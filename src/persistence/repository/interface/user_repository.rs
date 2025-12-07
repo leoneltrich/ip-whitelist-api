@@ -1,11 +1,17 @@
-// src/persistence/repository/interface/user_repository.rs
+use crate::model::user::User;
+use async_trait::async_trait;
 
-use rusqlite::Result;
-use crate::model::user::User; // <-- Import from top-level model
-
+#[async_trait]
 pub trait UserRepository {
-    fn get_user(&self, username: &str) -> Result<Option<User>>;
-    fn update_user(&self, user: &User) -> Result<usize>;
-    fn delete_user(&self, username: &str) -> Result<usize>;
-    fn create_user(&self, user: &User) -> Result<usize>;
+    /// Inserts a new user. Returns rows affected.
+    async fn create_user(&self, user: &User) -> Result<usize, String>;
+
+    /// returns a user option
+    async fn get_user(&self, username: &str) -> Result<Option<User>, String>;
+
+    /// Updates the user's password.
+    async fn update_user(&self, user: &User) -> Result<usize, String>;
+
+    /// Deletes the user.
+    async fn delete_user(&self, username: &str) -> Result<usize, String>;
 }

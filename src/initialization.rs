@@ -1,12 +1,16 @@
 // src/initialization.rs
 use crate::persistence::sqlite;
+use sqlx::SqlitePool;
 
-pub fn run_startup_sequence() -> Result<(), Box<dyn std::error::Error>> {
+pub async fn run_startup_sequence() -> Result<SqlitePool, Box<dyn std::error::Error>> {
     println!("⚙️  Initializing Persistence Layer...");
 
-    // We call the sqlite module which now handles the schema internally
-    let _db_client = sqlite::initialize("application.db")?;
+    let db_path = "application.db";
+
+    // We await the result here
+    let pool = sqlite::initialize(db_path).await?;
 
     println!("✅ Database setup complete.");
-    Ok(())
+
+    Ok(pool)
 }
