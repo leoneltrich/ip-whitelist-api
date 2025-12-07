@@ -1,77 +1,45 @@
+// src/api/routes/user.rs
 use axum::{
     extract::{Path, State},
     http::StatusCode,
     Json, response::IntoResponse,
 };
-
-// 1. Import the Repository Interface
 use crate::persistence::repository::Repositories;
-
-// 2. Import the Domain Entity (for talking to the Repo)
-use crate::model::database::user::User;
-
-// 3. Import the DTOs (for talking to the HTTP Client)
-//    We now point to model -> api -> user
-use crate::model::api::user::{CreateUserRequest, UpdateUserRequest};
+use crate::models::api::user::{CreateUserRequest, UpdateUserRequest};
+// Import the service module
+use crate::api::services::user as user_service;
+use crate::errors::AppError;
 
 // --- POST: Create User ---
 pub async fn create_user(
     State(repos): State<Repositories>,
-    Json(payload): Json<CreateUserRequest>, // Uses the DTO
-) -> impl IntoResponse {
+    Json(payload): Json<CreateUserRequest>,
+) -> Result<impl IntoResponse, AppError> { // <--- Changed return type
 
-    // Map DTO -> Domain Entity
-    // In a real app, you would likely hash the password here
-    let user = User {
-        username: payload.username,
-        password_hash: payload.password,
-    };
+    // If this fails, the '?' automatically converts the error to an HTTP Response
+    user_service::create_user(&repos, payload).await?;
 
-    match repos.user.create_user(&user).await {
-        Ok(_) => StatusCode::CREATED,
-        Err(_) => StatusCode::INTERNAL_SERVER_ERROR,
-    }
+    Ok(StatusCode::CREATED)
 }
 
-// --- PUT: Update User ---
+// PUT
 pub async fn update_user(
     State(repos): State<Repositories>,
-    Json(payload): Json<UpdateUserRequest>, // Uses the DTO
-) -> impl IntoResponse {
+    Json(payload): Json<UpdateUserRequest>,
+) -> Result<impl IntoResponse, AppError> {
 
-    // Map DTO -> Domain Entity
-    let user = User {
-        username: payload.username,
-        password_hash: payload.password,
-    };
+    user_service::update_user(&repos, payload).await?;
 
-    match repos.user.update_user(&user).await {
-        Ok(rows) => {
-            if rows == 0 {
-                StatusCode::NOT_FOUND
-            } else {
-                StatusCode::OK
-            }
-        },
-        Err(_) => StatusCode::INTERNAL_SERVER_ERROR,
-    }
+    Ok(StatusCode::OK)
 }
 
-// --- DELETE: Delete User ---
-// (No DTO needed here, we just use the URL path)
+// DELETE
 pub async fn delete_user(
     State(repos): State<Repositories>,
     Path(username): Path<String>,
-) -> impl IntoResponse {
+) -> Result<impl IntoResponse, AppError> {
 
-    match repos.user.delete_user(&username).await {
-        Ok(rows) => {
-            if rows == 0 {
-                StatusCode::NOT_FOUND
-            } else {
-                StatusCode::NO_CONTENT
-            }
-        }
-        Err(_) => StatusCode::INTERNAL_SERVER_ERROR,
-    }
+    user_service::delete_user(&repos, username).await?;
+
+    Ok(StatusCode::NO_CONTENT)
 }

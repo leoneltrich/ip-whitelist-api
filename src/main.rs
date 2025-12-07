@@ -2,9 +2,10 @@ use tokio::net::TcpListener;
 
 mod persistence;
 mod api;
-mod model;
+mod models;
 mod filesystem;
 mod initialization;
+mod errors;
 
 use crate::persistence::repository::Repositories;
 
@@ -19,7 +20,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     let app = api::app(repos); // <--- Pass it here
 
     let listener = TcpListener::bind("0.0.0.0:3000").await?;
-    println!("🚀 Server listening on port 3000");
+    println!("Server listening on port 3000");
     axum::serve(listener, app).await?;
 
     Ok(())
