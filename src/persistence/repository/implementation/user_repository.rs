@@ -1,6 +1,6 @@
 // src/persistence/repository/implementation/user_repository.rs
 
-use crate::model::user::User;
+use crate::model::database::user::User;
 use crate::persistence::repository::interface::user_repository::UserRepository;
 use async_trait::async_trait;
 use sqlx::SqlitePool;

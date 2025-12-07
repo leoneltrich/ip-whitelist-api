@@ -12,6 +12,7 @@ use self::interface::user_repository::UserRepository;
 
 // This container holds your Interfaces. 
 // Main will only ever see this struct.
+#[derive(Clone)]
 pub struct Repositories {
     pub user: Arc<dyn UserRepository + Send + Sync>,
     // Later you will add: pub server: Arc<dyn ServerRepository...>,

@@ -1,4 +1,4 @@
-use crate::model::user::User;
+use crate::model::database::user::User;
 use async_trait::async_trait;
 
 #[async_trait]

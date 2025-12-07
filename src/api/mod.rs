@@ -1,17 +1,16 @@
 // src/api/mod.rs
-use axum::Router; // <-- Removed 'middleware' from here to fix the conflict
+use axum::Router;
+use crate::persistence::repository::Repositories;
 
-// Your local modules
-pub mod middleware;
 pub mod routes;
 pub mod services;
+pub mod middleware;
 
-pub fn app() -> Router {
-    let my_routes = routes::get_routes();
+// Pass the repositories in here
+pub fn app(repos: Repositories) -> Router {
+    let user_routes = routes::get_routes();
 
     Router::new()
-        .merge(my_routes)
-        // Fix: Use the full path 'axum::middleware' here
-        // The second 'self::middleware' refers to your local folder
-        .layer(axum::middleware::from_fn(middleware::auth::auth))
+        .merge(user_routes)
+        .with_state(repos)
 }

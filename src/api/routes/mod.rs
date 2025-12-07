@@ -1,11 +1,18 @@
 mod refresh;
 mod health;
+mod user;
 
-use axum::{routing::get, Router};
+use axum::{
+    routing::{post, put, delete},
+    Router,
+};
+use crate::persistence::repository::Repositories;
 
 
-// This function gathers all routes from the submodules
-pub fn get_routes() -> Router {
+// Note the return type change: Router<Repositories>
+// This tells Axum: "This router expects 'Repositories' to exist in the state"
+pub fn get_routes() -> Router<Repositories> {
     Router::new()
-        .route("/health", get(health::health_handler))
-}
+        .route("/users", post(user::create_user))
+        .route("/users", put(user::update_user))
+        .route("/users/{username}", delete(user::delete_user))}

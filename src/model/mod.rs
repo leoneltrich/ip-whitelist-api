@@ -1,2 +1,2 @@
-pub mod user;
-mod server;
+pub(crate) mod database;
+pub(crate) mod api;
