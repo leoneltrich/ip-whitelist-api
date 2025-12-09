@@ -4,14 +4,15 @@
 use crate::models::api::auth::{LoginRequest, LoginResponse};
 use crate::persistence::repository::Repositories; // assuming 'repository' module is still singular based on your earlier snippet
 use crate::errors::AppError;
+use crate::state::AppState;
 
 // 2. Security imports
 use bcrypt::verify;
 use uuid::Uuid;
 
-pub async fn login(repos: &Repositories, req: LoginRequest) -> Result<LoginResponse, AppError> {
+pub async fn login(state: &AppState, req: LoginRequest) -> Result<LoginResponse, AppError> {
     // 1. Attempt to fetch the user
-    let user_option = repos.user.get_user(&req.username).await
+    let user_option = state.repositories.user.get_user(&req.username).await
         .map_err(|e| AppError::InternalServerError(e))?;
 
     // 2. Check if user exists (Security: Handle generic error)

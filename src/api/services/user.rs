@@ -1,13 +1,13 @@
-use bcrypt::{hash, DEFAULT_COST};
 use crate::errors::AppError;
 // src/api/services/user.rs
 use crate::models::api::user::{CreateUserRequest, UpdateUserRequest};
 use crate::models::database::user::User;
-use crate::persistence::repository::Repositories;
+use crate::state::AppState;
+use bcrypt::{hash, DEFAULT_COST};
 
-pub async fn create_user(repos: &Repositories, req: CreateUserRequest) -> Result<(), AppError> {
+pub async fn create_user(state: &AppState, req: CreateUserRequest) -> Result<(), AppError> {
 
-    if repos.user.get_user(&req.username).await.is_ok() {
+    if state.repositories.user.get_user(&req.username).await.is_ok() {
         return Err(AppError::Conflict(format!("User {} already exists", req.username)));
     }
 
@@ -20,13 +20,13 @@ pub async fn create_user(repos: &Repositories, req: CreateUserRequest) -> Result
         password_hash,
     };
 
-    repos.user.create_user(&user).await
+    state.repositories.user.create_user(&user).await
         .map_err(|e| AppError::InternalServerError(e))?;
 
     Ok(())
 }
 
-pub async fn update_user(repos: &Repositories, req: UpdateUserRequest) -> Result<(), AppError> {
+pub async fn update_user(state: &AppState, req: UpdateUserRequest) -> Result<(), AppError> {
 
     let password_hash = hash(req.password, DEFAULT_COST)
         .map_err(|e| AppError::InternalServerError(format!("Password hashing failed: {}", e)))?;
@@ -36,7 +36,7 @@ pub async fn update_user(repos: &Repositories, req: UpdateUserRequest) -> Result
         password_hash,
     };
 
-    let rows = repos.user.update_user(&user).await
+    let rows = state.repositories.user.update_user(&user).await
         .map_err(|e| AppError::InternalServerError(e))?;
 
     if rows == 0 {
@@ -46,8 +46,8 @@ pub async fn update_user(repos: &Repositories, req: UpdateUserRequest) -> Result
     Ok(())
 }
 
-pub async fn delete_user(repos: &Repositories, username: String) -> Result<(), AppError> {
-    let rows = repos.user.delete_user(&username).await
+pub async fn delete_user(state: &AppState, username: String) -> Result<(), AppError> {
+    let rows = state.repositories.user.delete_user(&username).await
         .map_err(|e| AppError::InternalServerError(e))?;
 
     if rows == 0 {

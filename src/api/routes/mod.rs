@@ -3,14 +3,13 @@ mod health;
 mod user;
 mod auth;
 
+use crate::state::AppState;
 use axum::{
-    routing::{post, put, delete},
+    routing::{delete, post, put},
     Router,
 };
-use crate::persistence::repository::Repositories;
 
-
-pub fn get_routes() -> Router<Repositories> {
+pub fn get_routes() -> Router<AppState> {
     let user_routes = Router::new()
         .route("/users", post(user::create_user))
         .route("/users", put(user::update_user))
