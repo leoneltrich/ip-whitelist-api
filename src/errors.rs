@@ -11,7 +11,7 @@ pub enum AppError {
     InternalServerError(String),
     NotFound,
     Conflict(String),
-    // You can add more here later, e.g., ConfigError, DatabaseConnectionError...
+    InvalidCredentials
 }
 
 // We still implement IntoResponse here so it can be used directly in handlers.
@@ -22,6 +22,7 @@ impl IntoResponse for AppError {
             AppError::InternalServerError(msg) => (StatusCode::INTERNAL_SERVER_ERROR, msg),
             AppError::NotFound => (StatusCode::NOT_FOUND, "Resource not found".to_string()),
             AppError::Conflict(msg) => (StatusCode::CONFLICT, msg),
+            AppError::InvalidCredentials => (StatusCode::UNAUTHORIZED, "Invalid username or password".to_string()),
         };
 
         let body = Json(json!({
