@@ -1,14 +1,13 @@
 // src/api/services/auth.rs
 
 // 1. Imports from your pluralized modules
-use crate::models::api::auth::{LoginRequest, LoginResponse};
-use crate::persistence::repository::Repositories; // assuming 'repository' module is still singular based on your earlier snippet
+use crate::models::api::auth::{Claims, LoginRequest, LoginResponse};
 use crate::errors::AppError;
 use crate::state::AppState;
 
 // 2. Security imports
 use bcrypt::verify;
-use uuid::Uuid;
+use jsonwebtoken::{encode, EncodingKey, Header};
 
 pub async fn login(state: &AppState, req: LoginRequest) -> Result<LoginResponse, AppError> {
     // 1. Attempt to fetch the user
@@ -29,10 +28,20 @@ pub async fn login(state: &AppState, req: LoginRequest) -> Result<LoginResponse,
         return Err(AppError::InvalidCredentials);
     }
 
-    // 4. Generate a simple random token (UUID)
-    // NOTE: In a real app, you would save this token to a DB table (sessions) 
-    // to track it. For now, we just return it.
-    let token = Uuid::new_v4().to_string();
+    let claims = Claims::new(user.username);
+
+    // 4. Encode the Token using the Secret from AppState Config
+    // We convert the String secret into bytes with .as_bytes()
+    let secret_bytes = state.config.jwt_secret.as_bytes();
+
+    let token = encode(
+        &Header::default(),
+        &claims,
+        &EncodingKey::from_secret(secret_bytes),
+    )
+        .map_err(|e| AppError::InternalServerError(format!("Token signing failed: {}", e)))?;
+
+    // --- JWT GENERATION END ---
 
     Ok(LoginResponse { token })
 }
