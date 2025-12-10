@@ -6,11 +6,22 @@ use axum::{
 };
 use serde_json::json;
 use crate::state::AppState;
-use crate::models::api::server::{CreateServerRequest, UpdateServerRequest};
+use crate::models::api::server::{CreateServerRequest, ServerResponse, UpdateServerRequest};
 use crate::api::services::server as server_service;
 use crate::errors::AppError;
 
-// POST /servers
+#[utoipa::path(
+    post,
+    path = "/admin/servers",
+    request_body = CreateServerRequest,
+    responses(
+        (status = 201, description = "Server created"),
+        (status = 409, description = "Server name already exists"),
+        (status = 401, description = "Unauthorized"),
+        (status = 403, description = "Forbidden (Non-admins)")
+    ),
+    security(("jwt" = []))
+)]
 pub async fn create_server(
     State(state): State<AppState>,
     Json(payload): Json<CreateServerRequest>,
@@ -23,7 +34,16 @@ pub async fn create_server(
     ))
 }
 
-// GET /servers
+#[utoipa::path(
+    get,
+    path = "/admin/servers",
+    responses(
+        (status = 200, description = "List of servers", body = [ServerResponse]),
+        (status = 401, description = "Unauthorized"),
+        (status = 403, description = "Forbidden")
+    ),
+    security(("jwt" = []))
+)]
 pub async fn list_servers(
     State(state): State<AppState>,
 ) -> Result<impl IntoResponse, AppError> {
@@ -31,7 +51,19 @@ pub async fn list_servers(
     Ok(Json(servers))
 }
 
-// GET /servers/:name
+#[utoipa::path(
+    get,
+    path = "/admin/servers/{name}",
+    params(
+        ("name" = String, Path, description = "Name of the server")
+    ),
+    responses(
+        (status = 200, description = "Server details", body = ServerResponse),
+        (status = 404, description = "Server not found"),
+        (status = 403, description = "Forbidden")
+    ),
+    security(("jwt" = []))
+)]
 pub async fn get_server(
     State(state): State<AppState>,
     Path(name): Path<String>,
@@ -40,7 +72,21 @@ pub async fn get_server(
     Ok(Json(server))
 }
 
-// PUT /servers/:name
+#[utoipa::path(
+    put,
+    path = "/admin/servers/{name}",
+    params(
+        ("name" = String, Path, description = "Name of the server to update")
+    ),
+    request_body = UpdateServerRequest,
+    responses(
+        (status = 200, description = "Server updated"),
+        (status = 404, description = "Server not found"),
+        (status = 409, description = "New server name conflict"),
+        (status = 403, description = "Forbidden")
+    ),
+    security(("jwt" = []))
+)]
 pub async fn update_server(
     State(state): State<AppState>,
     Path(name): Path<String>,
@@ -54,7 +100,19 @@ pub async fn update_server(
     ))
 }
 
-// DELETE /servers/:name
+#[utoipa::path(
+    delete,
+    path = "/admin/servers/{name}",
+    params(
+        ("name" = String, Path, description = "Name of the server to delete")
+    ),
+    responses(
+        (status = 200, description = "Server deleted"),
+        (status = 404, description = "Server not found"),
+        (status = 403, description = "Forbidden")
+    ),
+    security(("jwt" = []))
+)]
 pub async fn delete_server(
     State(state): State<AppState>,
     Path(name): Path<String>,

@@ -1,7 +1,7 @@
-mod auth;
-mod user;
-mod access;
-mod server;
+pub mod user;
+pub mod auth;
+pub mod access;
+pub mod server;
 
 use crate::api::middleware::auth::require_admin;
 use crate::state::AppState;
@@ -32,6 +32,6 @@ pub fn admin_routes() -> Router<AppState> {
         .route("/servers/{name}", get(server::get_server))
         .route("/servers/{name}", put(server::update_server))
         .route("/servers/{name}", delete(server::delete_server))
-        
+
         .layer(axum::middleware::from_fn(require_admin))
 }

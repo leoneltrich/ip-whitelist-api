@@ -1,20 +1,32 @@
 use serde::Deserialize;
+use utoipa::ToSchema; // <--- Import ToSchema
 
-#[derive(Deserialize)]
+#[derive(Deserialize, ToSchema)] // <--- Add ToSchema
 pub struct CreateUserRequest {
+    #[schema(example = "new_user")]
     pub username: String,
-    pub password: String, // The API receives a raw password
-    pub is_admin: bool,
-}
 
-#[derive(Deserialize)]
-pub struct UpdateUserRequest {
-    pub username: String, // We need to know who to update
+    #[schema(example = "password123")]
     pub password: String,
+
+    #[schema(example = false)]
     pub is_admin: bool,
 }
 
-#[derive(Deserialize)]
+#[derive(Deserialize, ToSchema)] // <--- Add ToSchema
+pub struct UpdateUserRequest {
+    #[schema(example = "target_user")]
+    pub username: String,
+
+    #[schema(example = "new_password123")]
+    pub password: String,
+
+    #[schema(example = false)]
+    pub is_admin: bool,
+}
+
+#[derive(Deserialize, ToSchema)] // <--- Add ToSchema
 pub struct UpdateProfileRequest {
+    #[schema(example = "my_new_secure_password")]
     pub password: String,
 }

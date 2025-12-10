@@ -1,9 +1,13 @@
 use serde::{Deserialize, Serialize};
 use chrono::{Duration, Utc};
+use utoipa::ToSchema; // <--- Import ToSchema
 
 // Token is valid for 24 hours
 const EXPIRATION_HOURS: i64 = 24;
 
+// Claims is internal logic (payload of the JWT), so we don't necessarily
+// need to expose it in the OpenAPI schema unless you have an endpoint
+// that returns raw claims.
 #[derive(Debug, Serialize, Deserialize, Clone)]
 pub struct Claims {
     pub sub: String,
@@ -26,13 +30,16 @@ impl Claims {
     }
 }
 
-#[derive(Deserialize)]
+#[derive(Deserialize, ToSchema)] // <--- Add ToSchema
 pub struct LoginRequest {
+    #[schema(example = "admin")]
     pub username: String,
+    #[schema(example = "supersecret123")]
     pub password: String,
 }
 
-#[derive(Serialize)]
+#[derive(Serialize, ToSchema)] // <--- Add ToSchema
 pub struct LoginResponse {
+    #[schema(example = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...")]
     pub token: String,
 }

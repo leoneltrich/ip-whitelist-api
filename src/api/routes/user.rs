@@ -13,7 +13,17 @@ use axum::{
 };
 use serde_json::json;
 
-// --- POST: Create User ---
+#[utoipa::path(
+    post,
+    path = "/admin/users",
+    request_body = CreateUserRequest,
+    responses(
+        (status = 201, description = "User created"),
+        (status = 409, description = "Username already exists"),
+        (status = 403, description = "Forbidden")
+    ),
+    security(("jwt" = []))
+)]
 pub async fn create_user(
     State(state): State<AppState>,
     Json(payload): Json<CreateUserRequest>,
@@ -32,7 +42,17 @@ pub async fn create_user(
     ))
 }
 
-// PUT
+#[utoipa::path(
+    put,
+    path = "/admin/users",
+    request_body = UpdateUserRequest,
+    responses(
+        (status = 200, description = "User updated"),
+        (status = 404, description = "User not found"),
+        (status = 403, description = "Forbidden")
+    ),
+    security(("jwt" = []))
+)]
 pub async fn admin_update_user(
     State(state): State<AppState>,
     Json(payload): Json<UpdateUserRequest>,
@@ -48,6 +68,16 @@ pub async fn admin_update_user(
     ))
 }
 
+#[utoipa::path(
+    put,
+    path = "/users/profile",
+    request_body = UpdateProfileRequest,
+    responses(
+        (status = 200, description = "Profile updated"),
+        (status = 401, description = "Unauthorized")
+    ),
+    security(("jwt" = []))
+)]
 pub async fn self_update_user(
     State(state): State<AppState>,
     Extension(claims): Extension<Claims>,
@@ -70,7 +100,19 @@ pub async fn self_update_user(
     ))
 }
 
-// DELETE
+#[utoipa::path(
+    delete,
+    path = "/admin/users/{username}",
+    params(
+        ("username" = String, Path, description = "Username to delete")
+    ),
+    responses(
+        (status = 204, description = "User deleted"), // 204 No Content or 200 OK depending on impl
+        (status = 404, description = "User not found"),
+        (status = 403, description = "Forbidden")
+    ),
+    security(("jwt" = []))
+)]
 pub async fn delete_user(
     State(state): State<AppState>,
     Path(username): Path<String>,

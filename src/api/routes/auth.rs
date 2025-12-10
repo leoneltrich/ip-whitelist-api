@@ -1,13 +1,20 @@
 use crate::api::services::auth;
 use crate::errors::AppError;
-use crate::models::api::auth::LoginRequest;
+use crate::models::api::auth::{LoginRequest, LoginResponse};
 use crate::state::AppState;
 use axum::http::StatusCode;
-// src/api/routes/auth.rs
 use axum::{Json, extract::State, response::IntoResponse};
 use serde_json::json;
 
-// This handler now lives in its own home
+#[utoipa::path(
+    post,
+    path = "/login",
+    request_body = LoginRequest,
+    responses(
+        (status = 200, description = "Login successful", body = LoginResponse),
+        (status = 401, description = "Invalid credentials")
+    )
+)]
 pub async fn login(
     State(state): State<AppState>,
     Json(payload): Json<LoginRequest>,

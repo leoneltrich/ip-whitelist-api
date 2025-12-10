@@ -6,10 +6,23 @@ use axum::{
 };
 use std::net::{IpAddr, SocketAddr};
 use crate::state::AppState;
-use crate::models::api::access::AccessRequest;
+use crate::models::api::access::{AccessRequest, AccessResponse};
 use crate::api::services::access as access_service;
 use crate::errors::AppError;
 
+#[utoipa::path(
+    post,
+    path = "/users/access",
+    request_body = AccessRequest,
+    responses(
+        (status = 200, description = "Access granted", body = AccessResponse),
+        (status = 401, description = "Unauthorized"),
+        (status = 500, description = "Firewall backend error")
+    ),
+    security(
+        ("jwt" = [])
+    )
+)]
 pub async fn request_access(
     State(state): State<AppState>,
     headers: HeaderMap,
