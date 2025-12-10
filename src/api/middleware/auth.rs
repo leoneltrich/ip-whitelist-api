@@ -7,6 +7,7 @@ use axum::{
 };
 use axum::extract::State;
 use jsonwebtoken::{decode, DecodingKey, Validation};
+use crate::errors::AppError;
 use crate::models::api::auth::Claims;
 use crate::state::AppState;
 
@@ -17,18 +18,18 @@ pub async fn auth(
     // Axum injects the state here automatically
     State(state): State<AppState>,
     headers: HeaderMap,
-    mut request: Request,
+    request: Request,
     next: Next,
-) -> Result<Response, StatusCode> {
+) -> Result<Response, AppError> {
     // 1. Get the 'Authorization' header
     let auth_header = headers
         .get("Authorization")
         .and_then(|value| value.to_str().ok())
-        .ok_or(StatusCode::UNAUTHORIZED)?;
+        .ok_or(AppError::InvalidToken)?;
 
     // 2. Parse "Bearer <token>"
     if !auth_header.starts_with("Bearer ") {
-        return Err(StatusCode::UNAUTHORIZED);
+        return Err(AppError::InvalidToken);
     }
     let token = &auth_header[7..]; // Strip "Bearer " prefix
 
@@ -43,7 +44,7 @@ pub async fn auth(
         &decoding_key,
         &Validation::default(),
     )
-        .map_err(|_| StatusCode::UNAUTHORIZED)?; // If expired or invalid, return 401
+        .map_err(|_| AppError::InvalidToken)?; // If expired or invalid, return 401
 
     // 4. (Optional but recommended) Inject the user info into the request
     // This allows downstream handlers to know WHO is making the request.
