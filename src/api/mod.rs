@@ -9,19 +9,22 @@ pub mod middleware;
 
 // Pass the repositories in here
 pub fn app(state: AppState) -> Router {
-    // 1. Define the protected layer
-    let protected = routes::protected_routes()
+
+    let public = routes::public_routes();
+    let protected_user = routes::protected_routes();
+    let admin = routes::admin_routes();
+
+    let secure_api = Router::new()
+        .merge(protected_user)
+        .merge(admin) // <--- Merging it here!
         .layer(axum::middleware::from_fn_with_state(
             state.clone(),
             middleware::auth::auth,
         ));
 
-    // 2. Define the public layer
-    let public = routes::public_routes();
-
-    // 3. Merge them
+    // 3. Final Assembly
     Router::new()
         .merge(public)
-        .merge(protected)
+        .merge(secure_api)
         .with_state(state)
 }

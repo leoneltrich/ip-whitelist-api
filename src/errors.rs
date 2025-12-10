@@ -13,6 +13,7 @@ pub enum AppError {
     Conflict(String),
     InvalidCredentials,
     InvalidToken,
+    Forbidden,
 }
 
 // We still implement IntoResponse here so it can be used directly in handlers.
@@ -25,6 +26,7 @@ impl IntoResponse for AppError {
             AppError::Conflict(msg) => (StatusCode::CONFLICT, msg),
             AppError::InvalidCredentials => (StatusCode::UNAUTHORIZED, "Invalid username or password".to_string()),
             AppError::InvalidToken => (StatusCode::UNAUTHORIZED, "Invalid, expired or missing token".to_string()),
+            AppError::Forbidden => (StatusCode::FORBIDDEN, "Permission denied".to_string()),
         };
 
         let body = Json(json!({

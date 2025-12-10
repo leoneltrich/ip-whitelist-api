@@ -4,15 +4,16 @@ use chrono::{Duration, Utc};
 // Token is valid for 24 hours
 const EXPIRATION_HOURS: i64 = 24;
 
-#[derive(Debug, Serialize, Deserialize)]
+#[derive(Debug, Serialize, Deserialize, Clone)]
 pub struct Claims {
-    pub sub: String, // "Subject" (Username)
-    pub iat: usize,  // "Issued At" (Timestamp)
-    pub exp: usize,  // "Expiration" (Timestamp)
+    pub sub: String,
+    pub iat: usize,
+    pub exp: usize,
+    pub is_admin: bool,
 }
 
 impl Claims {
-    pub fn new(username: String) -> Self {
+    pub fn new(username: String, is_admin: bool) -> Self {
         let now = Utc::now();
         let expiration = now + Duration::hours(EXPIRATION_HOURS);
 
@@ -20,6 +21,7 @@ impl Claims {
             sub: username,
             iat: now.timestamp() as usize,
             exp: expiration.timestamp() as usize,
+            is_admin,
         }
     }
 }
