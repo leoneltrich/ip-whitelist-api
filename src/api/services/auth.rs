@@ -8,8 +8,11 @@ use crate::state::AppState;
 use crate::security::hashing;
 use jsonwebtoken::{EncodingKey, Header, encode};
 
+use subtle::ConstantTimeEq; // Optional but recommended for boolean checks, though verify_password is the main bottleneck here.
+
 pub async fn login(state: &AppState, req: LoginRequest) -> Result<LoginResponse, AppError> {
-    // 1. Fetch User
+
+
     let user_option = state
         .repositories
         .user
@@ -17,30 +20,31 @@ pub async fn login(state: &AppState, req: LoginRequest) -> Result<LoginResponse,
         .await
         .map_err(|e| AppError::InternalServerError(e.to_string()))?;
 
-    let user = match user_option {
-        Some(u) => u,
-        None => return Err(AppError::InvalidCredentials),
+    let dummy_hash = "$argon2id$v=19$m=19456,t=2,p=1$DummyHashSaltStringShouldBeValidLength$DummyHashSignatureStringShouldBeValidLength";
+
+    let (hash_to_verify, user_found) = match &user_option {
+        Some(user) => (user.password_hash.as_str(), Some(user)),
+        None => (dummy_hash, None),
     };
 
-    // 2. Verify Password
-    let is_valid = hashing::verify_password(&req.password, &user.password_hash)
-        .map_err(|_| AppError::InternalServerError("Verification failed".to_string()))?;
+    let is_valid_hash = hashing::verify_password(&req.password, hash_to_verify)
+        .unwrap_or(false);
 
-    if !is_valid {
-        return Err(AppError::InvalidCredentials);
+    if let (true, Some(user)) = (is_valid_hash, user_found) {
+
+        let claims = Claims::new(user.username.clone(), user.is_admin);
+
+        let secret_bytes = state.config.jwt_secret.as_bytes();
+        let token = encode(
+            &Header::default(),
+            &claims,
+            &EncodingKey::from_secret(secret_bytes),
+        )
+            .map_err(|e| AppError::InternalServerError(format!("Token signing failed: {}", e)))?;
+
+        Ok(LoginResponse { token })
+
+    } else {
+        Err(AppError::InvalidCredentials)
     }
-
-    // 3. Create Claims WITH is_admin flag from the DB entity
-    let claims = Claims::new(user.username, user.is_admin);
-
-    // 4. Encode Token
-    let secret_bytes = state.config.jwt_secret.as_bytes();
-    let token = encode(
-        &Header::default(),
-        &claims,
-        &EncodingKey::from_secret(secret_bytes),
-    )
-    .map_err(|e| AppError::InternalServerError(format!("Token signing failed: {}", e)))?;
-
-    Ok(LoginResponse { token })
 }

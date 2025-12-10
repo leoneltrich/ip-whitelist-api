@@ -1,5 +1,6 @@
 mod auth;
 mod user;
+mod access;
 
 use crate::api::middleware::auth::require_admin;
 use crate::state::AppState;
@@ -13,7 +14,9 @@ pub fn public_routes() -> Router<AppState> {
 }
 
 pub fn user_routes() -> Router<AppState> {
-    Router::new().route("/profile", put(user::self_update_user))
+    Router::new()
+        .route("/profile", put(user::self_update_user))
+        .route("/access", post(access::request_access))
 }
 
 pub fn admin_routes() -> Router<AppState> {
