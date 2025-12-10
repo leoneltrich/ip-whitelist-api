@@ -2,7 +2,7 @@ use crate::errors::AppError;
 use bcrypt::{DEFAULT_COST, hash, verify};
 
 /// Hash a password using the standard application configuration.
-pub fn hash_password(password: String) -> Result<String, AppError> {
+pub fn hash_password(password: &str) -> Result<String, AppError> {
     hash(password, DEFAULT_COST)
         .map_err(|e| AppError::InternalServerError(format!("Password hashing failed: {}", e)))
 }

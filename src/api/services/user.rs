@@ -21,7 +21,7 @@ pub async fn create_user(state: &AppState, req: CreateUserRequest) -> Result<(),
         )));
     }
 
-    let password_hash = hashing::hash_password(req.password)
+    let password_hash = hashing::hash_password(&req.password)
         .map_err(|_| AppError::InternalServerError("Password hashing failed".to_string()))?;
 
     let user = User {
@@ -41,7 +41,7 @@ pub async fn create_user(state: &AppState, req: CreateUserRequest) -> Result<(),
 }
 
 pub async fn update_user(state: &AppState, req: UpdateUserRequest) -> Result<(), AppError> {
-    let password_hash = hashing::hash_password(req.password)
+    let password_hash = hashing::hash_password(&req.password)
         .map_err(|_| AppError::InternalServerError("Password hashing failed".to_string()))?;
 
     let user = User {
