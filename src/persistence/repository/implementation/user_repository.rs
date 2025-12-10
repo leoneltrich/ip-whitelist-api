@@ -13,10 +13,11 @@ pub struct SqliteUserRepository {
 impl UserRepository for SqliteUserRepository {
     async fn create_user(&self, user: &User) -> Result<usize, String> {
         let result = sqlx::query(
-            "INSERT INTO users (username, password_hash) VALUES (?, ?)"
+            "INSERT INTO users (username, password_hash, is_admin) VALUES (?, ?, ?)"
         )
             .bind(&user.username)
             .bind(&user.password_hash)
+            .bind(user.is_admin)
             .execute(&self.pool)
             .await
             .map_err(|e| e.to_string())?;
@@ -28,7 +29,7 @@ impl UserRepository for SqliteUserRepository {
         // query_as maps the database row directly to your Struct!
         // Note: Your User struct needs `#[derive(sqlx::FromRow)]` for this magic to work.
         let result = sqlx::query_as::<_, User>(
-            "SELECT username, password_hash FROM users WHERE username = ?"
+            "SELECT username, password_hash, is_admin FROM users WHERE username = ?"
         )
             .bind(username)
             .fetch_optional(&self.pool)
@@ -40,9 +41,10 @@ impl UserRepository for SqliteUserRepository {
 
     async fn update_user(&self, user: &User) -> Result<usize, String> {
         let result = sqlx::query(
-            "UPDATE users SET password_hash = ? WHERE username = ?"
+            "UPDATE users SET password_hash = ?, is_admin = ? WHERE username = ?"
         )
             .bind(&user.password_hash)
+            .bind(user.is_admin)
             .bind(&user.username)
             .execute(&self.pool)
             .await

@@ -32,7 +32,8 @@ async fn create_schema(pool: &SqlitePool) -> Result<(), Error> {
     sqlx::query(
         "CREATE TABLE IF NOT EXISTS users (
             username TEXT PRIMARY KEY,
-            password_hash TEXT NOT NULL
+            password_hash TEXT NOT NULL,
+            is_admin BOOLEAN NOT NULL DEFAULT 0
         );"
     ).execute(pool).await?;
 

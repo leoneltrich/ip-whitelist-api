@@ -7,7 +7,7 @@ use bcrypt::{hash, DEFAULT_COST};
 
 pub async fn create_user(state: &AppState, req: CreateUserRequest) -> Result<(), AppError> {
 
-    if state.repositories.user.get_user(&req.username).await.is_ok() {
+    if state.repositories.user.get_user(&req.username).await.unwrap().is_none() == false {
         return Err(AppError::Conflict(format!("User {} already exists", req.username)));
     }
 
@@ -18,6 +18,7 @@ pub async fn create_user(state: &AppState, req: CreateUserRequest) -> Result<(),
     let user = User {
         username: req.username,
         password_hash,
+        is_admin: req.is_admin
     };
 
     state.repositories.user.create_user(&user).await
@@ -34,6 +35,7 @@ pub async fn update_user(state: &AppState, req: UpdateUserRequest) -> Result<(),
     let user = User {
         username: req.username,
         password_hash,
+        is_admin: req.is_admin
     };
 
     let rows = state.repositories.user.update_user(&user).await
