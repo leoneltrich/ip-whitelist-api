@@ -9,7 +9,7 @@ pub async fn create_user(state: &AppState, req: CreateUserRequest) -> Result<(),
     if state
         .repositories
         .user
-        .get_user(&req.username)
+        .get_user_by_name(&req.username)
         .await
         .unwrap()
         .is_none()

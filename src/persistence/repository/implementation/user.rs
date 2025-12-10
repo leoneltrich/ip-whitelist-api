@@ -1,7 +1,7 @@
-// src/persistence/repository/implementation/user_repository.rs
+// src/persistence/repository/implementation/user
 
 use crate::models::database::user::User;
-use crate::persistence::repository::interface::user_repository::UserRepository;
+use crate::persistence::repository::interface::user::UserRepository;
 use async_trait::async_trait;
 use sqlx::SqlitePool;
 
@@ -25,7 +25,7 @@ impl UserRepository for SqliteUserRepository {
         Ok(result.rows_affected() as usize)
     }
 
-    async fn get_user(&self, username: &str) -> Result<Option<User>, String> {
+    async fn get_user_by_name(&self, username: &str) -> Result<Option<User>, String> {
         // query_as maps the database row directly to your Struct!
         // Note: Your User struct needs `#[derive(sqlx::FromRow)]` for this magic to work.
         let result = sqlx::query_as::<_, User>(

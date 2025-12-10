@@ -25,7 +25,7 @@ async fn bootstrap_admin(repos: &Repositories) -> Result<(), Box<dyn std::error:
     let admin_username = "admin";
 
     // Check if admin already exists
-    if repos.user.get_user(admin_username).await?.is_some() {
+    if repos.user.get_user_by_name(admin_username).await?.is_some() {
         println!("Admin user already exists. Skipping creation...");
         return Ok(()); // Admin exists, nothing to do.
     }

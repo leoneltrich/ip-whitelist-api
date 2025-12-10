@@ -16,7 +16,7 @@ pub async fn login(state: &AppState, req: LoginRequest) -> Result<LoginResponse,
     let user_option = state
         .repositories
         .user
-        .get_user(&req.username)
+        .get_user_by_name(&req.username)
         .await
         .map_err(|e| AppError::InternalServerError(e.to_string()))?;
 

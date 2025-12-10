@@ -41,11 +41,11 @@ async fn create_schema(pool: &SqlitePool) -> Result<(), Error> {
     sqlx::query(
         "CREATE TABLE IF NOT EXISTS servers (
             servername TEXT PRIMARY KEY,
-            ip_address TEXT NOT NULL,
             port INTEGER NOT NULL,
-            api_startup_method TEXT NOT NULL,
-            api_startup_link TEXT NOT NULL,
-            api_startup_token TEXT NOT NULL
+            api_startup_method TEXT, -- No longer 'NOT NULL'
+            api_startup_link TEXT,   -- No longer 'NOT NULL'
+            api_startup_token TEXT   -- No longer 'NOT NULL'
+            -- ip_address is removed
         );"
     ).execute(pool).await?;
 

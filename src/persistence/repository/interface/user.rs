@@ -7,7 +7,7 @@ pub trait UserRepository {
     async fn create_user(&self, user: &User) -> Result<usize, String>;
 
     /// returns a user option
-    async fn get_user(&self, username: &str) -> Result<Option<User>, String>;
+    async fn get_user_by_name(&self, username: &str) -> Result<Option<User>, String>;
 
     /// Updates the user's password.
     async fn update_user(&self, user: &User) -> Result<usize, String>;

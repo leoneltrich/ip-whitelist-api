@@ -11,5 +11,5 @@ services:
       - JWT_SECRET=SuperSecretValue
       - FIREWALL_BACKEND=nftables
       - DATABASE_PATH=/app/application.db
-#    volumes:
-#      - ./application.db:/app/application.db
+    volumes:
+      - ./application.db:/app/application.db
