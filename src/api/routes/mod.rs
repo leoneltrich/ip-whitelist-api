@@ -1,23 +1,19 @@
-mod refresh;
-mod health;
-mod user;
 mod auth;
+mod user;
 
+use crate::api::middleware::auth::require_admin;
 use crate::state::AppState;
 use axum::{
-    routing::{delete, post, put},
     Router,
+    routing::{delete, post, put},
 };
-use crate::api::middleware::auth::require_admin;
 
 pub fn public_routes() -> Router<AppState> {
-    Router::new()
-        .route("/login", post(auth::login))
+    Router::new().route("/login", post(auth::login))
 }
 
 pub fn user_routes() -> Router<AppState> {
-    Router::new()
-        .route("/profile", put(user::self_update_user))
+    Router::new().route("/profile", put(user::self_update_user))
 }
 
 pub fn admin_routes() -> Router<AppState> {
