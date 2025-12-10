@@ -35,7 +35,7 @@ pub async fn create_user(state: &AppState, req: CreateUserRequest) -> Result<(),
         .user
         .create_user(&user)
         .await
-        .map_err(|e| AppError::InternalServerError(e))?;
+        .map_err(|e| AppError::InternalServerError(e.to_string()))?;
 
     Ok(())
 }
@@ -55,7 +55,7 @@ pub async fn update_user(state: &AppState, req: UpdateUserRequest) -> Result<(),
         .user
         .update_user(&user)
         .await
-        .map_err(|e| AppError::InternalServerError(e))?;
+        .map_err(|e| AppError::InternalServerError(e.to_string()))?;
 
     if rows == 0 {
         return Err(AppError::NotFound);
@@ -70,7 +70,7 @@ pub async fn delete_user(state: &AppState, username: String) -> Result<(), AppEr
         .user
         .delete_user(&username)
         .await
-        .map_err(|e| AppError::InternalServerError(e))?;
+        .map_err(|e| AppError::InternalServerError(e.to_string()))?;
 
     if rows == 0 {
         return Err(AppError::NotFound);

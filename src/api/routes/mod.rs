@@ -1,6 +1,7 @@
 mod auth;
 mod user;
 mod access;
+mod server;
 
 use crate::api::middleware::auth::require_admin;
 use crate::state::AppState;
