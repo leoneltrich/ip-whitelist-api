@@ -13,7 +13,7 @@ impl AppConfig {
         Self {
             jwt_secret: env::var("JWT_SECRET").expect("JWT_SECRET must be set"),
             firewall_backend: env::var("FIREWALL_BACKEND").expect("FIREWALL_BACKEND must be set"),
-            database_path: env::var("DATABASE_URL").expect("DATABASE_URL must be set"),
+            database_path: env::var("DATABASE_PATH").expect("DATABASE_PATH must be set"),
         }
     }
 }

@@ -26,13 +26,14 @@ async fn bootstrap_admin(repos: &Repositories) -> Result<(), Box<dyn std::error:
 
     // Check if admin already exists
     if repos.user.get_user(admin_username).await?.is_some() {
+        println!("Admin user already exists. Skipping creation...");
         return Ok(()); // Admin exists, nothing to do.
     }
 
     println!("No admin user found. Creating default admin...");
 
     // 1. Generate Random Password (32 chars)
-    let password_plain: String = rand::thread_rng()
+    let password_plain: String = rand::rng()
         .sample_iter(&Alphanumeric)
         .take(32)
         .map(char::from)

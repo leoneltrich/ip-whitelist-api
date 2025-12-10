@@ -30,9 +30,6 @@ RUN apk add --no-cache ca-certificates nftables
 # Copy the compiled binary from the builder stage
 COPY --from=builder /usr/src/app/target/release/access_proxy_server /usr/local/bin/access_proxy_server
 
-# Copy the SQLite database file into the container
-COPY application.db /app/application.db
-
 # Set the working directory for the final application
 WORKDIR /app
 

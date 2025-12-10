@@ -41,22 +41,29 @@ impl NftablesFirewall {
 #[async_trait]
 impl FirewallBackend for NftablesFirewall {
     async fn grant_access(&self, ip: IpAddr, duration: Duration) -> Result<(), AppError> {
-        // Command: nft add element inet <table_name> <set_name> { <ip> timeout <seconds>s }
         let ip_str = ip.to_string();
         let timeout_str = format!("{}s", duration.as_secs());
 
-        // Construct the element string: "192.168.1.5 timeout 3600s"
-        // Note: We use "timeout" flag in the set, so we pass it here.
-        let element = format!("{{ {} timeout {} }}", ip_str, timeout_str);
+        let delete_args = [
+            "delete", "element",
+            "inet", &self.table,
+            &self.set,
+            &format!("{{ {} }}", ip_str)
+        ];
 
-        let args = [
+        let _ = Command::new("nft")
+            .args(&delete_args)
+            .output();
+
+        let element = format!("{{ {} timeout {} }}", ip_str, timeout_str);
+        let add_args = [
             "add", "element",
             "inet", &self.table,
             &self.set,
             &element
         ];
 
-        self.run_nft_cmd(&args)
+        self.run_nft_cmd(&add_args)
     }
 
     async fn validate_config(&self) -> Result<(), AppError> {

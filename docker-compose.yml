@@ -3,11 +3,13 @@ version: '3.8'
 services:
   app:
     build: .
-    network_mode: "host"
+    ports:
+      - "3000:3000"
     cap_add:
       - NET_ADMIN
     environment:
       - JWT_SECRET=SuperSecretValue
       - FIREWALL_BACKEND=nftables
-    volumes:
-      - ./application.db:/app/application.db
+      - DATABASE_PATH=/app/application.db
+#    volumes:
+#      - ./application.db:/app/application.db
