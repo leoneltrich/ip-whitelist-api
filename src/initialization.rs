@@ -7,13 +7,11 @@ use crate::models::database::user::User;
 use crate::persistence::repository::Repositories;
 use crate::security::hashing;
 
-pub async fn run_startup_sequence() -> Result<SqlitePool, Box<dyn std::error::Error>> {
+pub async fn run_startup_sequence(database_path: &str) -> Result<SqlitePool, Box<dyn std::error::Error>> {
     println!("Initializing Persistence Layer...");
 
-    let db_path = "./application.db";
-
     // We await the result here
-    let pool = sqlite::initialize(db_path).await?;
+    let pool = sqlite::initialize(database_path).await?;
 
     println!("Database setup complete.");
 

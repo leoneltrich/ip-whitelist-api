@@ -18,4 +18,9 @@ impl FirewallBackend for MockFirewall {
         println!("🔒 [MOCK FIREWALL] Configuration OK");
         Ok(())
     }
+
+    async fn setup(&self) -> Result<(), AppError> {
+        println!("Mock setup");
+        Ok(())
+    }
 }

@@ -15,4 +15,6 @@ pub trait FirewallBackend: Send + Sync {
 
     /// (Optional) Validates that the firewall is configured correctly on startup
     async fn validate_config(&self) -> Result<(), AppError>;
+
+    async fn setup(&self) -> Result<(), AppError>; // <--- New Method
 }

@@ -8,5 +8,6 @@ services:
       - NET_ADMIN
     environment:
       - JWT_SECRET=SuperSecretValue
+      - FIREWALL_BACKEND=nftables
     volumes:
       - ./application.db:/app/application.db

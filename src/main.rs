@@ -16,15 +16,33 @@ use crate::persistence::repository::Repositories;
 use crate::state::AppState;
 use crate::system::firewall::FirewallBackend;
 use crate::system::firewall::mock::MockFirewall;
+use crate::system::firewall::nftables::NftablesFirewall;
 
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn std::error::Error>> {
     let config = AppConfig::new();
 
-    let pool = initialization::run_startup_sequence().await?;
+    let pool = initialization::run_startup_sequence(&config.database_path).await?;
     let repositories = Repositories::new(pool);
 
-    let firewall = Arc::new(MockFirewall);
+    let firewall: Arc<dyn FirewallBackend> = match config.firewall_backend.as_str() {
+        "nftables" => {
+            println!("🛡️ Selected Backend: NFTables (Linux)");
+            Arc::new(NftablesFirewall::new())
+        },
+        "mock" => {
+            println!("🛡️ Selected Backend: Mock (Safe Mode)");
+            Arc::new(MockFirewall)
+        },
+        &_ => {
+            println!("Invalid firewall backend specified in FIREWALL_BACKEND env var");
+            return Err("Invalid firewall backend specified".into());
+        }
+    };
+
+    firewall.setup().await.map_err(|e| {
+        format!("Firewall setup failed: {:?}", e)
+    })?;
 
     println!("🔥 Verifying firewall configuration...");
     firewall.validate_config().await.map_err(|e| {
