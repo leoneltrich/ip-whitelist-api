@@ -11,12 +11,12 @@ pub mod middleware;
 pub fn app(state: AppState) -> Router {
 
     let public = routes::public_routes();
-    let protected_user = routes::protected_routes();
+    let users = routes::user_routes();
     let admin = routes::admin_routes();
 
     let secure_api = Router::new()
-        .merge(protected_user)
-        .merge(admin) // <--- Merging it here!
+        .nest("/admin", admin)
+        .nest("/users", users)
         .layer(axum::middleware::from_fn_with_state(
             state.clone(),
             middleware::auth::auth,

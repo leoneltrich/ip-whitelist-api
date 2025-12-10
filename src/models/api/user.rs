@@ -13,3 +13,8 @@ pub struct UpdateUserRequest {
     pub password: String,
     pub is_admin: bool,
 }
+
+#[derive(Deserialize)]
+pub struct UpdateProfileRequest {
+    pub password: String,
+}
