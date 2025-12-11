@@ -44,13 +44,14 @@ pub async fn request_access(
 /// Hardened IP Extraction
 ///
 /// Strictly enforces trusted headers.
-/// Does NOT blindly trust X-Forwarded-For chains.
 fn get_real_ip(headers: &HeaderMap, addr: SocketAddr) -> Option<IpAddr> {
 
+    // The order of those is important to give the CF header a higher priority than the X-Real-IP
     if let Some(ip) = extract_header(headers, "CF-Connecting-IP") {
         return Some(ip);
     }
 
+    // The order of those is important to give the X-Real-IP header a higher priority than the src
     if let Some(ip) = extract_header(headers, "X-Real-IP") {
         return Some(ip);
     }
