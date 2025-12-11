@@ -41,12 +41,27 @@ pub async fn request_access(
     Ok(Json(response))
 }
 
-/// Helper to parse X-Forwarded-For or fall back to socket address
+/// Hardened IP Extraction
+///
+/// Strictly enforces trusted headers.
+/// Does NOT blindly trust X-Forwarded-For chains.
 fn get_real_ip(headers: &HeaderMap, addr: SocketAddr) -> Option<IpAddr> {
+
+    if let Some(ip) = extract_header(headers, "CF-Connecting-IP") {
+        return Some(ip);
+    }
+
+    if let Some(ip) = extract_header(headers, "X-Real-IP") {
+        return Some(ip);
+    }
+
+    Some(addr.ip())
+}
+
+/// Helper to extract and parse a single IP header
+fn extract_header(headers: &HeaderMap, key: &str) -> Option<IpAddr> {
     headers
-        .get("X-Forwarded-For")
+        .get(key)
         .and_then(|hv| hv.to_str().ok())
-        .and_then(|s| s.split(',').next()) // Get first IP in list
         .and_then(|s| s.trim().parse::<IpAddr>().ok())
-        .or(Some(addr.ip()))
 }

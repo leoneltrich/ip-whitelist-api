@@ -9,12 +9,9 @@ pub mod nftables;
 
 #[async_trait]
 pub trait FirewallBackend: Send + Sync {
-    /// Grants access to a specific IP for a specific duration.
-    /// If the IP exists, the timer is reset.
-    async fn grant_access(&self, ip: IpAddr, duration: Duration) -> Result<(), AppError>;
+    async fn setup(&self) -> Result<(), AppError>;
 
-    /// (Optional) Validates that the firewall is configured correctly on startup
+    async fn grant_access(&self, ip: IpAddr, port: u16, duration: Duration) -> Result<(), AppError>;
+
     async fn validate_config(&self) -> Result<(), AppError>;
-
-    async fn setup(&self) -> Result<(), AppError>; // <--- New Method
 }

@@ -8,15 +8,19 @@ const ACCESS_DURATION: Duration = Duration::from_secs(12 * 60 * 60);
 
 pub async fn grant_access(
     state: &AppState,
-    _req: AccessRequest,
+    req: AccessRequest,
     requester_ip: IpAddr
 ) -> Result<AccessResponse, AppError> {
 
-    state.firewall.grant_access(requester_ip, ACCESS_DURATION).await?;
+    let server = state.repositories.server.get_server_by_name(&req.server_id).await
+        .map_err(|e| AppError::InternalServerError(e.to_string()))?
+        .ok_or(AppError::NotFound)?;
+
+    state.firewall.grant_access(requester_ip, server.port, ACCESS_DURATION).await?;
 
     Ok(AccessResponse {
         status: "success".to_string(),
-        message: format!("IP {} has been whitelisted.", requester_ip),
+        message: format!("Access granted to '{}' on port {} for 12h.", server.servername, server.port),
         expires_in: "12h".to_string(),
     })
 }
