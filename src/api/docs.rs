@@ -1,6 +1,6 @@
 use utoipa::OpenApi;
 use crate::api::routes;
-use crate::models::api::{access, auth, server, token, user};
+use crate::models::api::{access, auth, server, token, user, health};
 
 #[derive(OpenApi)]
 #[openapi(

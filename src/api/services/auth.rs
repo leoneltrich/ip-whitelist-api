@@ -12,7 +12,6 @@ use subtle::ConstantTimeEq; // Optional but recommended for boolean checks, thou
 
 pub async fn login(state: &AppState, req: LoginRequest) -> Result<LoginResponse, AppError> {
 
-
     let user_option = state
         .repositories
         .user
@@ -20,7 +19,7 @@ pub async fn login(state: &AppState, req: LoginRequest) -> Result<LoginResponse,
         .await
         .map_err(|e| AppError::InternalServerError(e.to_string()))?;
 
-    let dummy_hash = "$argon2id$v=19$m=19456,t=2,p=1$DummyHashSaltStringShouldBeValidLength$DummyHashSignatureStringShouldBeValidLength";
+    let dummy_hash = "$2b$12$J5YHkgw7QJrhL8etGOZMpObtChFL4rxSDdYNAMqC.k5AWikbDkhau";
 
     let (hash_to_verify, user_found) = match &user_option {
         Some(user) => (user.password_hash.as_str(), Some(user)),
