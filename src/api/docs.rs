@@ -1,6 +1,6 @@
 use utoipa::OpenApi;
 use crate::api::routes;
-use crate::models::api::{access, auth, server, user};
+use crate::models::api::{access, auth, server, token, user};
 
 #[derive(OpenApi)]
 #[openapi(
@@ -25,6 +25,10 @@ use crate::models::api::{access, auth, server, user};
 
         // --- User: Self Management ---
         routes::user::self_update_user,
+
+        routes::token::expires,
+
+        routes::health::health_check,
     ),
     components(
         schemas(
@@ -45,13 +49,18 @@ use crate::models::api::{access, auth, server, user};
             user::CreateUserRequest,
             user::UpdateUserRequest,
             user::UpdateProfileRequest,
+
+            token::TokenExpiresResponse,
+
+            health::HealthResponse,
         )
     ),
     tags(
         (name = "Auth", description = "Authentication and Tokens"),
         (name = "Access", description = "Firewall and IP Whitelisting"),
         (name = "Admin", description = "System Administration (Servers & Users)"),
-        (name = "User", description = "User Self-Service")
+        (name = "User", description = "User Self-Service"),
+        (name = "Token", description = "JWT Token Management")
     ),
     // Attach the Security Scheme (JWT Bearer)
     modifiers(&SecurityAddon)

@@ -2,7 +2,7 @@
 FROM rustlang/rust:nightly-alpine3.22 AS builder
 
 # Install necessary build-time dependencies for a statically linked binary
-RUN apk add --no-cache musl-dev curl
+RUN apk add --no-cache musl-dev build-base curl ca-certificates
 
 # Set the working directory
 WORKDIR /usr/src/app

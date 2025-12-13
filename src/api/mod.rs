@@ -16,6 +16,7 @@ pub fn app(state: AppState) -> Router {
 
     let users = routes::user_routes();
     let admin = routes::admin_routes();
+    let token = routes::token_routes();
 
     let swagger = SwaggerUi::new("/swagger-ui")
         .url("/api-docs/openapi.json", ApiDoc::openapi());
@@ -27,6 +28,7 @@ pub fn app(state: AppState) -> Router {
     let secure_api = Router::new()
         .nest("/admin", admin)
         .nest("/users", users)
+        .nest("/token", token)
         .layer(axum::middleware::from_fn_with_state(
             state.clone(),
             middleware::auth::auth,

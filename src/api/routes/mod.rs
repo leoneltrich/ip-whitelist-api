@@ -2,6 +2,8 @@ pub mod user;
 pub mod auth;
 pub mod access;
 pub mod server;
+pub mod token;
+pub mod health;
 
 use crate::api::middleware::auth::require_admin;
 use crate::state::AppState;
@@ -12,7 +14,14 @@ use axum::{
 use axum::routing::get;
 
 pub fn public_routes() -> Router<AppState> {
-    Router::new().route("/login", post(auth::login))
+    Router::new()
+        .route("/login", post(auth::login))
+        .route("/health", get(health::health_check))
+}
+
+pub fn token_routes() -> Router<AppState> {
+    Router::new()
+        .route("/expires", get(token::expires))
 }
 
 pub fn user_routes() -> Router<AppState> {
