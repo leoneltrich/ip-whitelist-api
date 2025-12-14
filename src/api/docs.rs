@@ -10,6 +10,7 @@ use crate::models::api::{access, auth, server, token, user, health};
 
         // --- Access (Firewall) ---
         routes::access::request_access,
+        routes::access::check_access_status,
 
         // --- Admin: Server Management ---
         routes::server::create_server,
@@ -40,6 +41,7 @@ use crate::models::api::{access, auth, server, token, user, health};
             // Access DTOs
             access::AccessRequest,
             access::AccessResponse,
+            access::AccessStatusResponse,
 
             // Server DTOs
             server::CreateServerRequest,

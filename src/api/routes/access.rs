@@ -1,14 +1,12 @@
-use axum::{
-    extract::{ConnectInfo, State},
-    Json,
-    http::HeaderMap,
-    response::IntoResponse,
-};
+use axum::{extract::{ConnectInfo, State}, Json, http::HeaderMap, response::IntoResponse, Extension};
 use std::net::{IpAddr, SocketAddr};
+use axum::extract::Path;
+use crate::api::services;
 use crate::state::AppState;
-use crate::models::api::access::{AccessRequest, AccessResponse};
+use crate::models::api::access::{AccessRequest, AccessResponse, AccessStatusResponse};
 use crate::api::services::access as access_service;
 use crate::errors::AppError;
+use crate::models::api::auth::Claims;
 
 #[utoipa::path(
     post,
@@ -25,10 +23,10 @@ use crate::errors::AppError;
 )]
 pub async fn request_access(
     State(state): State<AppState>,
+    Extension(claims): Extension<Claims>,
     headers: HeaderMap,
-    // Axum extracts the socket info automatically
     ConnectInfo(addr): ConnectInfo<SocketAddr>,
-    Json(payload): Json<AccessRequest>,
+    Json(req): Json<AccessRequest>,
 ) -> Result<impl IntoResponse, AppError> {
 
     // 1. Determine the Real IP
@@ -36,7 +34,40 @@ pub async fn request_access(
     let ip = get_real_ip(&headers, addr).unwrap_or(addr.ip());
 
     // 2. Call Service
-    let response = access_service::grant_access(&state, payload, ip).await?;
+    let response = services::access::grant_access(&state, req, ip, &claims.sub).await?;
+
+    Ok(Json(response))
+}
+
+#[utoipa::path(
+    get,
+    path = "/users/access/{server}/status",
+    params(
+        ("server" = String, Path, description = "Server name to check")
+    ),
+    responses(
+        (status = 200, description = "Status retrieved", body = AccessStatusResponse),
+        (status = 401, description = "Unauthorized")
+    ),
+    security(("jwt" = []))
+)]
+pub async fn check_access_status(
+    State(state): State<AppState>,
+    Extension(claims): Extension<Claims>,
+    Path(server): Path<String>,
+    headers: HeaderMap,
+    ConnectInfo(addr): ConnectInfo<SocketAddr>,
+) -> Result<Json<AccessStatusResponse>, AppError> {
+
+    let ip = get_real_ip(&headers, addr)
+        .ok_or(AppError::InternalServerError("Could not determine IP".into()))?;
+
+    let response = services::access::get_access_status(
+        &state,
+        server,
+        claims.sub,
+        ip
+    ).await?;
 
     Ok(Json(response))
 }
