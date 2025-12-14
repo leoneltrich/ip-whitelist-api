@@ -60,5 +60,21 @@ async fn create_schema(pool: &SqlitePool) -> Result<(), Error> {
         );"
     ).execute(pool).await?;
 
+    sqlx::query(
+        "CREATE TABLE IF NOT EXISTS whitelist (
+            servername TEXT NOT NULL,
+            username TEXT NOT NULL,
+            ip_address TEXT NOT NULL,
+            expiration INTEGER NOT NULL,
+
+            -- Composite Primary Key
+            PRIMARY KEY (servername, username, ip_address),
+
+            -- Foreign Keys
+            FOREIGN KEY (servername) REFERENCES servers(servername) ON DELETE CASCADE,
+            FOREIGN KEY (username) REFERENCES users(username) ON DELETE CASCADE
+        );"
+    ).execute(pool).await?;
+
     Ok(())
 }

@@ -6,7 +6,7 @@ use axum::{
 };
 use serde_json::json;
 use crate::state::AppState;
-use crate::models::api::server::{CreateServerRequest, ServerResponse, UpdateServerRequest};
+use crate::models::api::server::{CreateServerRequest, ServerExistsResponse, ServerResponse, UpdateServerRequest};
 use crate::api::services::server as server_service;
 use crate::errors::AppError;
 
@@ -123,4 +123,29 @@ pub async fn delete_server(
         StatusCode::OK,
         Json(json!({"status": "success", "message": "Server deleted"}))
     ))
+}
+
+#[utoipa::path(
+    get,
+    path = "/users/servers/{name}/exists",
+    params(
+        ("name" = String, Path, description = "Server name to check")
+    ),
+    responses(
+        (status = 200, description = "Check result", body = ServerExistsResponse),
+        (status = 401, description = "Unauthorized"),
+    ),
+    security(("jwt" = []))
+)]
+pub async fn check_server_exists(
+    State(state): State<AppState>,
+    Path(name): Path<String>,
+) -> Result<Json<ServerExistsResponse>, AppError> {
+
+    // We reuse the existing repository function
+    let exists = state.repositories.server.get_server_by_name(&name).await
+        .map_err(|e| AppError::InternalServerError(e.to_string()))?
+        .is_some();
+
+    Ok(Json(ServerExistsResponse { exists }))
 }

@@ -54,3 +54,9 @@ pub struct ServerResponse {
     #[schema(example = true)]
     pub has_token: bool,
 }
+
+#[derive(Debug, Serialize, ToSchema)]
+pub struct ServerExistsResponse {
+    #[schema(example = true)]
+    pub exists: bool,
+}

@@ -28,6 +28,7 @@ pub fn user_routes() -> Router<AppState> {
     Router::new()
         .route("/profile", put(user::self_update_user))
         .route("/access", post(access::request_access))
+        .route("/servers/{name}/exists", get(server::check_server_exists))
 }
 
 pub fn admin_routes() -> Router<AppState> {

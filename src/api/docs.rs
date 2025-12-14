@@ -17,6 +17,7 @@ use crate::models::api::{access, auth, server, token, user, health};
         routes::server::get_server,
         routes::server::update_server,
         routes::server::delete_server,
+        routes::server::check_server_exists,
 
         // --- Admin: User Management ---
         routes::user::create_user,
@@ -44,6 +45,7 @@ use crate::models::api::{access, auth, server, token, user, health};
             server::CreateServerRequest,
             server::UpdateServerRequest,
             server::ServerResponse,
+            server::ServerExistsResponse,
 
             // User DTOs
             user::CreateUserRequest,

@@ -6,9 +6,8 @@ use crate::models::api::auth::{Claims, LoginRequest, LoginResponse};
 use crate::state::AppState;
 
 use crate::security::hashing;
-use jsonwebtoken::{EncodingKey, Header, encode};
+use jsonwebtoken::{encode, EncodingKey, Header};
 
-use subtle::ConstantTimeEq; // Optional but recommended for boolean checks, though verify_password is the main bottleneck here.
 
 pub async fn login(state: &AppState, req: LoginRequest) -> Result<LoginResponse, AppError> {
 
