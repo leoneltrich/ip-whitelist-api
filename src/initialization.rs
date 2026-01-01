@@ -58,7 +58,7 @@ async fn bootstrap_admin(repos: &Repositories) -> Result<(), Box<dyn std::error:
     println!("DEFAULT ADMIN CREATED");
     println!("Username: {}", admin_username);
     println!("Password: {}", password_plain);
-    println!("AVE THIS PASSWORD NOW. IT WILL NOT BE SHOWN AGAIN.");
+    println!("SAVE THIS PASSWORD NOW. IT WILL NOT BE SHOWN AGAIN.");
     println!("========================================================\n");
 
     Ok(())
