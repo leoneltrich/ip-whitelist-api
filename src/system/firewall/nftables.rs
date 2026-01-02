@@ -15,8 +15,8 @@ pub struct NftablesFirewall {
 impl NftablesFirewall {
     pub fn new() -> Self {
         Self {
-            table: "access_proxy".to_string(),
-            chain: "filter_input".to_string(),
+            table: "filter".to_string(),
+            chain: "input".to_string(),
             set: "allowed_clients".to_string(),
             api_port: 3000,
         }
