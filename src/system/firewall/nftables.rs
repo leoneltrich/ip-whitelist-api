@@ -41,40 +41,32 @@ impl NftablesFirewall {
 #[async_trait]
 impl FirewallBackend for NftablesFirewall {
     async fn setup(&self) -> Result<(), AppError> {
-        println!("Initializing NFTables (Port-Specific Mode)...");
+        println!("Integrating with Main NFTables (inet filter)...");
 
-        // 1. Create Table
-        self.run_nft_cmd(&["add", "table", "inet", &self.table])?;
 
-        // 2. Create Chain
-        self.run_nft_cmd(&[
-            "add", "chain", "inet", &self.table, &self.chain,
-            "{ type filter hook input priority 0; }"
-        ])?;
-        self.run_nft_cmd(&["flush", "chain", "inet", &self.table, &self.chain])?;
-
-        // 3. Create the Set (Concatenation Type)
-        // "type ipv4_addr . inet_service" means "Match IP AND Port"
         self.run_nft_cmd(&[
             "add", "set", "inet", &self.table, &self.set,
             "{ type ipv4_addr . inet_service; flags timeout; }"
         ])?;
 
-        // 4. RULE: Allow API Traffic (Port 3000)
-        let api_port = self.api_port.to_string();
-        self.run_nft_cmd(&[
-            "add", "rule", "inet", &self.table, &self.chain,
-            "tcp", "dport", &api_port, "accept"
-        ])?;
-
-        // 5. RULE: Allow from Map
-        // "ip saddr . tcp dport @set_name accept"
-        // This checks if the PACKET'S Source IP + Dest Port exist in our list
         let set_ref = format!("@{}", self.set);
-        self.run_nft_cmd(&[
-            "add", "rule", "inet", &self.table, &self.chain,
-            "ip", "saddr", ".", "tcp", "dport", &set_ref, "accept"
-        ])?;
+
+        let check_cmd = Command::new("nft")
+            .args(&["list", "chain", "inet", &self.table, &self.chain])
+            .output()
+            .map_err(|e| AppError::InternalServerError(format!("Failed to check nft: {}", e)))?;
+
+        let existing_rules = String::from_utf8_lossy(&check_cmd.stdout);
+
+        if !existing_rules.contains(&set_ref) {
+            println!("Rule not found. Inserting whitelist rule...");
+            self.run_nft_cmd(&[
+                "insert", "rule", "inet", &self.table, &self.chain,
+                "ip", "saddr", ".", "tcp", "dport", &set_ref, "accept"
+            ])?;
+        } else {
+            println!("Whitelist rule already exists in the main chain. Skipping insertion.");
+        }
 
         Ok(())
     }
