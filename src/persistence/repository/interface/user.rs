@@ -15,4 +15,7 @@ pub trait UserRepository {
 
     /// Deletes the user.
     async fn delete_user(&self, username: &str) -> Result<usize, Error>;
+
+    /// Returns all users.
+    async fn get_all_users(&self) -> Result<Vec<User>, Error>;
 }

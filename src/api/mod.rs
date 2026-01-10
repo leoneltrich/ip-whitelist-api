@@ -1,10 +1,9 @@
+use crate::api::docs::ApiDoc;
+use crate::state::AppState;
 // src/api/mod.rs
 use axum::Router;
 use utoipa::OpenApi;
 use utoipa_swagger_ui::SwaggerUi;
-use crate::api::docs::ApiDoc;
-use crate::persistence::repository::Repositories;
-use crate::state::AppState;
 
 pub mod routes;
 pub mod services;
@@ -22,7 +21,7 @@ pub fn app(state: AppState) -> Router {
         .url("/api-docs/openapi.json", ApiDoc::openapi());
 
     let public_api = Router::new()
-        .merge(swagger)                   // Swagger is public
+        .merge(swagger)
         .merge(routes::public_routes());
 
     let secure_api = Router::new()
@@ -34,7 +33,6 @@ pub fn app(state: AppState) -> Router {
             middleware::auth::auth,
         ));
 
-    // 3. Final Assembly
     Router::new()
         .merge(public_api)
         .merge(secure_api)

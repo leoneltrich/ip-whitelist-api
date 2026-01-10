@@ -58,4 +58,14 @@ impl UserRepository for SqliteUserRepository {
 
         Ok(result.rows_affected() as usize)
     }
+
+    async fn get_all_users(&self) -> Result<Vec<User>, Error> {
+        let result = sqlx::query_as::<_, User>(
+            "SELECT username, password_hash, is_admin FROM users"
+        )
+            .fetch_all(&self.pool)
+            .await?;
+
+        Ok(result)
+    }
 }

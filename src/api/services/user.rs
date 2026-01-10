@@ -1,6 +1,6 @@
 use crate::errors::AppError;
 // src/api/services/user.rs
-use crate::models::api::user::{CreateUserRequest, UpdateUserRequest};
+use crate::models::api::user::{CreateUserRequest, UpdateUserRequest, UserResponse};
 use crate::models::database::user::User;
 use crate::security::hashing;
 use crate::state::AppState;
@@ -77,4 +77,20 @@ pub async fn delete_user(state: &AppState, username: String) -> Result<(), AppEr
     }
 
     Ok(())
+}
+
+pub async fn get_all_users(state: &AppState) -> Result<Vec<UserResponse>, AppError> {
+    let users = state
+        .repositories
+        .user
+        .get_all_users()
+        .await
+        .map_err(|e| AppError::InternalServerError(e.to_string()))?;
+
+    let response: Vec<UserResponse> = users
+        .into_iter()
+        .map(UserResponse::from)
+        .collect();
+
+    Ok(response)
 }

@@ -24,6 +24,7 @@ use crate::models::api::{access, auth, server, token, user, health};
         routes::user::create_user,
         routes::user::admin_update_user,
         routes::user::delete_user,
+        routes::user::get_all_users,
 
         // --- User: Self Management ---
         routes::user::self_update_user,
@@ -53,6 +54,7 @@ use crate::models::api::{access, auth, server, token, user, health};
             user::CreateUserRequest,
             user::UpdateUserRequest,
             user::UpdateProfileRequest,
+            user::UserResponse,
 
             token::TokenExpiresResponse,
 

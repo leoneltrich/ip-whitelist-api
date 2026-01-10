@@ -34,8 +34,9 @@ pub fn user_routes() -> Router<AppState> {
 
 pub fn admin_routes() -> Router<AppState> {
     Router::new()
+        .route("/users", get(user::get_all_users))
         .route("/users", post(user::create_user))
-        .route("/users", put(user::admin_update_user)) // <--- Use the Admin Handler
+        .route("/users", put(user::admin_update_user)) 
         .route("/users/{username}", delete(user::delete_user))
         .route("/servers", post(server::create_server))
 
