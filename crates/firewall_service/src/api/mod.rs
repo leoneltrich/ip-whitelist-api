@@ -19,7 +19,7 @@ pub fn app(state: AppState) -> Router {
 
     let secure_api = Router::new()
         .nest("/admin", routes::admin_routes())
-        .merge(routes::user_routes())
+        .nest("/users", routes::user_routes())
         .layer(axum::middleware::from_fn_with_state(
             state.clone(),
             middleware::auth::auth,
