@@ -55,6 +55,7 @@ use crate::models::api::{access, auth, server, token, user, health};
             user::UpdateUserRequest,
             user::UpdateProfileRequest,
             user::UserResponse,
+            user::UserListResponse,
 
             token::TokenExpiresResponse,
 

@@ -2,14 +2,14 @@
 use crate::api::services::user as user_service;
 use crate::errors::AppError;
 use crate::models::api::auth::Claims;
-use crate::models::api::user::{CreateUserRequest, UpdateProfileRequest, UpdateUserRequest, UserResponse};
+use crate::models::api::user::{CreateUserRequest, UpdateProfileRequest, UpdateUserRequest, UserListResponse};
 use crate::state::AppState;
 // src/api/routes/user.rs
 use axum::{
-    Extension, Json,
-    extract::{Path, State},
-    http::StatusCode,
+    extract::{Path, State}, http::StatusCode,
     response::IntoResponse,
+    Extension,
+    Json,
 };
 use serde_json::json;
 
@@ -135,7 +135,7 @@ pub async fn delete_user(
     get,
     path = "/admin/users",
     responses(
-        (status = 200, description = "List of all users retrieved successfully", body = [UserResponse]),
+        (status = 200, description = "List of all users retrieved successfully", body = UserListResponse),
         (status = 500, description = "Internal Server Error"),
         (status = 401, description = "Unauthorized")
     ),
@@ -147,11 +147,13 @@ pub async fn get_all_users(
 
     let users = user_service::get_all_users(&state).await?;
 
+    let response = UserListResponse {
+        status: "success".to_string(),
+        data: users,
+    };
+
     Ok((
         StatusCode::OK,
-        Json(json!({
-            "status": "success",
-            "data": users
-        })),
+        Json(response),
     ))
 }

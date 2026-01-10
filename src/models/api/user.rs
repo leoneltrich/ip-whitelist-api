@@ -1,7 +1,14 @@
 use serde::{Deserialize, Serialize};
 use utoipa::ToSchema;
 use crate::models::database::user::User;
-// <--- Import ToSchema
+
+#[derive(Serialize, ToSchema)]
+pub struct UserListResponse {
+    #[schema(example = "success")]
+    pub status: String,
+
+    pub data: Vec<UserResponse>,
+}
 
 #[derive(Serialize, ToSchema)]
 pub struct UserResponse {
