@@ -1,6 +1,7 @@
 use utoipa::OpenApi;
 use crate::api::routes;
 use shared::auth_models as auth;
+use shared::health_models as health;
 use crate::models::api::{token, user};
 
 #[derive(OpenApi)]
@@ -19,6 +20,8 @@ use crate::models::api::{token, user};
         routes::user::self_update_user,
 
         routes::token::expires,
+        
+        routes::health::health_check,
     ),
     components(
         schemas(
@@ -34,6 +37,8 @@ use crate::models::api::{token, user};
             user::UserListResponse,
 
             token::TokenExpiresResponse,
+            
+            health::HealthResponse,
         )
     ),
     tags(

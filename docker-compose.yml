@@ -1,15 +1,35 @@
-version: '3.8'
-
 services:
-  app:
-    build: .
-    network_mode: host
-    container_name: firewall-api
-    cap_add:
-      - NET_ADMIN
-    environment:
-      - JWT_SECRET=SuperSecretValue
-      - FIREWALL_BACKEND=nftables
-      - DATABASE_PATH=/app/application.db
+  nginx:
+    image: nginx:alpine
+    ports:
+      - "80:80"
     volumes:
-      - ./application.db:/app/application.db
+      - ./nginx.conf:/etc/nginx/nginx.conf:ro
+    depends_on:
+      - auth_service
+      - firewall_service
+
+  auth_service:
+    build:
+      context: .
+      target: auth_service
+    environment:
+      - DATABASE_PATH=/data/auth.db
+      - PRIVATE_KEY_PATH=/secrets/private.pem
+      - PUBLIC_KEY_PATH=/secrets/public.pem
+    volumes:
+      - ./data:/data
+      - ./private.pem:/secrets/private.pem:ro
+      - ./public.pem:/secrets/public.pem:ro
+
+  firewall_service:
+    build:
+      context: .
+      target: firewall_service
+    environment:
+      - DATABASE_PATH=/data/firewall.db
+      - PUBLIC_KEY_PATH=/secrets/public.pem
+      - FIREWALL_BACKEND=mock
+    volumes:
+      - ./data:/data
+      - ./public.pem:/secrets/public.pem:ro

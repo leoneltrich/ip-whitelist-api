@@ -1,0 +1,20 @@
+[package]
+name = "auth_service"
+version = "0.1.0"
+edition = "2024"
+
+[dependencies]
+shared = { path = "../shared" }
+axum = "0.8.7"
+tokio = { version = "1", features = ["full"] }
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"
+sqlx = { version = "0.8.6", features = ["runtime-tokio", "sqlite", "macros"] }
+async-trait = "0.1.89"
+bcrypt = "0.17.1"
+chrono = { version = "0.4", features = ["serde"] }
+rand = "0.9.2"
+subtle = "2.6.1"
+utoipa = { version = "5.4.0", features = ["axum_extras"] }
+utoipa-swagger-ui = { version = "9.0.2", features = ["axum"] }
+# jsonwebtoken is not needed here if we only use it via shared (unless we use types from it)
