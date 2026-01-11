@@ -37,44 +37,5 @@ async fn create_schema(pool: &SqlitePool) -> Result<(), Error> {
         );"
     ).execute(pool).await?;
 
-    // Server Table
-    sqlx::query(
-        "CREATE TABLE IF NOT EXISTS servers (
-            servername TEXT PRIMARY KEY,
-            port INTEGER NOT NULL,
-            api_startup_method TEXT, -- No longer 'NOT NULL'
-            api_startup_link TEXT,   -- No longer 'NOT NULL'
-            api_startup_token TEXT   -- No longer 'NOT NULL'
-            -- ip_address is removed
-        );"
-    ).execute(pool).await?;
-
-    // Mapping Table
-    sqlx::query(
-        "CREATE TABLE IF NOT EXISTS user_server_map (
-            username TEXT NOT NULL,
-            servername TEXT NOT NULL,
-            PRIMARY KEY (username, servername),
-            FOREIGN KEY (username) REFERENCES users(username) ON DELETE CASCADE,
-            FOREIGN KEY (servername) REFERENCES servers(servername) ON DELETE CASCADE
-        );"
-    ).execute(pool).await?;
-
-    sqlx::query(
-        "CREATE TABLE IF NOT EXISTS whitelist (
-            servername TEXT NOT NULL,
-            username TEXT NOT NULL,
-            ip_address TEXT NOT NULL,
-            expiration INTEGER NOT NULL,
-
-            -- Composite Primary Key
-            PRIMARY KEY (servername, username, ip_address),
-
-            -- Foreign Keys
-            FOREIGN KEY (servername) REFERENCES servers(servername) ON DELETE CASCADE,
-            FOREIGN KEY (username) REFERENCES users(username) ON DELETE CASCADE
-        );"
-    ).execute(pool).await?;
-
     Ok(())
 }

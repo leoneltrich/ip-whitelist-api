@@ -52,6 +52,16 @@ async fn create_schema(pool: &SqlitePool) -> Result<(), sqlx::Error> {
         );"
     ).execute(pool).await?;
 
+    // User Server Mapping Table (Permissions)
+    sqlx::query(
+        "CREATE TABLE IF NOT EXISTS user_server_map (
+            username TEXT NOT NULL,
+            servername TEXT NOT NULL,
+            PRIMARY KEY (username, servername),
+            FOREIGN KEY (servername) REFERENCES servers(servername) ON DELETE CASCADE
+        );"
+    ).execute(pool).await?;
+
     println!("✅ Database schema initialized.");
     Ok(())
 }
