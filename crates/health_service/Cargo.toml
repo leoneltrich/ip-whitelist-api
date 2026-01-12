@@ -1,0 +1,16 @@
+[package]
+name = "health_service"
+version = "0.1.0"
+edition = "2024"
+
+[dependencies]
+axum = "0.8.1"
+tokio = { version = "1.43", features = ["full"] }
+serde = { version = "1.0", features = ["derive"] }
+serde_json = "1.0"
+reqwest = { version = "0.12.12", default-features = false, features = ["json", "rustls-tls"] }
+utoipa = { version = "5.4.0", features = ["axum_extras", "chrono"] }
+utoipa-swagger-ui = { version = "9.0.0", features = ["axum"] }
+chrono = { version = "0.4", features = ["serde"] }
+tracing = "0.1.41"
+tracing-subscriber = { version = "0.3.19", features = ["env-filter"] }

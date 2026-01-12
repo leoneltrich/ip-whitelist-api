@@ -8,6 +8,7 @@ services:
     depends_on:
       - auth_service
       - firewall_service
+      - health_service
 
   auth_service:
     build:
@@ -22,9 +23,23 @@ services:
       - ./private.pem:/secrets/private.pem:ro
       - ./public.pem:/secrets/public.pem:ro
     labels:
-      - "mesh1.proxy.enable=true"                  # REQUIRED: Enables discovery
-      - "mesh1.proxy.port=3000"                    # Internal port (default: 3000)
-      - "mesh1.proxy.spec_path=/api-docs/openapi.json" # Path to JSON spec (default: /api-docs/openapi.json)
+      - "mesh1.proxy.enable=true"
+      - "mesh1.proxy.port=3000"
+      - "mesh1.proxy.spec_path=/api-docs/openapi.json"
+
+  health_service:
+    build:
+      context: .
+      target: health_service
+    environment:
+      - HEALTH_CONFIG_PATH=/config/services.json
+      - HEALTH_PORT=3002
+    volumes:
+      - ./services.json:/config/services.json:ro
+    labels:
+      - "mesh1.proxy.enable=true"
+      - "mesh1.proxy.port=3002"
+      - "mesh1.proxy.spec_path=/api-docs/openapi.json"
 
   firewall_service:
     build:

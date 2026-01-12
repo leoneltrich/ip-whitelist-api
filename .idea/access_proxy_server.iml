@@ -11,6 +11,7 @@
       <sourceFolder url="file://$MODULE_DIR$/crates/firewall_service/src" isTestSource="false" />
       <sourceFolder url="file://$MODULE_DIR$/crates/shared/src" isTestSource="false" />
       <sourceFolder url="file://$MODULE_DIR$/src" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/crates/health_service/src" isTestSource="false" />
       <excludeFolder url="file://$MODULE_DIR$/.venv" />
       <excludeFolder url="file://$MODULE_DIR$/target" />
     </content>

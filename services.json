@@ -1,0 +1,19 @@
+{
+  "refresh_interval_ms": 5000,
+  "services": [
+    {
+      "name": "auth_service",
+      "url": "http://auth_service:3000/health",
+      "required": true,
+      "timeout_ms": 1000,
+      "initial_delay_s": 5
+    },
+    {
+      "name": "firewall_service",
+      "url": "http://firewall_service:3001/health",
+      "required": true,
+      "timeout_ms": 1000,
+      "initial_delay_s": 5
+    }
+  ]
+}

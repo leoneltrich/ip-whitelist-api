@@ -27,3 +27,10 @@ WORKDIR /app
 RUN apk add --no-cache libgcc nftables
 COPY --from=builder /app/target/release/firewall_service .
 CMD ["./firewall_service"]
+
+# --- Health Service Image ---
+FROM alpine:3.20 AS health_service
+WORKDIR /app
+RUN apk add --no-cache libgcc
+COPY --from=builder /app/target/release/health_service .
+CMD ["./health_service"]

@@ -5,4 +5,5 @@ members = [
     "crates/shared",
     "crates/auth_service",
     "crates/firewall_service",
+    "crates/health_service",
 ]
