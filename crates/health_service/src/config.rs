@@ -39,23 +39,89 @@ fn default_timeout() -> u64 { 1000 }
 fn default_initial_delay() -> u64 { 5 }
 
 impl Config {
-    pub async fn load() -> Result<Self, Box<dyn std::error::Error>> {
+    pub async fn load_from_env() -> Result<Self, Box<dyn std::error::Error>> {
         let config_path = env::var("HEALTH_CONFIG_PATH").unwrap_or_else(|_| "services.json".to_string());
         
-        if !Path::new(&config_path).exists() {
-            return Err(format!("Configuration file not found at: {}", config_path).into());
+        let port_override = env::var("HEALTH_PORT")
+            .ok()
+            .and_then(|p| p.parse().ok());
+
+        Self::load_internal(&config_path, port_override).await
+    }
+
+    pub async fn load_internal(path: &str, port_override: Option<u16>) -> Result<Self, Box<dyn std::error::Error>> {
+        if !Path::new(path).exists() {
+            return Err(format!("Configuration file not found at: {}", path).into());
         }
 
-        let content = fs::read_to_string(&config_path).await?;
+        let content = fs::read_to_string(path).await?;
         let mut config: Config = serde_json::from_str(&content)?;
 
-        // Override port from env if present (double check to ensure env var takes precedence if not set in JSON)
-        if let Ok(port_str) = env::var("HEALTH_PORT") {
-            if let Ok(p) = port_str.parse() {
-                config.port = p;
-            }
+        if let Some(p) = port_override {
+            config.port = p;
         }
 
         Ok(config)
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use std::io::Write;
+    use tempfile::NamedTempFile;
+
+    #[tokio::test]
+    async fn test_load_returns_error_when_file_not_found() {
+        // Arrange
+        let path = "non_existent_file.json";
+
+        // Act
+        let result = Config::load_internal(path, None).await;
+
+        // Assert
+        assert!(result.is_err());
+    }
+
+    #[tokio::test]
+    async fn test_load_parses_valid_json_with_defaults() {
+        // Arrange
+        let mut temp_file = NamedTempFile::new().unwrap();
+        let json_content = r#"{
+            "services": [
+                {
+                    "name": "test_service",
+                    "url": "http://localhost"
+                }
+            ]
+        }"#;
+        writeln!(temp_file, "{}", json_content).unwrap();
+        
+        let path = temp_file.path().to_str().unwrap();
+
+        // Act
+        let config = Config::load_internal(path, None).await.expect("Failed to load config");
+
+        // Assert
+        assert_eq!(config.port, 3002); // Default port from struct (serde default)
+        assert_eq!(config.refresh_interval_ms, 10000); // Default interval
+        assert_eq!(config.services.len(), 1);
+        
+        let service = &config.services[0];
+        assert_eq!(service.name, "test_service");
+    }
+
+    #[tokio::test]
+    async fn test_load_applies_port_override() {
+        // Arrange
+        let mut temp_file = NamedTempFile::new().unwrap();
+        writeln!(temp_file, "{}", r#"{ "services": [] }"#).unwrap();
+        let path = temp_file.path().to_str().unwrap();
+
+        // Act
+        let config = Config::load_internal(path, Some(9090)).await.unwrap();
+
+        // Assert
+        assert_eq!(config.port, 9090);
     }
 }

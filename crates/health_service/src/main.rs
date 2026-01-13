@@ -19,7 +19,7 @@ async fn main() {
     info!("Health Service starting up...");
 
     // 1. Load Config
-    let config = match Config::load().await {
+    let config = match Config::load_from_env().await {
         Ok(c) => c,
         Err(e) => {
             error!("Fatal: {}", e);

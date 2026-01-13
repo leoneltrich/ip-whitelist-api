@@ -64,3 +64,72 @@ async fn get_all_services(State(state): State<SharedHealthState>) -> Json<System
     let read_guard = state.read().await;
     Json(read_guard.clone())
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use axum::{
+        body::Body,
+        http::{Request, StatusCode},
+    };
+    use tower::ServiceExt; // for `oneshot`
+    use std::sync::Arc;
+    use tokio::sync::RwLock;
+
+    #[tokio::test]
+    async fn test_health_check_returns_200_when_status_is_up() {
+        // Arrange
+        let mut health = SystemHealth::new();
+        health.status = HealthStatus::Up;
+        let state = Arc::new(RwLock::new(health));
+        
+        let app = router(state);
+
+        // Act
+        let response = app
+            .oneshot(Request::builder().uri("/health").body(Body::empty()).unwrap())
+            .await
+            .unwrap();
+
+        // Assert
+        assert_eq!(response.status(), StatusCode::OK);
+    }
+
+    #[tokio::test]
+    async fn test_health_check_returns_503_when_status_is_down() {
+        // Arrange
+        let mut health = SystemHealth::new();
+        health.status = HealthStatus::Down;
+        let state = Arc::new(RwLock::new(health));
+        
+        let app = router(state);
+
+        // Act
+        let response = app
+            .oneshot(Request::builder().uri("/health").body(Body::empty()).unwrap())
+            .await
+            .unwrap();
+
+        // Assert
+        assert_eq!(response.status(), StatusCode::SERVICE_UNAVAILABLE);
+    }
+
+    #[tokio::test]
+    async fn test_health_check_returns_200_when_status_is_starting() {
+        // Arrange
+        let mut health = SystemHealth::new();
+        health.status = HealthStatus::Starting;
+        let state = Arc::new(RwLock::new(health));
+        
+        let app = router(state);
+
+        // Act
+        let response = app
+            .oneshot(Request::builder().uri("/health").body(Body::empty()).unwrap())
+            .await
+            .unwrap();
+
+        // Assert
+        assert_eq!(response.status(), StatusCode::OK);
+    }
+}

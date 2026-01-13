@@ -39,3 +39,15 @@ impl SystemHealth {
         }
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_system_health_new_initializes_with_starting_status() {
+        let health = SystemHealth::new();
+        assert_eq!(health.status, HealthStatus::Starting);
+        assert!(health.services.is_empty());
+    }
+}
