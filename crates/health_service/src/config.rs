@@ -7,10 +7,10 @@ use tokio::fs;
 pub struct Config {
     #[serde(default = "default_port")]
     pub port: u16,
-    
+
     #[serde(default = "default_refresh_interval")]
     pub refresh_interval_ms: u64,
-    
+
     pub services: Vec<ServiceConfig>,
 }
 
@@ -33,23 +33,33 @@ fn default_port() -> u16 {
         .unwrap_or(3002)
 }
 
-fn default_refresh_interval() -> u64 { 10000 }
-fn default_required() -> bool { true }
-fn default_timeout() -> u64 { 1000 }
-fn default_initial_delay() -> u64 { 5 }
+fn default_refresh_interval() -> u64 {
+    10000
+}
+fn default_required() -> bool {
+    true
+}
+fn default_timeout() -> u64 {
+    1000
+}
+fn default_initial_delay() -> u64 {
+    5
+}
 
 impl Config {
     pub async fn load_from_env() -> Result<Self, Box<dyn std::error::Error>> {
-        let config_path = env::var("HEALTH_CONFIG_PATH").unwrap_or_else(|_| "services.json".to_string());
-        
-        let port_override = env::var("HEALTH_PORT")
-            .ok()
-            .and_then(|p| p.parse().ok());
+        let config_path =
+            env::var("HEALTH_CONFIG_PATH").unwrap_or_else(|_| "services.json".to_string());
+
+        let port_override = env::var("HEALTH_PORT").ok().and_then(|p| p.parse().ok());
 
         Self::load_internal(&config_path, port_override).await
     }
 
-    pub async fn load_internal(path: &str, port_override: Option<u16>) -> Result<Self, Box<dyn std::error::Error>> {
+    pub async fn load_internal(
+        path: &str,
+        port_override: Option<u16>,
+    ) -> Result<Self, Box<dyn std::error::Error>> {
         if !Path::new(path).exists() {
             return Err(format!("Configuration file not found at: {}", path).into());
         }
@@ -96,17 +106,19 @@ mod tests {
             ]
         }"#;
         writeln!(temp_file, "{}", json_content).unwrap();
-        
+
         let path = temp_file.path().to_str().unwrap();
 
         // Act
-        let config = Config::load_internal(path, None).await.expect("Failed to load config");
+        let config = Config::load_internal(path, None)
+            .await
+            .expect("Failed to load config");
 
         // Assert
         assert_eq!(config.port, 3002); // Default port from struct (serde default)
         assert_eq!(config.refresh_interval_ms, 10000); // Default interval
         assert_eq!(config.services.len(), 1);
-        
+
         let service = &config.services[0];
         assert_eq!(service.name, "test_service");
     }

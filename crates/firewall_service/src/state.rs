@@ -1,6 +1,7 @@
 use crate::config::AppConfig;
 use crate::persistence::repository::Repositories;
 use crate::system::firewall::FirewallBackend;
+use shared::auth::middleware::AuthState;
 use std::sync::Arc;
 
 #[derive(Clone)]
@@ -21,5 +22,11 @@ impl AppState {
             repositories,
             firewall,
         }
+    }
+}
+
+impl AuthState for AppState {
+    fn public_key_pem(&self) -> &str {
+        &self.config.public_key_pem
     }
 }

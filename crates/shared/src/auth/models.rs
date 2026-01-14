@@ -1,5 +1,5 @@
-use serde::{Deserialize, Serialize};
 use chrono::{Duration, Utc};
+use serde::{Deserialize, Serialize};
 use utoipa::ToSchema; // <--- Import ToSchema
 
 // Token is valid for 24 hours

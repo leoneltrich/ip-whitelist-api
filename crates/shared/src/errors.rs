@@ -1,8 +1,8 @@
 // src/error.rs
 use axum::{
+    Json,
     http::StatusCode,
     response::{IntoResponse, Response},
-    Json,
 };
 use serde_json::json;
 
@@ -41,8 +41,14 @@ impl IntoResponse for AppError {
             AppError::InternalServerError(msg) => (StatusCode::INTERNAL_SERVER_ERROR, msg),
             AppError::NotFound => (StatusCode::NOT_FOUND, "Resource not found".to_string()),
             AppError::Conflict(msg) => (StatusCode::CONFLICT, msg),
-            AppError::InvalidCredentials => (StatusCode::UNAUTHORIZED, "Invalid username or password".to_string()),
-            AppError::InvalidToken => (StatusCode::UNAUTHORIZED, "Invalid, expired or missing token".to_string()),
+            AppError::InvalidCredentials => (
+                StatusCode::UNAUTHORIZED,
+                "Invalid username or password".to_string(),
+            ),
+            AppError::InvalidToken => (
+                StatusCode::UNAUTHORIZED,
+                "Invalid, expired or missing token".to_string(),
+            ),
             AppError::Forbidden => (StatusCode::FORBIDDEN, "Permission denied".to_string()),
         };
 

@@ -1,7 +1,7 @@
-use utoipa::OpenApi;
 use crate::api::routes;
 use crate::models::api::{access, server};
-use shared::health_models as health;
+use shared::health::models as health;
+use utoipa::OpenApi;
 
 #[derive(OpenApi)]
 #[openapi(
@@ -39,11 +39,9 @@ impl utoipa::Modify for SecurityAddon {
         let components = openapi.components.as_mut().unwrap();
         components.add_security_scheme(
             "jwt",
-            utoipa::openapi::security::SecurityScheme::Http(
-                utoipa::openapi::security::Http::new(
-                    utoipa::openapi::security::HttpAuthScheme::Bearer,
-                ),
-            ),
+            utoipa::openapi::security::SecurityScheme::Http(utoipa::openapi::security::Http::new(
+                utoipa::openapi::security::HttpAuthScheme::Bearer,
+            )),
         );
     }
 }

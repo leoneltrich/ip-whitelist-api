@@ -1,10 +1,10 @@
 use crate::api::services::auth;
-use shared::errors::AppError;
-use shared::auth_models::{LoginRequest, LoginResponse};
 use crate::state::AppState;
 use axum::http::StatusCode;
 use axum::{Json, extract::State, response::IntoResponse};
 use serde_json::json;
+use shared::auth::models::{LoginRequest, LoginResponse};
+use shared::errors::AppError;
 
 #[utoipa::path(
     post,

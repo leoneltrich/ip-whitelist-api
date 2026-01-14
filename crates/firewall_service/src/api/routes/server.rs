@@ -1,13 +1,15 @@
+use crate::api::services::server as server_service;
+use crate::models::api::server::{
+    CreateServerRequest, ServerExistsResponse, ServerResponse, UpdateServerRequest,
+};
+use crate::state::AppState;
 use axum::{
+    Json,
     extract::{Path, State},
     http::StatusCode,
-    Json,
     response::IntoResponse,
 };
 use serde_json::json;
-use crate::state::AppState;
-use crate::models::api::server::{CreateServerRequest, ServerExistsResponse, ServerResponse, UpdateServerRequest};
-use crate::api::services::server as server_service;
 use shared::errors::AppError;
 
 #[utoipa::path(
@@ -30,7 +32,7 @@ pub async fn create_server(
 
     Ok((
         StatusCode::CREATED,
-        Json(json!({"status": "success", "message": "Server created"}))
+        Json(json!({"status": "success", "message": "Server created"})),
     ))
 }
 
@@ -44,9 +46,7 @@ pub async fn create_server(
     ),
     security(("jwt" = []))
 )]
-pub async fn list_servers(
-    State(state): State<AppState>,
-) -> Result<impl IntoResponse, AppError> {
+pub async fn list_servers(State(state): State<AppState>) -> Result<impl IntoResponse, AppError> {
     let servers = server_service::list_servers(&state.repositories).await?;
     Ok(Json(servers))
 }
@@ -96,7 +96,7 @@ pub async fn update_server(
 
     Ok((
         StatusCode::OK,
-        Json(json!({"status": "success", "message": "Server updated"}))
+        Json(json!({"status": "success", "message": "Server updated"})),
     ))
 }
 
@@ -121,7 +121,7 @@ pub async fn delete_server(
 
     Ok((
         StatusCode::OK,
-        Json(json!({"status": "success", "message": "Server deleted"}))
+        Json(json!({"status": "success", "message": "Server deleted"})),
     ))
 }
 
@@ -141,9 +141,12 @@ pub async fn check_server_exists(
     State(state): State<AppState>,
     Path(name): Path<String>,
 ) -> Result<Json<ServerExistsResponse>, AppError> {
-
     // We reuse the existing repository function
-    let exists = state.repositories.server.get_server_by_name(&name).await
+    let exists = state
+        .repositories
+        .server
+        .get_server_by_name(&name)
+        .await
         .map_err(|e| AppError::InternalServerError(e.to_string()))?
         .is_some();
 

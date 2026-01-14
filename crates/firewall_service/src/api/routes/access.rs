@@ -1,11 +1,16 @@
-use axum::{extract::{ConnectInfo, State}, Json, http::HeaderMap, response::IntoResponse, Extension};
-use std::net::{IpAddr, SocketAddr};
-use axum::extract::Path;
 use crate::api::services;
-use crate::state::AppState;
 use crate::models::api::access::{AccessRequest, AccessResponse, AccessStatusResponse};
+use crate::state::AppState;
+use axum::extract::Path;
+use axum::{
+    Extension, Json,
+    extract::{ConnectInfo, State},
+    http::HeaderMap,
+    response::IntoResponse,
+};
+use shared::auth::models::Claims;
 use shared::errors::AppError;
-use shared::auth_models::Claims;
+use std::net::{IpAddr, SocketAddr};
 
 #[utoipa::path(
     post,
@@ -27,7 +32,6 @@ pub async fn request_access(
     ConnectInfo(addr): ConnectInfo<SocketAddr>,
     Json(req): Json<AccessRequest>,
 ) -> Result<impl IntoResponse, AppError> {
-
     // 1. Determine the Real IP
     // Priority: X-Forwarded-For Header -> Direct Connection
     let ip = get_real_ip(&headers, addr).unwrap_or(addr.ip());
@@ -57,16 +61,11 @@ pub async fn check_access_status(
     headers: HeaderMap,
     ConnectInfo(addr): ConnectInfo<SocketAddr>,
 ) -> Result<Json<AccessStatusResponse>, AppError> {
+    let ip = get_real_ip(&headers, addr).ok_or(AppError::InternalServerError(
+        "Could not determine IP".into(),
+    ))?;
 
-    let ip = get_real_ip(&headers, addr)
-        .ok_or(AppError::InternalServerError("Could not determine IP".into()))?;
-
-    let response = services::access::get_access_status(
-        &state,
-        server,
-        claims.sub,
-        ip
-    ).await?;
+    let response = services::access::get_access_status(&state, server, claims.sub, ip).await?;
 
     Ok(Json(response))
 }
@@ -75,7 +74,6 @@ pub async fn check_access_status(
 ///
 /// Strictly enforces trusted headers.
 fn get_real_ip(headers: &HeaderMap, addr: SocketAddr) -> Option<IpAddr> {
-
     // The order of those is important to give the CF header a higher priority than the X-Real-IP
     if let Some(ip) = extract_header(headers, "CF-Connecting-IP") {
         return Some(ip);

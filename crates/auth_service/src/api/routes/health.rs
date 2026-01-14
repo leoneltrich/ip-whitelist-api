@@ -1,5 +1,5 @@
 use axum::{Json, response::IntoResponse};
-use shared::health_models::HealthResponse;
+use shared::health::models::HealthResponse;
 
 #[utoipa::path(
     get,

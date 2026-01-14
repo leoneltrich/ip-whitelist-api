@@ -231,7 +231,6 @@ mod tests {
 
     #[tokio::test]
     async fn test_check_all_services_returns_starting_status_when_within_grace_period() {
-
         // Arrange
         let config = create_single_service_config("auth", true, 100); // 100s delay
         let state = Arc::new(RwLock::new(SystemHealth::new()));
@@ -258,7 +257,6 @@ mod tests {
     #[tokio::test]
 
     async fn test_check_all_services_returns_up_status_when_grace_period_is_zero() {
-
         // Arrange
         let config = create_single_service_config("auth", true, 0); // 0s delay
         let state = Arc::new(RwLock::new(SystemHealth::new()));
@@ -279,7 +277,6 @@ mod tests {
     #[tokio::test]
 
     async fn test_check_all_services_sets_global_status_down_when_required_service_is_down() {
-
         // Arrange
         let config = create_single_service_config("auth", true, 0);
         let state = Arc::new(RwLock::new(SystemHealth::new()));
@@ -298,7 +295,6 @@ mod tests {
     #[tokio::test]
 
     async fn test_check_all_services_sets_global_status_degraded_when_optional_service_is_down() {
-
         // Arrange
         let config = create_single_service_config("metrics", false, 0); // Optional
         let state = Arc::new(RwLock::new(SystemHealth::new()));
@@ -317,7 +313,6 @@ mod tests {
     #[tokio::test]
 
     async fn test_check_all_services_sets_global_status_up_when_all_services_are_up() {
-
         // Arrange
         let config = Config {
             port: 3000,

@@ -1,6 +1,6 @@
+use crate::models::database::user::User;
 use serde::{Deserialize, Serialize};
 use utoipa::ToSchema;
-use crate::models::database::user::User;
 
 #[derive(Serialize, ToSchema)]
 pub struct UserListResponse {

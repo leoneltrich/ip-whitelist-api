@@ -1,1 +1,1 @@
-pub mod auth;
+// This module is now empty as the auth middleware has been moved to the shared crate.

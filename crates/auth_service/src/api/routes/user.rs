@@ -1,16 +1,18 @@
 // Import the service module
 use crate::api::services::user as user_service;
-use shared::errors::AppError;
-use shared::auth_models::Claims;
-use crate::models::api::user::{CreateUserRequest, UpdateProfileRequest, UpdateUserRequest, UserListResponse};
+use crate::models::api::user::{
+    CreateUserRequest, UpdateProfileRequest, UpdateUserRequest, UserListResponse,
+};
 use crate::state::AppState;
 use axum::{
-    extract::{Path, State}, http::StatusCode,
+    Extension, Json,
+    extract::{Path, State},
+    http::StatusCode,
     response::IntoResponse,
-    Extension,
-    Json,
 };
 use serde_json::json;
+use shared::auth::models::Claims;
+use shared::errors::AppError;
 
 // Self-routes
 
@@ -63,7 +65,6 @@ pub async fn create_user(
     State(state): State<AppState>,
     Json(payload): Json<CreateUserRequest>,
 ) -> Result<impl IntoResponse, AppError> {
-
     user_service::create_user(&state, payload).await?;
 
     Ok((
@@ -129,7 +130,6 @@ pub async fn delete_user(
     ))
 }
 
-
 #[utoipa::path(
     get,
     path = "/admin/users",
@@ -140,10 +140,7 @@ pub async fn delete_user(
     ),
     security(("jwt" = []))
 )]
-pub async fn get_all_users(
-    State(state): State<AppState>,
-) -> Result<impl IntoResponse, AppError> {
-
+pub async fn get_all_users(State(state): State<AppState>) -> Result<impl IntoResponse, AppError> {
     let users = user_service::get_all_users(&state).await?;
 
     let response = UserListResponse {
@@ -151,8 +148,5 @@ pub async fn get_all_users(
         data: users,
     };
 
-    Ok((
-        StatusCode::OK,
-        Json(response),
-    ))
+    Ok((StatusCode::OK, Json(response)))
 }

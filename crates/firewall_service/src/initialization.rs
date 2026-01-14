@@ -1,5 +1,5 @@
-use sqlx::sqlite::{SqliteConnectOptions, SqlitePoolOptions};
 use sqlx::SqlitePool;
+use sqlx::sqlite::{SqliteConnectOptions, SqlitePoolOptions};
 use std::str::FromStr;
 use std::time::Duration;
 
@@ -33,8 +33,10 @@ async fn create_schema(pool: &SqlitePool) -> Result<(), sqlx::Error> {
             api_startup_method TEXT,
             api_startup_link TEXT,
             api_startup_token TEXT
-        );"
-    ).execute(pool).await?;
+        );",
+    )
+    .execute(pool)
+    .await?;
 
     // Whitelist Table
     sqlx::query(
@@ -49,8 +51,10 @@ async fn create_schema(pool: &SqlitePool) -> Result<(), sqlx::Error> {
 
             -- Foreign Keys
             FOREIGN KEY (servername) REFERENCES servers(servername) ON DELETE CASCADE
-        );"
-    ).execute(pool).await?;
+        );",
+    )
+    .execute(pool)
+    .await?;
 
     // User Server Mapping Table (Permissions)
     sqlx::query(
@@ -59,8 +63,10 @@ async fn create_schema(pool: &SqlitePool) -> Result<(), sqlx::Error> {
             servername TEXT NOT NULL,
             PRIMARY KEY (username, servername),
             FOREIGN KEY (servername) REFERENCES servers(servername) ON DELETE CASCADE
-        );"
-    ).execute(pool).await?;
+        );",
+    )
+    .execute(pool)
+    .await?;
 
     println!("✅ Database schema initialized.");
     Ok(())

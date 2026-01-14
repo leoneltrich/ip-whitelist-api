@@ -1,13 +1,15 @@
-use rand::distr::Alphanumeric;
 use rand::Rng;
+use rand::distr::Alphanumeric;
 // src/initialization.rs
-use crate::persistence::sqlite;
-use sqlx::SqlitePool;
 use crate::models::database::user::User;
 use crate::persistence::repository::Repositories;
+use crate::persistence::sqlite;
 use crate::security::hashing;
+use sqlx::SqlitePool;
 
-pub async fn run_startup_sequence(database_path: &str) -> Result<SqlitePool, Box<dyn std::error::Error>> {
+pub async fn run_startup_sequence(
+    database_path: &str,
+) -> Result<SqlitePool, Box<dyn std::error::Error>> {
     println!("Initializing Persistence Layer...");
 
     // We await the result here

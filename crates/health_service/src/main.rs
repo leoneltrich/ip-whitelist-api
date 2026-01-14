@@ -1,20 +1,18 @@
+mod api;
 mod config;
 mod domain;
 mod monitor;
-mod api;
 
-use std::sync::Arc;
-use tokio::sync::RwLock;
-use tracing::{info, error};
 use crate::config::Config;
 use crate::domain::SystemHealth;
 use crate::monitor::{HealthMonitor, SharedHealthState};
+use std::sync::Arc;
+use tokio::sync::RwLock;
+use tracing::{error, info};
 
 #[tokio::main]
 async fn main() {
-    tracing_subscriber::fmt()
-        .with_env_filter("debug")
-        .init();
+    tracing_subscriber::fmt().with_env_filter("debug").init();
 
     info!("Health Service starting up...");
 
@@ -26,7 +24,7 @@ async fn main() {
             std::process::exit(1);
         }
     };
-    
+
     let port = config.port; // Copy port before moving config
 
     // 2. Initialize Shared State
@@ -40,8 +38,10 @@ async fn main() {
 
     // 4. Start API Server
     let app = api::router(state);
-    let listener = tokio::net::TcpListener::bind(format!("0.0.0.0:{}", port)).await.unwrap();
-    
+    let listener = tokio::net::TcpListener::bind(format!("0.0.0.0:{}", port))
+        .await
+        .unwrap();
+
     info!("Health API listening on port {}", port);
     axum::serve(listener, app).await.unwrap();
 }

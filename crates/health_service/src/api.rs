@@ -1,14 +1,8 @@
-use axum::{
-    Json,
-    Router,
-    routing::get,
-    extract::State,
-    http::StatusCode,
-};
+use crate::domain::{HealthStatus, ServiceHealth, SystemHealth};
+use crate::monitor::SharedHealthState;
+use axum::{Json, Router, extract::State, http::StatusCode, routing::get};
 use utoipa::OpenApi;
 use utoipa_swagger_ui::SwaggerUi;
-use crate::monitor::SharedHealthState;
-use crate::domain::{SystemHealth, ServiceHealth, HealthStatus};
 
 #[derive(OpenApi)]
 #[openapi(
@@ -72,9 +66,9 @@ mod tests {
         body::Body,
         http::{Request, StatusCode},
     };
-    use tower::ServiceExt; // for `oneshot`
     use std::sync::Arc;
     use tokio::sync::RwLock;
+    use tower::ServiceExt; // for `oneshot`
 
     #[tokio::test]
     async fn test_health_check_returns_200_when_status_is_up() {
@@ -82,12 +76,17 @@ mod tests {
         let mut health = SystemHealth::new();
         health.status = HealthStatus::Up;
         let state = Arc::new(RwLock::new(health));
-        
+
         let app = router(state);
 
         // Act
         let response = app
-            .oneshot(Request::builder().uri("/health").body(Body::empty()).unwrap())
+            .oneshot(
+                Request::builder()
+                    .uri("/health")
+                    .body(Body::empty())
+                    .unwrap(),
+            )
             .await
             .unwrap();
 
@@ -101,12 +100,17 @@ mod tests {
         let mut health = SystemHealth::new();
         health.status = HealthStatus::Down;
         let state = Arc::new(RwLock::new(health));
-        
+
         let app = router(state);
 
         // Act
         let response = app
-            .oneshot(Request::builder().uri("/health").body(Body::empty()).unwrap())
+            .oneshot(
+                Request::builder()
+                    .uri("/health")
+                    .body(Body::empty())
+                    .unwrap(),
+            )
             .await
             .unwrap();
 
@@ -120,12 +124,17 @@ mod tests {
         let mut health = SystemHealth::new();
         health.status = HealthStatus::Starting;
         let state = Arc::new(RwLock::new(health));
-        
+
         let app = router(state);
 
         // Act
         let response = app
-            .oneshot(Request::builder().uri("/health").body(Body::empty()).unwrap())
+            .oneshot(
+                Request::builder()
+                    .uri("/health")
+                    .body(Body::empty())
+                    .unwrap(),
+            )
             .await
             .unwrap();
 

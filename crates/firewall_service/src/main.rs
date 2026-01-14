@@ -1,5 +1,5 @@
-use std::sync::Arc;
 use crate::config::AppConfig;
+use std::sync::Arc;
 use tokio::net::TcpListener;
 
 mod api;
@@ -27,11 +27,11 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         "nftables" => {
             println!("🛡️ Selected Backend: NFTables (Linux)");
             Arc::new(NftablesFirewall::new())
-        },
+        }
         "mock" => {
             println!("🛡️ Selected Backend: Mock (Safe Mode)");
             Arc::new(MockFirewall)
-        },
+        }
         &_ => {
             println!("Invalid firewall backend specified in FIREWALL_BACKEND env var");
             return Err("Invalid firewall backend specified".into());
@@ -47,8 +47,9 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     println!("Firewall Service listening on port 3001");
     axum::serve(
         listener,
-        app.into_make_service_with_connect_info::<std::net::SocketAddr>()
-    ).await?;
+        app.into_make_service_with_connect_info::<std::net::SocketAddr>(),
+    )
+    .await?;
 
     Ok(())
 }

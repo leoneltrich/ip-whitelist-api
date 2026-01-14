@@ -1,8 +1,8 @@
-use shared::errors::AppError;
 use crate::models::api::user::{CreateUserRequest, UpdateUserRequest, UserResponse};
 use crate::models::database::user::User;
 use crate::security::hashing;
 use crate::state::AppState;
+use shared::errors::AppError;
 
 pub async fn create_user(state: &AppState, req: CreateUserRequest) -> Result<(), AppError> {
     if state
@@ -86,10 +86,7 @@ pub async fn get_all_users(state: &AppState) -> Result<Vec<UserResponse>, AppErr
         .await
         .map_err(|e| AppError::InternalServerError(e.to_string()))?;
 
-    let response: Vec<UserResponse> = users
-        .into_iter()
-        .map(UserResponse::from)
-        .collect();
+    let response: Vec<UserResponse> = users.into_iter().map(UserResponse::from).collect();
 
     Ok(response)
 }

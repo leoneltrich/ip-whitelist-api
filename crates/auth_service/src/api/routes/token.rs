@@ -1,8 +1,8 @@
-use shared::errors::AppError;
-use shared::auth_models::Claims;
 use crate::models::api::token::TokenExpiresResponse;
 use axum::response::IntoResponse;
 use axum::{Extension, Json};
+use shared::auth::models::Claims;
+use shared::errors::AppError;
 
 #[utoipa::path(
     get,
@@ -14,11 +14,9 @@ use axum::{Extension, Json};
     ),
     security(("jwt" = []))
 )]
-pub async fn expires(
-    Extension(claims): Extension<Claims>,
-) -> Result<impl IntoResponse, AppError> {
+pub async fn expires(Extension(claims): Extension<Claims>) -> Result<impl IntoResponse, AppError> {
     let response = TokenExpiresResponse {
-        expires_at: claims.exp
+        expires_at: claims.exp,
     };
 
     Ok(Json(response))

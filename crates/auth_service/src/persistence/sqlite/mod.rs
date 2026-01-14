@@ -1,7 +1,7 @@
 // src/persistence/sqlite/mod.rs
 
+use sqlx::Error;
 use sqlx::sqlite::{SqliteConnectOptions, SqlitePool, SqlitePoolOptions};
-use sqlx::{Error};
 use std::str::FromStr;
 use std::time::Duration;
 
@@ -34,8 +34,10 @@ async fn create_schema(pool: &SqlitePool) -> Result<(), Error> {
             username TEXT PRIMARY KEY,
             password_hash TEXT NOT NULL,
             is_admin BOOLEAN NOT NULL DEFAULT 0
-        );"
-    ).execute(pool).await?;
+        );",
+    )
+    .execute(pool)
+    .await?;
 
     Ok(())
 }

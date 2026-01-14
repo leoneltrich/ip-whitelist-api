@@ -1,2 +1,2 @@
-mod database;
 mod api;
+mod database;

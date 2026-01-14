@@ -1,15 +1,13 @@
 // src/api/services/auth.rs
 
-use shared::errors::AppError;
-use shared::auth_models::{Claims, LoginRequest, LoginResponse};
 use crate::state::AppState;
+use shared::auth::models::{Claims, LoginRequest, LoginResponse};
+use shared::errors::AppError;
 
 use crate::security::hashing;
-use shared::jwt;
-
+use shared::auth::jwt;
 
 pub async fn login(state: &AppState, req: LoginRequest) -> Result<LoginResponse, AppError> {
-
     let user_option = state
         .repositories
         .user
@@ -24,17 +22,14 @@ pub async fn login(state: &AppState, req: LoginRequest) -> Result<LoginResponse,
         None => (dummy_hash, None),
     };
 
-    let is_valid_hash = hashing::verify_password(&req.password, hash_to_verify)
-        .unwrap_or(false);
+    let is_valid_hash = hashing::verify_password(&req.password, hash_to_verify).unwrap_or(false);
 
     if let (true, Some(user)) = (is_valid_hash, user_found) {
-
         let claims = Claims::new(user.username.clone(), user.is_admin);
 
         let token = jwt::sign(claims, &state.config.private_key_pem)?;
 
         Ok(LoginResponse { token })
-
     } else {
         Err(AppError::InvalidCredentials)
     }

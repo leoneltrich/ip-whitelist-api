@@ -1,9 +1,9 @@
-pub mod interface;
 pub mod implementation;
+pub mod interface;
 
-use std::sync::Arc;
 use crate::persistence::repository::interface::server::ServerRepository;
 use crate::persistence::repository::interface::whitelist::WhitelistRepository;
+use std::sync::Arc;
 
 #[derive(Clone)]
 pub struct Repositories {

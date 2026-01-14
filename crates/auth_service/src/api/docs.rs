@@ -1,8 +1,8 @@
-use utoipa::OpenApi;
 use crate::api::routes;
-use shared::auth_models as auth;
-use shared::health_models as health;
 use crate::models::api::{token, user};
+use shared::auth::models as auth;
+use shared::health::models as health;
+use utoipa::OpenApi;
 
 #[derive(OpenApi)]
 #[openapi(
@@ -18,9 +18,7 @@ use crate::models::api::{token, user};
 
         // --- User: Self Management ---
         routes::user::self_update_user,
-
         routes::token::expires,
-        
         routes::health::health_check,
     ),
     components(
@@ -35,9 +33,7 @@ use crate::models::api::{token, user};
             user::UpdateProfileRequest,
             user::UserResponse,
             user::UserListResponse,
-
             token::TokenExpiresResponse,
-            
             health::HealthResponse,
         )
     ),
@@ -61,11 +57,9 @@ impl utoipa::Modify for SecurityAddon {
         let components = openapi.components.as_mut().unwrap();
         components.add_security_scheme(
             "jwt",
-            utoipa::openapi::security::SecurityScheme::Http(
-                utoipa::openapi::security::Http::new(
-                    utoipa::openapi::security::HttpAuthScheme::Bearer,
-                ),
-            ),
+            utoipa::openapi::security::SecurityScheme::Http(utoipa::openapi::security::Http::new(
+                utoipa::openapi::security::HttpAuthScheme::Bearer,
+            )),
         );
     }
 }

@@ -1,5 +1,5 @@
-use shared::errors::AppError;
 use bcrypt::{DEFAULT_COST, hash, verify};
+use shared::errors::AppError;
 
 /// Hash a password using the standard application configuration.
 pub fn hash_password(password: &str) -> Result<String, AppError> {

@@ -12,5 +12,10 @@ pub trait WhitelistRepository: Send + Sync {
 
     async fn remove_entry(&self, server: &str, user: &str, ip: &str) -> Result<(), Error>;
 
-    async fn get_entry(&self, server: &str, user: &str, ip: &str) -> Result<Option<WhitelistEntry>, Error>;
+    async fn get_entry(
+        &self,
+        server: &str,
+        user: &str,
+        ip: &str,
+    ) -> Result<Option<WhitelistEntry>, Error>;
 }

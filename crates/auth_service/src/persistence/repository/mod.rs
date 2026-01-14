@@ -1,5 +1,5 @@
-pub mod interface;
 pub mod implementation;
+pub mod interface;
 
 use crate::persistence::repository::interface::user::UserRepository;
 use std::sync::Arc;
@@ -12,7 +12,11 @@ pub struct Repositories {
 impl Repositories {
     pub fn new(pool: sqlx::SqlitePool) -> Self {
         Self {
-            user: Arc::new(crate::persistence::repository::implementation::user::SqliteUserRepository::new(pool)),
+            user: Arc::new(
+                crate::persistence::repository::implementation::user::SqliteUserRepository::new(
+                    pool,
+                ),
+            ),
         }
     }
 }
