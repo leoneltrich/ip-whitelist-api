@@ -858,7 +858,6 @@ dependencies = [
  "async-trait",
  "axum",
  "chrono",
- "http-body-util",
  "reqwest",
  "serde",
  "serde_json",
