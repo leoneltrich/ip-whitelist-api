@@ -1414,6 +1414,7 @@ dependencies = [
  "serde_json",
  "shared",
  "sqlx",
+ "tokio",
  "utoipa",
  "utoipa-swagger-ui",
 ]
