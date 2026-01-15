@@ -18,9 +18,10 @@ use shared::errors::AppError;
     path = "/notes",
     request_body = CreateNoteRequest,
     responses(
-        (status = 201, description = "Note created"),
-        (status = 500, description = "Internal Server Error"),
-        (status = 403, description = "Forbidden")
+        (status = 201, description = "Note created successfully"),
+        (status = 401, description = "Unauthorized"),
+        (status = 403, description = "Forbidden"),
+        (status = 500, description = "Internal Server Error")
     ),
     security(("jwt" = []))
 )]
@@ -44,9 +45,9 @@ pub async fn create_note(
     get,
     path = "/notes",
     responses(
-        (status = 200, description = "List of all notes retrieved successfully", body = NoteListResponse),
-        (status = 500, description = "Internal Server Error"),
-        (status = 403, description = "Forbidden")
+        (status = 200, description = "List of all notes available to the user", body = NoteListResponse),
+        (status = 401, description = "Unauthorized"),
+        (status = 500, description = "Internal Server Error")
     ),
     security(("jwt" = []))
 )]
@@ -72,8 +73,10 @@ pub async fn get_all_notes(
     ),
     responses(
         (status = 200, description = "The retrieved note", body = SingleNoteResponse),
-        (status = 500, description = "Internal Server Error"),
-        (status = 403, description = "Forbidden")
+        (status = 401, description = "Unauthorized"),
+        (status = 403, description = "Forbidden - User does not have permission to view the note"),
+        (status = 404, description = "Note not found"),
+        (status = 500, description = "Internal Server Error")
     ),
     security(("jwt" = []))
 )]
@@ -97,10 +100,11 @@ pub async fn get_note_by_id(
     path = "/notes",
     request_body = UpdateNoteRequest,
     responses(
-        (status = 200, description = "Note updated"),
+        (status = 200, description = "Note updated successfully"),
+        (status = 401, description = "Unauthorized"),
+        (status = 403, description = "Forbidden - User does not have permission to update the note"),
         (status = 404, description = "Note not found"),
-        (status = 403, description = "Forbidden"),
-        (status = 401, description = "Unauthorized")
+        (status = 500, description = "Internal Server Error")
     ),
     security(("jwt" = []))
 )]
@@ -124,13 +128,14 @@ pub async fn update_note(
     delete,
     path = "/notes/{id}",
     params(
-        ("Note ID" = String, Path, description = "Note id to delete")
+        ("id" = String, Path, description = "Note id to delete")
     ),
     responses(
-        (status = 204, description = "Note deleted"),
-        (status = 404, description = "Note not found"),
+        (status = 204, description = "Note deleted successfully"),
         (status = 401, description = "Unauthorized"),
-        (status = 403, description = "Forbidden")
+        (status = 403, description = "Forbidden - User is not admin nor the owner of the note"),
+        (status = 404, description = "Note not found"),
+        (status = 500, description = "Internal Server Error")
     ),
     security(("jwt" = []))
 )]
@@ -154,13 +159,13 @@ pub async fn delete_note(
     delete,
     path = "/notes/user/{id}",
     params(
-        ("User ID" = String, Path, description = "Note id to delete")
+        ("id" = String, Path, description = "User ID whose notes should be deleted")
     ),
     responses(
-        (status = 204, description = "All notes of user deleted"),
-        (status = 404, description = "No notes for user exist"),
+        (status = 204, description = "All notes for the user deleted"),
         (status = 401, description = "Unauthorized"),
-        (status = 403, description = "Forbidden")
+        (status = 403, description = "Forbidden - Only an admin or the resource owner can perform this action"),
+        (status = 500, description = "Internal Server Error")
     ),
     security(("jwt" = []))
 )]
