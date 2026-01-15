@@ -1408,8 +1408,13 @@ name = "notes_service"
 version = "0.1.0"
 dependencies = [
  "async-trait",
+ "axum",
+ "http",
+ "serde",
+ "serde_json",
  "shared",
  "sqlx",
+ "utoipa",
 ]
 
 [[package]]
