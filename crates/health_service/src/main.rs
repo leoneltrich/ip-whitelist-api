@@ -25,7 +25,7 @@ async fn main() {
         }
     };
 
-    let port = config.port; // Copy port before moving config
+    let port = config.port; // Copy port before moving state
 
     // 2. Initialize Shared State
     let state: SharedHealthState = Arc::new(RwLock::new(SystemHealth::new()));

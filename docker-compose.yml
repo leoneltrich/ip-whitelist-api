@@ -32,10 +32,10 @@ services:
       context: .
       target: health_service
     environment:
-      - HEALTH_CONFIG_PATH=/config/services.json
+      - HEALTH_CONFIG_PATH=/state/services.json
       - HEALTH_PORT=3002
     volumes:
-      - ./services.json:/config/services.json:ro
+      - ./services.json:/state/services.json:ro
     labels:
       - "mesh1.proxy.enable=true"
       - "mesh1.proxy.port=3002"

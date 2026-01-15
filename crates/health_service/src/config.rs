@@ -112,7 +112,7 @@ mod tests {
         // Act
         let config = Config::load_internal(path, None)
             .await
-            .expect("Failed to load config");
+            .expect("Failed to load state");
 
         // Assert
         assert_eq!(config.port, 3002); // Default port from struct (serde default)

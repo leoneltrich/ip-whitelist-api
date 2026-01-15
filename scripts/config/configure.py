@@ -90,7 +90,7 @@ def discover_docker_services(label_prefix="proxy"):
 
         print(f"🔎 Found candidate: {c_name}")
         
-        # Extract config from labels
+        # Extract state from labels
         port = labels.get(f'{label_prefix}.port', '3000')
         protocol = labels.get(f'{label_prefix}.protocol', 'http')
         prefix = labels.get(f'{label_prefix}.prefix', '')

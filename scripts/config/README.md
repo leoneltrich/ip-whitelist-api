@@ -78,7 +78,7 @@ services:
 Run the script from the project root:
 
 ```bash
-python3 scripts/config/configure.py
+python3 scripts/state/configure.py
 ```
 
 You will be presented with a menu:
