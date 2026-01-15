@@ -27,8 +27,8 @@ use shared::errors::AppError;
 )]
 pub async fn create_note(
     State(state): State<AppState>,
-    Json(payload): Json<CreateNoteRequest>,
     Extension(claims): Extension<Claims>,
+    Json(payload): Json<CreateNoteRequest>,
 ) -> Result<impl IntoResponse, AppError> {
     notes::create_note(&*state.repositories.note, &payload, &claims).await?;
 
@@ -110,8 +110,8 @@ pub async fn get_note_by_id(
 )]
 pub async fn update_note(
     State(state): State<AppState>,
+    Extension(claims): Extension<Claims>,
     Json(payload): Json<UpdateNoteRequest>,
-    Extension(claims): Extension<Claims>
 ) -> Result<impl IntoResponse, AppError> {
     notes::update_note(&*state.repositories.note, &payload, &claims).await?;
 
