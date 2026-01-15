@@ -1,5 +1,7 @@
 use crate::api::services::notes;
-use crate::models::api::note::{CreateNoteRequest, NoteListResponse, SingleNoteResponse, UpdateNoteRequest};
+use crate::models::api::note::{
+    CreateNoteRequest, NoteListResponse, SingleNoteResponse, UpdateNoteRequest,
+};
 use crate::state::AppState;
 use axum::{
     extract::{Path, State}, http::StatusCode,
@@ -25,8 +27,9 @@ use shared::errors::AppError;
 pub async fn create_note(
     State(state): State<AppState>,
     Json(payload): Json<CreateNoteRequest>,
+    Extension(claims): Extension<Claims>,
 ) -> Result<impl IntoResponse, AppError> {
-    notes::create_note().await?;
+    notes::create_note(&*state.repositories.note, &payload, &claims).await?;
 
     Ok((
         StatusCode::CREATED,
@@ -47,8 +50,11 @@ pub async fn create_note(
     ),
     security(("jwt" = []))
 )]
-pub async fn get_all_notes(State(state): State<AppState>) -> Result<impl IntoResponse, AppError> {
-    let notes = notes::get_all_notes().await?;
+pub async fn get_all_notes(
+    State(state): State<AppState>,
+    Extension(claims): Extension<Claims>,
+) -> Result<impl IntoResponse, AppError> {
+    let notes = notes::get_all_notes(&*state.repositories.note, &claims).await?;
 
     let response = NoteListResponse {
         status: "success".to_string(),
@@ -74,14 +80,14 @@ pub async fn get_all_notes(State(state): State<AppState>) -> Result<impl IntoRes
 pub async fn get_note_by_id(
     State(state): State<AppState>,
     Path(note_id): Path<String>,
+    Extension(claims): Extension<Claims>
 ) -> Result<impl IntoResponse, AppError> {
-    let note = notes::get_note_by_id().await?;
+    let note = notes::get_note_by_id(&*state.repositories.note, note_id, &claims).await?;
 
     let response = SingleNoteResponse {
         status: "success".to_string(),
         data: note,
     };
-
 
     Ok((StatusCode::OK, Json(response)))
 }
@@ -91,18 +97,19 @@ pub async fn get_note_by_id(
     path = "/notes",
     request_body = UpdateNoteRequest,
     responses(
-        (status = 200, description = "Profile updated"),
+        (status = 200, description = "Note updated"),
+        (status = 404, description = "Note not found"),
+        (status = 403, description = "Forbidden"),
         (status = 401, description = "Unauthorized")
     ),
     security(("jwt" = []))
 )]
 pub async fn update_note(
     State(state): State<AppState>,
-    Extension(claims): Extension<Claims>,
     Json(payload): Json<UpdateNoteRequest>,
+    Extension(claims): Extension<Claims>
 ) -> Result<impl IntoResponse, AppError> {
-
-    notes::update_note().await?;
+    notes::update_note(&*state.repositories.note, &payload, &claims).await?;
 
     Ok((
         StatusCode::OK,
@@ -120,8 +127,9 @@ pub async fn update_note(
         ("Note ID" = String, Path, description = "Note id to delete")
     ),
     responses(
-        (status = 204, description = "Note deleted"), // 204 No Content or 200 OK depending on impl
+        (status = 204, description = "Note deleted"),
         (status = 404, description = "Note not found"),
+        (status = 401, description = "Unauthorized"),
         (status = 403, description = "Forbidden")
     ),
     security(("jwt" = []))
@@ -129,8 +137,9 @@ pub async fn update_note(
 pub async fn delete_note(
     State(state): State<AppState>,
     Path(note_id): Path<String>,
+    Extension(claims): Extension<Claims>,
 ) -> Result<impl IntoResponse, AppError> {
-    notes::delete_note().await?;
+    notes::delete_note(&*state.repositories.note, note_id, &claims).await?;
 
     Ok((
         StatusCode::NO_CONTENT,
@@ -148,8 +157,9 @@ pub async fn delete_note(
         ("User ID" = String, Path, description = "Note id to delete")
     ),
     responses(
-        (status = 204, description = "User deleted"), // 204 No Content or 200 OK depending on impl
-        (status = 404, description = "User not found"),
+        (status = 204, description = "All notes of user deleted"),
+        (status = 404, description = "No notes for user exist"),
+        (status = 401, description = "Unauthorized"),
         (status = 403, description = "Forbidden")
     ),
     security(("jwt" = []))
@@ -157,8 +167,9 @@ pub async fn delete_note(
 pub async fn delete_all_notes_of_user(
     State(state): State<AppState>,
     Path(user_id): Path<String>,
+    Extension(claims): Extension<Claims>,
 ) -> Result<impl IntoResponse, AppError> {
-    notes::delete_all_notes_of_user().await?;
+    notes::delete_all_notes_of_user(&*state.repositories.note, user_id, &claims).await?;
 
     Ok((
         StatusCode::NO_CONTENT,
