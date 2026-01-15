@@ -2,7 +2,7 @@ use axum::Router;
 use axum::routing::{delete, get, post, put};
 use crate::state::AppState;
 
-mod notes;
+pub(crate) mod notes;
 
 pub fn authenticated_routes() -> Router<AppState> {
     Router::new()

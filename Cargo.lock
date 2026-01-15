@@ -1415,6 +1415,7 @@ dependencies = [
  "shared",
  "sqlx",
  "utoipa",
+ "utoipa-swagger-ui",
 ]
 
 [[package]]
