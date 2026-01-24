@@ -9,7 +9,7 @@ pub trait NoteRepository: Send + Sync {
     async fn create_note(&self, note: &NewNote) -> Result<i64, Error>;
 
     /// Returns sqlx error or an optional containing the retrieved note or nothing
-    async fn get_note_by_id(&self, note_id: &str) -> Result<Option<Note>, Error>;
+    async fn get_note_by_id(&self, note_id: &i64) -> Result<Option<Note>, Error>;
 
     /// Returns sqlx error or the owner id of the note
     async fn get_note_owner_id(&self, note_id: &i64) -> Result<Option<String>, Error>;

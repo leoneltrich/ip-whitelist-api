@@ -4,6 +4,7 @@ use crate::models::database::note::{NewNote, Note, UpdateNote};
 use crate::persistence::repository::interface::notes::NoteRepository;
 use shared::auth::models::Claims;
 use shared::errors::AppError;
+use crate::api::services::utils::get_note_owner;
 
 pub(crate) async fn create_note(
     note_repository: &dyn NoteRepository,
@@ -47,25 +48,33 @@ pub(crate) async fn get_own_notes_feed(
 pub(crate) async fn get_note_by_id_as_admin(
     note_repository: &dyn NoteRepository,
     note_id: i64,
-    claims: &Claims,
-) -> Result<Note, AppError> {
-    todo!()
+) -> Result<Option<Note>, AppError> {
+    get_note_by_id(note_repository, note_id).await
 }
 
 pub(crate) async fn get_own_note_by_id(
     note_repository: &dyn NoteRepository,
     note_id: i64,
     claims: &Claims,
-) -> Result<Note, AppError> {
-    todo!()
+) -> Result<Option<Note>, AppError> {
+    let owner = get_note_owner(note_repository, &note_id).await?;
+    
+    if owner != claims.sub {
+        return Err(AppError::Forbidden)
+    }
+    
+    get_note_by_id(note_repository, note_id).await
 }
 
 async fn get_note_by_id(
     note_repository: &dyn NoteRepository,
     note_id: i64,
-    claims: &Claims,
-) -> Result<Note, AppError> {
-    todo!()
+) -> Result<Option<Note>, AppError> {
+    note_repository.get_note_by_id(&note_id).await.map_err(|_| {
+        AppError::InternalServerError(
+            "An internal server error occurred getting the note".to_string(),
+        )
+    })
 }
 
 pub(crate) async fn update_own_note(
@@ -73,7 +82,7 @@ pub(crate) async fn update_own_note(
     payload: &UpdateNoteRequest,
     claims: &Claims,
 ) -> Result<usize, AppError> {
-    let note_owner = utils::get_note_owner(note_repository, &payload.id).await?;
+    let note_owner = get_note_owner(note_repository, &payload.id).await?;
 
     if note_owner != claims.sub {
         return Err(AppError::Forbidden);
@@ -85,9 +94,8 @@ pub(crate) async fn update_own_note(
 pub(crate) async fn update_note_as_admin(
     note_repository: &dyn NoteRepository,
     payload: &UpdateNoteRequest,
-    claims: &Claims,
-) -> Result<(), AppError> {
-    todo!()
+) -> Result<usize, AppError> {
+    update_note(note_repository, &payload).await
 }
 
 async fn update_note(

@@ -40,7 +40,7 @@ impl NoteRepository for SqliteNoteRepository {
         Ok(result.last_insert_rowid())
     }
 
-    async fn get_note_by_id(&self, note_id: &str) -> Result<Option<Note>, Error> {
+    async fn get_note_by_id(&self, note_id: &i64) -> Result<Option<Note>, Error> {
         let note = sqlx::query_as::<_, Note>(
             "SELECT 
                 note_id, 
