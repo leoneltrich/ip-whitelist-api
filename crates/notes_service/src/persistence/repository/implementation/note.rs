@@ -103,7 +103,7 @@ impl NoteRepository for SqliteNoteRepository {
         Ok(result.rows_affected() as usize)
     }
 
-    async fn get_all_notes(&self) -> Result<Vec<Note>, Error> {
+    async fn get_notes_feed(&self, user_id: &str) -> Result<Vec<Note>, Error> {
         let notes = sqlx::query_as::<_, Note>(
             "SELECT 
                 note_id, 
@@ -114,10 +114,13 @@ impl NoteRepository for SqliteNoteRepository {
                 content, 
                 timestamp_created, 
                 timestamp_modified
-            FROM notes",
+            FROM notes
+            WHERE owner_id = ? OR is_public_read = 1
+            ORDER BY timestamp_modified DESC",
         )
-        .fetch_all(&self.pool)
-        .await?;
+            .bind(user_id)
+            .fetch_all(&self.pool)
+            .await?;
 
         Ok(notes)
     }

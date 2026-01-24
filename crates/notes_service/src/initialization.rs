@@ -19,7 +19,7 @@ pub async fn run_startup_sequence(
         .await?;
 
     create_schema(&pool).await?;
-    
+
     Ok(pool)
 }
 
@@ -35,7 +35,13 @@ async fn create_schema(pool: &SqlitePool) -> Result<(), sqlx::Error> {
               timestamp_created INTEGER NOT NULL,
               timestamp_modified INTEGER NOT NULL
           );
-            CREATE INDEX IF NOT EXISTS idx_notes_owner_id ON notes (owner_id);"#,
+          
+          -- Index for retrieving a user's own notes efficiently
+          CREATE INDEX IF NOT EXISTS idx_notes_owner_date ON notes (owner_id, timestamp_modified DESC);
+          
+          -- Index for retrieving public notes efficiently
+          CREATE INDEX IF NOT EXISTS idx_notes_public_date ON notes (is_public_read, timestamp_modified DESC);
+          "#,
     )
     .execute(pool)
     .await?;

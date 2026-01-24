@@ -13,7 +13,6 @@ pub struct Note {
     pub(crate) timestamp_modified: i64,
 }
 
-#[derive(Serialize, ToSchema, Debug, sqlx::FromRow)]
 pub struct NewNote {
     pub(crate) owner_id: String,
     pub(crate) is_public_read: bool,
