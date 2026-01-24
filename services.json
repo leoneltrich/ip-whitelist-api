@@ -14,6 +14,13 @@
       "required": true,
       "timeout_ms": 1000,
       "initial_delay_s": 5
+    },
+    {
+      "name": "notes_service",
+      "url": "http://notes_service:3003/health",
+      "required": false,
+      "timeout_ms": 1000,
+      "initial_delay_s": 5
     }
   ]
 }

@@ -36,6 +36,6 @@ pub(crate) fn admin_routes() -> Router<AppState> {
 
 pub(crate) fn public_routes() -> Router<AppState> {
     Router::new()
-        .route("/notes/health", get(health_check))
+        .route("/health", get(health_check))
         .merge(SwaggerUi::new("/swagger-ui").url("/api-docs/openapi.json", ApiDoc::openapi()))
 }
