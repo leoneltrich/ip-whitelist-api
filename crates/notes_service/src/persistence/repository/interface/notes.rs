@@ -1,4 +1,4 @@
-use crate::models::database::note::{NewNote, Note};
+use crate::models::database::note::{NewNote, Note, UpdateNote};
 use async_trait::async_trait;
 use sqlx::Error;
 
@@ -12,15 +12,15 @@ pub trait NoteRepository: Send + Sync {
     async fn get_note_by_id(&self, note_id: &str) -> Result<Option<Note>, Error>;
 
     /// Returns sqlx error or the owner id of the note
-    async fn get_note_owner_id(&self, note_id: &str) -> Result<Option<String>, Error>;
+    async fn get_note_owner_id(&self, note_id: &i64) -> Result<Option<String>, Error>;
 
     /// Updates the note.
     /// Returns sqlx error or the number of rows affected
-    async fn update_note(&self, note: &Note) -> Result<usize, Error>;
+    async fn update_note(&self, note: &UpdateNote) -> Result<usize, Error>;
 
     /// Deletes the note.
     /// Returns sqlx error or the number of rows affected
-    async fn delete_note(&self, note_id: &str) -> Result<usize, Error>;
+    async fn delete_note(&self, note_id: &i64) -> Result<usize, Error>;
 
     /// Returns an sqlx error or a vector of all notes that are owned by the user or public
     /// in descending order

@@ -12,9 +12,11 @@ pub struct CreateNoteRequest {
 
 #[derive(Deserialize, ToSchema)]
 pub struct UpdateNoteRequest {
-    pub(crate) id: String,
+    pub(crate) id: i64,
     pub(crate) title: Option<String>,
     pub(crate) content: String,
+    pub(crate) is_public_read: bool,
+    pub(crate) is_public_write: bool,
 }
 
 #[derive(Serialize, ToSchema)]

@@ -1,6 +1,6 @@
 use crate::api::services::utils;
 use crate::models::api::note::{CreateNoteRequest, UpdateNoteRequest};
-use crate::models::database::note::{NewNote, Note};
+use crate::models::database::note::{NewNote, Note, UpdateNote};
 use crate::persistence::repository::interface::notes::NoteRepository;
 use shared::auth::models::Claims;
 use shared::errors::AppError;
@@ -46,7 +46,7 @@ pub(crate) async fn get_own_notes_feed(
 
 pub(crate) async fn get_note_by_id_as_admin(
     note_repository: &dyn NoteRepository,
-    note_id: String,
+    note_id: i64,
     claims: &Claims,
 ) -> Result<Note, AppError> {
     todo!()
@@ -54,7 +54,7 @@ pub(crate) async fn get_note_by_id_as_admin(
 
 pub(crate) async fn get_own_note_by_id(
     note_repository: &dyn NoteRepository,
-    note_id: String,
+    note_id: i64,
     claims: &Claims,
 ) -> Result<Note, AppError> {
     todo!()
@@ -62,7 +62,7 @@ pub(crate) async fn get_own_note_by_id(
 
 async fn get_note_by_id(
     note_repository: &dyn NoteRepository,
-    note_id: String,
+    note_id: i64,
     claims: &Claims,
 ) -> Result<Note, AppError> {
     todo!()
@@ -72,8 +72,14 @@ pub(crate) async fn update_own_note(
     note_repository: &dyn NoteRepository,
     payload: &UpdateNoteRequest,
     claims: &Claims,
-) -> Result<(), AppError> {
-    todo!()
+) -> Result<usize, AppError> {
+    let note_owner = utils::get_note_owner(note_repository, &payload.id).await?;
+
+    if note_owner != claims.sub {
+        return Err(AppError::Forbidden);
+    }
+    
+    update_note(note_repository, &payload).await
 }
 
 pub(crate) async fn update_note_as_admin(
@@ -87,28 +93,34 @@ pub(crate) async fn update_note_as_admin(
 async fn update_note(
     note_repository: &dyn NoteRepository,
     payload: &UpdateNoteRequest,
-    claims: &Claims,
-) -> Result<(), AppError> {
-    todo!()
+) -> Result<usize, AppError> {
+    let timestamp = chrono::Utc::now().timestamp();
+    let updated_note = UpdateNote{
+        note_id: payload.id,
+        is_public_read: payload.is_public_read,
+        is_public_write: payload.is_public_write,
+        title: payload.title.clone(),
+        content: payload.content.clone(),
+        timestamp_modified: timestamp,
+    };
+    note_repository.update_note(&updated_note).await.map_err(|_| {
+        AppError::InternalServerError("An internal server error occurred updating note".to_string())
+    })
 }
 
 pub(crate) async fn delete_note_as_admin(
     note_repository: &dyn NoteRepository,
-    note_id: String,
+    note_id: i64,
 ) -> Result<(), AppError> {
     delete_note(note_repository, note_id).await
 }
 
 pub(crate) async fn delete_own_note(
     note_repository: &dyn NoteRepository,
-    note_id: String,
+    note_id: i64,
     claims: &Claims,
 ) -> Result<(), AppError> {
-    let note_owner = note_repository
-        .get_note_owner_id(&note_id)
-        .await
-        .map_err(|_| utils::get_deletion_error())?
-        .ok_or(AppError::NotFound)?;
+    let note_owner = utils::get_note_owner(note_repository, &note_id).await?;
 
     if note_owner != claims.sub {
         return Err(AppError::Forbidden);
@@ -119,7 +131,7 @@ pub(crate) async fn delete_own_note(
 
 async fn delete_note(
     note_repository: &dyn NoteRepository,
-    note_id: String,
+    note_id: i64,
 ) -> Result<(), AppError> {
     let rows_deleted = note_repository
         .delete_note(&note_id)

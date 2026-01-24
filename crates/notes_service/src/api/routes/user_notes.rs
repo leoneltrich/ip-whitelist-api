@@ -69,7 +69,7 @@ pub async fn get_all_notes(
     get,
     path = "/notes/id/{id}",
     params(
-        ("id" = String, Path, description = "Note id to retrieve")
+        ("id" = i64, Path, description = "Note id to retrieve")
     ),
     responses(
         (status = 200, description = "The retrieved note", body = SingleNoteResponse),
@@ -82,7 +82,7 @@ pub async fn get_all_notes(
 )]
 pub async fn get_note_by_id(
     State(state): State<AppState>,
-    Path(note_id): Path<String>,
+    Path(note_id): Path<i64>,
     Extension(claims): Extension<Claims>
 ) -> Result<impl IntoResponse, AppError> {
     let note = notes::get_own_note_by_id(&*state.repositories.note, note_id, &claims).await?;
@@ -128,7 +128,7 @@ pub async fn update_note(
     delete,
     path = "/notes/{id}",
     params(
-        ("id" = String, Path, description = "Note id to delete")
+        ("id" = i64, Path, description = "Note id to delete")
     ),
     responses(
         (status = 204, description = "Note deleted successfully"),
@@ -141,7 +141,7 @@ pub async fn update_note(
 )]
 pub async fn delete_note(
     State(state): State<AppState>,
-    Path(note_id): Path<String>,
+    Path(note_id): Path<i64>,
     Extension(claims): Extension<Claims>,
 ) -> Result<impl IntoResponse, AppError> {
     notes::delete_own_note(&*state.repositories.note, note_id, &claims).await?;

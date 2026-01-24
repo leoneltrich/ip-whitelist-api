@@ -1,4 +1,4 @@
-use crate::models::database::note::{NewNote, Note};
+use crate::models::database::note::{NewNote, Note, UpdateNote};
 use crate::persistence::repository::interface::notes::NoteRepository;
 use async_trait::async_trait;
 use sqlx::{Error, Row, SqlitePool};
@@ -61,7 +61,7 @@ impl NoteRepository for SqliteNoteRepository {
         Ok(note)
     }
 
-    async fn get_note_owner_id(&self, note_id: &str) -> Result<Option<String>, Error> {
+    async fn get_note_owner_id(&self, note_id: &i64) -> Result<Option<String>, Error> {
         let row = sqlx::query("SELECT owner_id FROM notes WHERE note_id = ?")
             .bind(note_id)
             .fetch_optional(&self.pool)
@@ -71,7 +71,7 @@ impl NoteRepository for SqliteNoteRepository {
         Ok(owner_id)
     }
 
-    async fn update_note(&self, note: &Note) -> Result<usize, Error> {
+    async fn update_note(&self, note: &UpdateNote) -> Result<usize, Error> {
         let result = sqlx::query(
             "UPDATE notes 
             SET 
@@ -94,7 +94,7 @@ impl NoteRepository for SqliteNoteRepository {
         Ok(result.rows_affected() as usize)
     }
 
-    async fn delete_note(&self, note_id: &str) -> Result<usize, Error> {
+    async fn delete_note(&self, note_id: &i64) -> Result<usize, Error> {
         let result = sqlx::query("DELETE FROM notes WHERE note_id = ?")
             .bind(note_id)
             .execute(&self.pool)
