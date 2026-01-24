@@ -12,12 +12,14 @@ use utoipa::OpenApi;
         routes::user_notes::update_note,
         routes::user_notes::delete_note,
         routes::user_notes::delete_all_notes_of_user,
-        
+
         routes::admin_notes::update_note,
         routes::admin_notes::delete_note,
         routes::admin_notes::delete_all_notes_of_user,
         routes::admin_notes::get_note_by_id,
         routes::admin_notes::get_all_notes,
+
+        shared::health::routes::health_check
     ),
     components(
         schemas(

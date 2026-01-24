@@ -1,5 +1,4 @@
 pub mod access;
-pub mod health;
 pub mod server;
 
 use crate::state::AppState;
@@ -11,7 +10,7 @@ use axum::{
 use shared::auth::middleware::require_admin;
 
 pub fn public_routes() -> Router<AppState> {
-    Router::new().route("/health", get(health::health_check))
+    Router::new().route("/health", get(shared::health::routes::health_check))
 }
 
 pub fn user_routes() -> Router<AppState> {

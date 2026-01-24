@@ -1,9 +1,6 @@
-use crate::api::docs::ApiDoc;
 use crate::state::AppState;
 use axum::middleware::from_fn_with_state;
 use axum::Router;
-use utoipa::OpenApi;
-use utoipa_swagger_ui::SwaggerUi;
 use shared::auth::middleware::require_admin;
 
 mod docs;
@@ -12,11 +9,11 @@ mod routes;
 mod services;
 
 pub(crate) fn app(state: AppState) -> Router {
+    let public_routes = routes::public_routes();
     let authenticated_routes = routes::authenticated_routes();
-    let swagger = SwaggerUi::new("/swagger-ui").url("/api-docs/openapi.json", ApiDoc::openapi());
     let admin_routes = routes::admin_routes();
 
-    let public_api = Router::new().merge(swagger);
+    let public_api = Router::new().merge(public_routes);
     let secure_api = Router::new()
         .merge(authenticated_routes)
         .layer(from_fn_with_state(

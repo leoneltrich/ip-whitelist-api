@@ -14,7 +14,7 @@ use utoipa::OpenApi;
         routes::server::update_server,
         routes::server::delete_server,
         routes::server::check_server_exists,
-        routes::health::health_check,
+        shared::health::routes::health_check
     ),
     components(
         schemas(
