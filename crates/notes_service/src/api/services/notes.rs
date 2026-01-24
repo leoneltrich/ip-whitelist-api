@@ -69,7 +69,7 @@ pub(crate) async fn delete_note(
         .map_err(|_| internal_error())?
         .ok_or(AppError::NotFound)?;
 
-    if !claims.is_admin && note_owner != claims.sub {
+    if note_owner != claims.sub {
         return Err(AppError::Forbidden);
     }
 
@@ -89,7 +89,7 @@ pub(crate) async fn delete_all_notes_of_user(
     user_id: String,
     claims: &Claims,
 ) -> Result<usize, AppError> {
-    if !claims.is_admin && user_id != claims.sub {
+    if user_id != claims.sub {
         return Err(AppError::Forbidden);
     }
 
