@@ -19,7 +19,9 @@ use utoipa::OpenApi;
         // --- User: Self Management ---
         routes::user::self_update_user,
         routes::token::expires,
-        routes::health::health_check,
+
+        // --- Health check ---
+        shared::health::routes::health_check
     ),
     components(
         schemas(

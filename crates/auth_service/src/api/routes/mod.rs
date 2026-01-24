@@ -1,5 +1,4 @@
 pub mod auth;
-pub mod health;
 pub mod token;
 pub mod user;
 
@@ -14,7 +13,7 @@ use shared::auth::middleware::require_admin;
 pub fn public_routes() -> Router<AppState> {
     Router::new()
         .route("/login", post(auth::login))
-        .route("/health", get(health::health_check))
+        .route("/health", get(shared::health::routes::health_check))
 }
 
 pub fn token_routes() -> Router<AppState> {
