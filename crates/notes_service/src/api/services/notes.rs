@@ -176,7 +176,7 @@ pub(crate) async fn delete_all_notes_self(
     delete_all_notes_of_user(note_repository, user_id).await
 }
 
-pub(crate) async fn delete_all_notes_admin(
+pub(crate) async fn delete_all_notes_as_admin(
     note_repository: &dyn NoteRepository,
     user_id: String,
 ) -> Result<usize, AppError> {
