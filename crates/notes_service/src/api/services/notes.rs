@@ -84,7 +84,7 @@ pub(crate) async fn delete_note(
     Ok(())
 }
 
-pub(crate) async fn delete_all_notes_of_user(
+pub(crate) async fn delete_all_notes_self(
     note_repository: &dyn NoteRepository,
     user_id: String,
     claims: &Claims,
@@ -93,6 +93,17 @@ pub(crate) async fn delete_all_notes_of_user(
         return Err(AppError::Forbidden);
     }
 
+    delete_all_notes_of_user(note_repository, user_id).await
+}
+
+pub(crate) async fn delete_all_notes_admin(){
+    todo!()
+}
+
+async fn delete_all_notes_of_user(
+    note_repository: &dyn NoteRepository,
+    user_id: String,
+) -> Result<usize, AppError> {
     let result = note_repository
         .delete_all_notes_of_user(&user_id)
         .await

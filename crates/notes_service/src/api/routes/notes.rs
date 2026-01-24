@@ -174,7 +174,7 @@ pub async fn delete_all_notes_of_user(
     Path(user_id): Path<String>,
     Extension(claims): Extension<Claims>,
 ) -> Result<impl IntoResponse, AppError> {
-    notes::delete_all_notes_of_user(&*state.repositories.note, user_id, &claims).await?;
+    notes::delete_all_notes_self(&*state.repositories.note, user_id, &claims).await?;
 
     Ok((
         StatusCode::NO_CONTENT,
