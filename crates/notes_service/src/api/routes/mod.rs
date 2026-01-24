@@ -13,11 +13,11 @@ pub(crate) fn authenticated_routes() -> Router<AppState> {
     Router::new()
         .route("/notes", post(user_notes::create_note))
         .route("/notes", get(user_notes::get_all_notes))
-        .route("/notes/id/{id}", get(user_notes::get_note_by_id))
+        .route("/notes/{id}", get(user_notes::get_note_by_id))
         .route("/notes", put(user_notes::update_note))
         .route("/notes/{id}", delete(user_notes::delete_note))
         .route(
-            "/notes/user/{id}",
+            "/notes/user",
             delete(user_notes::delete_all_notes_of_user),
         )
 }
@@ -25,7 +25,7 @@ pub(crate) fn authenticated_routes() -> Router<AppState> {
 pub(crate) fn admin_routes() -> Router<AppState> {
     Router::new()
         .route("/admin/notes", get(admin_notes::get_all_notes))
-        .route("/admin/notes/id/{id}", get(admin_notes::get_note_by_id))
+        .route("/admin/notes/{id}", get(admin_notes::get_note_by_id))
         .route("/admin/notes", put(admin_notes::update_note))
         .route("/admin/notes/{id}", delete(admin_notes::delete_note))
         .route(

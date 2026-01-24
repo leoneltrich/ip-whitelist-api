@@ -67,7 +67,7 @@ pub async fn get_all_notes(
 
 #[utoipa::path(
     get,
-    path = "/notes/id/{id}",
+    path = "/notes/{id}",
     params(
         ("id" = i64, Path, description = "Note id to retrieve")
     ),
