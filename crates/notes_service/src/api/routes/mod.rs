@@ -4,7 +4,7 @@ use crate::state::AppState;
 
 pub(crate) mod notes;
 
-pub fn authenticated_routes() -> Router<AppState> {
+pub(crate) fn authenticated_routes() -> Router<AppState> {
     Router::new()
         .route("/notes", post(notes::create_note))
         .route("/notes", get(notes::get_all_notes))
@@ -12,4 +12,8 @@ pub fn authenticated_routes() -> Router<AppState> {
         .route("/notes", put(notes::update_note))
         .route("/notes/{id}", delete(notes::delete_note))
         .route("/notes/user/{id}", delete(notes::delete_all_notes_of_user))
+}
+
+pub(crate) fn admin_routes() -> Router<AppState> {
+    Router::new()
 }
