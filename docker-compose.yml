@@ -20,7 +20,7 @@ services:
       - PRIVATE_KEY_PATH=/secrets/private.pem
       - PUBLIC_KEY_PATH=/secrets/public.pem
     volumes:
-      - ./data:/data
+      - ./data/auth.db:/data/auth.db
       - ./private.pem:/secrets/private.pem:ro
       - ./public.pem:/secrets/public.pem:ro
     labels:
@@ -51,7 +51,7 @@ services:
       - PUBLIC_KEY_PATH=/secrets/public.pem
       - FIREWALL_BACKEND=mock
     volumes:
-      - ./data:/data
+      - ./data/firewall.db:/data/firewall.db
       - ./public.pem:/secrets/public.pem:ro
     labels:
       - "mesh1.proxy.enable=true"                  # REQUIRED: Enables discovery
@@ -67,7 +67,7 @@ services:
       - PUBLIC_KEY_PATH=/secrets/public.pem
       - LISTEN_PORT=3003
     volumes:
-      - ./data:/data
+      - ./data/notes.db:/data/notes.db
       - ./public.pem:/secrets/public.pem:ro
     labels:
       - "mesh1.proxy.enable=true"
