@@ -55,7 +55,7 @@ pub async fn get_all_notes(
     State(state): State<AppState>,
     Extension(claims): Extension<Claims>,
 ) -> Result<impl IntoResponse, AppError> {
-    let notes = notes::get_notes_feed(&*state.repositories.note, &claims).await?;
+    let notes = notes::get_own_notes_feed(&*state.repositories.note, &claims).await?;
 
     let response = NoteListResponse {
         status: "success".to_string(),
@@ -85,7 +85,7 @@ pub async fn get_note_by_id(
     Path(note_id): Path<String>,
     Extension(claims): Extension<Claims>
 ) -> Result<impl IntoResponse, AppError> {
-    let note = notes::get_note_by_id(&*state.repositories.note, note_id, &claims).await?;
+    let note = notes::get_own_note_by_id(&*state.repositories.note, note_id, &claims).await?;
 
     let response = SingleNoteResponse {
         status: "success".to_string(),
@@ -113,7 +113,7 @@ pub async fn update_note(
     Extension(claims): Extension<Claims>,
     Json(payload): Json<UpdateNoteRequest>,
 ) -> Result<impl IntoResponse, AppError> {
-    notes::update_note(&*state.repositories.note, &payload, &claims).await?;
+    notes::update_own_note(&*state.repositories.note, &payload, &claims).await?;
 
     Ok((
         StatusCode::OK,

@@ -1,9 +1,9 @@
+use crate::api::services::utils;
 use crate::models::api::note::{CreateNoteRequest, UpdateNoteRequest};
 use crate::models::database::note::{NewNote, Note};
 use crate::persistence::repository::interface::notes::NoteRepository;
 use shared::auth::models::Claims;
 use shared::errors::AppError;
-use crate::api::services::utils;
 
 pub(crate) async fn create_note(
     note_repository: &dyn NoteRepository,
@@ -30,14 +30,21 @@ pub(crate) async fn create_note(
     Ok(note_id)
 }
 
-pub(crate) async fn get_notes_feed(
+pub(crate) async fn get_notes_feed_as_admin(
     note_repository: &dyn NoteRepository,
     claims: &Claims,
 ) -> Result<Vec<Note>, AppError> {
     todo!()
 }
 
-pub(crate) async fn get_note_by_id(
+pub(crate) async fn get_own_notes_feed(
+    note_repository: &dyn NoteRepository,
+    claims: &Claims,
+) -> Result<Vec<Note>, AppError> {
+    todo!()
+}
+
+pub(crate) async fn get_note_by_id_as_admin(
     note_repository: &dyn NoteRepository,
     note_id: String,
     claims: &Claims,
@@ -45,7 +52,23 @@ pub(crate) async fn get_note_by_id(
     todo!()
 }
 
-pub(crate) async fn update_note(
+pub(crate) async fn get_own_note_by_id(
+    note_repository: &dyn NoteRepository,
+    note_id: String,
+    claims: &Claims,
+) -> Result<Note, AppError> {
+    todo!()
+}
+
+async fn get_note_by_id(
+    note_repository: &dyn NoteRepository,
+    note_id: String,
+    claims: &Claims,
+) -> Result<Note, AppError> {
+    todo!()
+}
+
+pub(crate) async fn update_own_note(
     note_repository: &dyn NoteRepository,
     payload: &UpdateNoteRequest,
     claims: &Claims,
@@ -53,8 +76,27 @@ pub(crate) async fn update_note(
     todo!()
 }
 
-pub(crate) async fn delete_note_as_admin(){
+pub(crate) async fn update_note_as_admin(
+    note_repository: &dyn NoteRepository,
+    payload: &UpdateNoteRequest,
+    claims: &Claims,
+) -> Result<(), AppError> {
     todo!()
+}
+
+async fn update_note(
+    note_repository: &dyn NoteRepository,
+    payload: &UpdateNoteRequest,
+    claims: &Claims,
+) -> Result<(), AppError> {
+    todo!()
+}
+
+pub(crate) async fn delete_note_as_admin(
+    note_repository: &dyn NoteRepository,
+    note_id: String,
+) -> Result<(), AppError> {
+    delete_note(note_repository, note_id).await
 }
 
 pub(crate) async fn delete_own_note(
@@ -102,8 +144,11 @@ pub(crate) async fn delete_all_notes_self(
     delete_all_notes_of_user(note_repository, user_id).await
 }
 
-pub(crate) async fn delete_all_notes_admin() {
-    todo!()
+pub(crate) async fn delete_all_notes_admin(
+    note_repository: &dyn NoteRepository,
+    user_id: String,
+) -> Result<usize, AppError> {
+    delete_all_notes_of_user(note_repository, user_id).await
 }
 
 async fn delete_all_notes_of_user(

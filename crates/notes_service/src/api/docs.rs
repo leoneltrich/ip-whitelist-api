@@ -6,12 +6,12 @@ use utoipa::OpenApi;
 #[derive(OpenApi)]
 #[openapi(
     paths(
-        routes::notes::create_note,
-        routes::notes::get_all_notes,
-        routes::notes::get_note_by_id,
-        routes::notes::update_note,
-        routes::notes::delete_note,
-        routes::notes::delete_all_notes_of_user,
+        routes::user_notes::create_note,
+        routes::user_notes::get_all_notes,
+        routes::user_notes::get_note_by_id,
+        routes::user_notes::update_note,
+        routes::user_notes::delete_note,
+        routes::user_notes::delete_all_notes_of_user,
     ),
     components(
         schemas(
