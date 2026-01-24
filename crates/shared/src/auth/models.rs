@@ -10,9 +10,13 @@ const EXPIRATION_HOURS: i64 = 24;
 // that returns raw claims.
 #[derive(Debug, Serialize, Deserialize, Clone)]
 pub struct Claims {
+    /// User ID
     pub sub: String,
+    /// Issued at
     pub iat: usize,
+    /// Expiration time
     pub exp: usize,
+    /// Does user have admin privileges?
     pub is_admin: bool,
 }
 
