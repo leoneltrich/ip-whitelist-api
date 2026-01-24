@@ -26,6 +26,10 @@ pub trait NoteRepository: Send + Sync {
     /// in descending order
     async fn get_notes_feed(&self, user_id: &str) -> Result<Vec<Note>, Error>;
 
+    /// Returns an sqlx error or a vector of all notes
+    /// in descending order
+    async fn get_all_notes_feed(&self) -> Result<Vec<Note>, Error>;
+
     /// Deletes all notes of user
     /// Returns sqlx error or the number of rows affected
     async fn delete_all_notes_of_user(&self, user_id: &str) -> Result<usize, Error>;

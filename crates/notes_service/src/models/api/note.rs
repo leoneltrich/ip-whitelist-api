@@ -28,6 +28,6 @@ pub struct NoteListResponse {
 #[derive(Serialize, ToSchema)]
 pub struct SingleNoteResponse {
     pub(crate) status: String,
-    pub(crate) data: Note
+    pub(crate) data: Option<Note>
 }
 

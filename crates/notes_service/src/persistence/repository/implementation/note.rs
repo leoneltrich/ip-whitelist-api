@@ -125,6 +125,13 @@ impl NoteRepository for SqliteNoteRepository {
         Ok(notes)
     }
 
+    async fn get_all_notes_feed(&self) -> Result<Vec<Note>, Error> {
+        let result = sqlx::query_as::<_, Note>("SELECT * FROM notes")
+            .fetch_all(&self.pool)
+            .await?;
+        Ok(result)
+    }
+
     async fn delete_all_notes_of_user(&self, user_id: &str) -> Result<usize, Error> {
         let result = sqlx::query("DELETE FROM notes WHERE owner_id = ?")
             .bind(user_id)
