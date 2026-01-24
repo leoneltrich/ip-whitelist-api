@@ -143,7 +143,7 @@ pub(crate) async fn delete_own_note(
     note_id: i64,
     claims: &Claims,
 ) -> Result<(), AppError> {
-    let note_owner = utils::get_note_owner(note_repository, &note_id).await?;
+    let note_owner = get_note_owner(note_repository, &note_id).await?;
 
     if note_owner != claims.sub {
         return Err(AppError::Forbidden);
