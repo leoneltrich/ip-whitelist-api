@@ -1,7 +1,7 @@
 use crate::models::database::note::Note;
 use crate::persistence::repository::interface::notes::NoteRepository;
 use async_trait::async_trait;
-use sqlx::{Error, SqlitePool};
+use sqlx::{Error, Row, SqlitePool};
 
 pub struct SqliteNoteRepository {
     pub pool: SqlitePool,
@@ -25,16 +25,17 @@ impl NoteRepository for SqliteNoteRepository {
                    content,
                    timestamp_created,
                    timestamp_modified
-                ) VALUES (?, ?, ?, ?, ?, ?, ?)")
-            .bind(&note.owner_id)
-            .bind(&note.is_public_read)
-            .bind(&note.is_public_write)
-            .bind(&note.title)
-            .bind(&note.content)
-            .bind(&note.timestamp_created)
-            .bind(&note.timestamp_modified)
-            .execute(&self.pool)
-            .await?;
+                ) VALUES (?, ?, ?, ?, ?, ?, ?)",
+        )
+        .bind(&note.owner_id)
+        .bind(&note.is_public_read)
+        .bind(&note.is_public_write)
+        .bind(&note.title)
+        .bind(&note.content)
+        .bind(&note.timestamp_created)
+        .bind(&note.timestamp_modified)
+        .execute(&self.pool)
+        .await?;
 
         Ok(result.rows_affected() as usize)
     }
@@ -51,12 +52,23 @@ impl NoteRepository for SqliteNoteRepository {
                 timestamp_created, 
                 timestamp_modified
             FROM notes 
-            WHERE note_id = ?")
+            WHERE note_id = ?",
+        )
+        .bind(note_id)
+        .fetch_optional(&self.pool)
+        .await?;
+
+        Ok(note)
+    }
+
+    async fn get_note_owner_id(&self, note_id: &str) -> Result<Option<String>, Error> {
+        let row = sqlx::query("SELECT owner_id FROM notes WHERE note_id = ?")
             .bind(note_id)
             .fetch_optional(&self.pool)
             .await?;
 
-        Ok(note)
+        let owner_id = row.map(|r| r.get("owner_id"));
+        Ok(owner_id)
     }
 
     async fn update_note(&self, note: &Note) -> Result<usize, Error> {
@@ -68,15 +80,16 @@ impl NoteRepository for SqliteNoteRepository {
                 title = ?, 
                 content = ?, 
                 timestamp_modified = ?
-            WHERE note_id = ?")
-            .bind(&note.is_public_read)
-            .bind(&note.is_public_write)
-            .bind(&note.title)
-            .bind(&note.content)
-            .bind(&note.timestamp_modified)
-            .bind(&note.note_id)
-            .execute(&self.pool)
-            .await?;
+            WHERE note_id = ?",
+        )
+        .bind(&note.is_public_read)
+        .bind(&note.is_public_write)
+        .bind(&note.title)
+        .bind(&note.content)
+        .bind(&note.timestamp_modified)
+        .bind(&note.note_id)
+        .execute(&self.pool)
+        .await?;
 
         Ok(result.rows_affected() as usize)
     }
@@ -101,9 +114,10 @@ impl NoteRepository for SqliteNoteRepository {
                 content, 
                 timestamp_created, 
                 timestamp_modified
-            FROM notes")
-            .fetch_all(&self.pool)
-            .await?;
+            FROM notes",
+        )
+        .fetch_all(&self.pool)
+        .await?;
 
         Ok(notes)
     }

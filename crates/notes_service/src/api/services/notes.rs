@@ -40,7 +40,10 @@ pub(crate) async fn delete_note(
     note_id: String,
     claims: &Claims,
 ) -> Result<(), AppError> {
-    todo!()
+    let note = note_repository.get_note_by_id()
+    if claims.is_admin || user_id == claims.sub{
+        
+    }
 }
 
 pub(crate) async fn delete_all_notes_of_user(
