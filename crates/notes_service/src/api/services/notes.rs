@@ -3,6 +3,7 @@ use crate::models::database::note::{NewNote, Note};
 use crate::persistence::repository::interface::notes::NoteRepository;
 use shared::auth::models::Claims;
 use shared::errors::AppError;
+use crate::api::services::utils;
 
 pub(crate) async fn create_note(
     note_repository: &dyn NoteRepository,
@@ -29,7 +30,7 @@ pub(crate) async fn create_note(
     Ok(note_id)
 }
 
-pub(crate) async fn get_all_notes(
+pub(crate) async fn get_notes_feed(
     note_repository: &dyn NoteRepository,
     claims: &Claims,
 ) -> Result<Vec<Note>, AppError> {
@@ -52,31 +53,36 @@ pub(crate) async fn update_note(
     todo!()
 }
 
-pub(crate) async fn delete_note(
+pub(crate) async fn delete_note_as_admin(){
+    todo!()
+}
+
+pub(crate) async fn delete_own_note(
     note_repository: &dyn NoteRepository,
     note_id: String,
     claims: &Claims,
 ) -> Result<(), AppError> {
-    let internal_error = || {
-        AppError::InternalServerError(
-            "An internal server error occurred deleting the note".to_string(),
-        )
-    };
-
     let note_owner = note_repository
         .get_note_owner_id(&note_id)
         .await
-        .map_err(|_| internal_error())?
+        .map_err(|_| utils::get_deletion_error())?
         .ok_or(AppError::NotFound)?;
 
     if note_owner != claims.sub {
         return Err(AppError::Forbidden);
     }
 
+    delete_note(note_repository, note_id).await
+}
+
+async fn delete_note(
+    note_repository: &dyn NoteRepository,
+    note_id: String,
+) -> Result<(), AppError> {
     let rows_deleted = note_repository
         .delete_note(&note_id)
         .await
-        .map_err(|_| internal_error())?;
+        .map_err(|_| utils::get_deletion_error())?;
 
     if rows_deleted == 0 {
         return Err(AppError::NotFound);
@@ -96,7 +102,7 @@ pub(crate) async fn delete_all_notes_self(
     delete_all_notes_of_user(note_repository, user_id).await
 }
 
-pub(crate) async fn delete_all_notes_admin(){
+pub(crate) async fn delete_all_notes_admin() {
     todo!()
 }
 
@@ -107,8 +113,6 @@ async fn delete_all_notes_of_user(
     let result = note_repository
         .delete_all_notes_of_user(&user_id)
         .await
-        .map_err(|_| {
-            AppError::InternalServerError("An error occurred deleting the users notes".to_string())
-        });
+        .map_err(|_| utils::get_deletion_error());
     Ok(result?)
 }

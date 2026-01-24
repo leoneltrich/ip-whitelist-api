@@ -55,7 +55,7 @@ pub async fn get_all_notes(
     State(state): State<AppState>,
     Extension(claims): Extension<Claims>,
 ) -> Result<impl IntoResponse, AppError> {
-    let notes = notes::get_all_notes(&*state.repositories.note, &claims).await?;
+    let notes = notes::get_notes_feed(&*state.repositories.note, &claims).await?;
 
     let response = NoteListResponse {
         status: "success".to_string(),
@@ -144,7 +144,7 @@ pub async fn delete_note(
     Path(note_id): Path<String>,
     Extension(claims): Extension<Claims>,
 ) -> Result<impl IntoResponse, AppError> {
-    notes::delete_note(&*state.repositories.note, note_id, &claims).await?;
+    notes::delete_own_note(&*state.repositories.note, note_id, &claims).await?;
 
     Ok((
         StatusCode::NO_CONTENT,
