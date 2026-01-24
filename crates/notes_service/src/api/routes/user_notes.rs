@@ -157,10 +157,7 @@ pub async fn delete_note(
 
 #[utoipa::path(
     delete,
-    path = "/notes/user/{id}",
-    params(
-        ("id" = String, Path, description = "User ID whose notes should be deleted")
-    ),
+    path = "/notes/user",
     responses(
         (status = 204, description = "All notes for the user deleted"),
         (status = 401, description = "Unauthorized"),
@@ -171,10 +168,9 @@ pub async fn delete_note(
 )]
 pub async fn delete_all_notes_of_user(
     State(state): State<AppState>,
-    Path(user_id): Path<String>,
     Extension(claims): Extension<Claims>,
 ) -> Result<impl IntoResponse, AppError> {
-    notes::delete_all_notes_self(&*state.repositories.note, user_id, &claims).await?;
+    notes::delete_all_notes_self(&*state.repositories.note, &claims).await?;
 
     Ok((
         StatusCode::NO_CONTENT,

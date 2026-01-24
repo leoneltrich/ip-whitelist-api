@@ -166,14 +166,9 @@ async fn delete_note(note_repository: &dyn NoteRepository, note_id: i64) -> Resu
 
 pub(crate) async fn delete_all_notes_self(
     note_repository: &dyn NoteRepository,
-    user_id: String,
     claims: &Claims,
 ) -> Result<usize, AppError> {
-    if user_id != claims.sub {
-        return Err(AppError::Forbidden);
-    }
-
-    delete_all_notes_of_user(note_repository, user_id).await
+    delete_all_notes_of_user(note_repository, claims.sub.clone()).await
 }
 
 pub(crate) async fn delete_all_notes_as_admin(

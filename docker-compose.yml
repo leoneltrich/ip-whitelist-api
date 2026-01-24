@@ -62,6 +62,8 @@ services:
     build:
       context: .
       target: notes_service
+    ports:
+      - "3000:3003"
     environment:
       - DATABASE_PATH=/data/notes.db
       - PUBLIC_KEY_PATH=/secrets/public.pem
