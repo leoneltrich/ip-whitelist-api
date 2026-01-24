@@ -40,10 +40,29 @@ pub(crate) async fn delete_note(
     note_id: String,
     claims: &Claims,
 ) -> Result<(), AppError> {
-    let note = note_repository.get_note_by_id()
-    if claims.is_admin || user_id == claims.sub{
-        
+    let internal_error = || AppError::InternalServerError(
+        "An internal server error occurred deleting the note".to_string(),
+    );
+
+    let note_owner = note_repository
+        .get_note_owner_id(&note_id)
+        .await
+        .map_err(|_| {internal_error()})?
+        .ok_or(AppError::NotFound)?;
+
+    if !claims.is_admin && note_owner != claims.sub {
+        return Err(AppError::Forbidden);
     }
+
+    let rows_deleted = note_repository
+        .delete_note(&note_id)
+        .await
+        .map_err(|_| {internal_error()})?;
+
+    if rows_deleted == 0 {
+        return Err(AppError::NotFound);
+    }
+    Ok(())
 }
 
 pub(crate) async fn delete_all_notes_of_user(
