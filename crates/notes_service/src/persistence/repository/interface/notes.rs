@@ -1,12 +1,12 @@
-use crate::models::database::note::Note;
+use crate::models::database::note::{NewNote, Note};
 use async_trait::async_trait;
 use sqlx::Error;
 
 #[async_trait]
 pub trait NoteRepository: Send + Sync {
     /// Inserts a new note.
-    /// Returns sqlx error or the number of rows affected
-    async fn create_note(&self, note: &Note) -> Result<usize, Error>;
+    /// Returns sqlx error or the new entries id
+    async fn create_note(&self, note: &NewNote) -> Result<i64, Error>;
 
     /// Returns sqlx error or an optional containing the retrieved note or nothing
     async fn get_note_by_id(&self, note_id: &str) -> Result<Option<Note>, Error>;

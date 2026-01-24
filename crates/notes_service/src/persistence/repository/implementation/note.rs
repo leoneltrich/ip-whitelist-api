@@ -1,4 +1,4 @@
-use crate::models::database::note::Note;
+use crate::models::database::note::{NewNote, Note};
 use crate::persistence::repository::interface::notes::NoteRepository;
 use async_trait::async_trait;
 use sqlx::{Error, Row, SqlitePool};
@@ -15,7 +15,7 @@ impl SqliteNoteRepository {
 
 #[async_trait]
 impl NoteRepository for SqliteNoteRepository {
-    async fn create_note(&self, note: &Note) -> Result<usize, Error> {
+    async fn create_note(&self, note: &NewNote) -> Result<i64, Error> {
         let result = sqlx::query(
             "INSERT INTO notes (
                    owner_id,
@@ -37,7 +37,7 @@ impl NoteRepository for SqliteNoteRepository {
         .execute(&self.pool)
         .await?;
 
-        Ok(result.rows_affected() as usize)
+        Ok(result.last_insert_rowid())
     }
 
     async fn get_note_by_id(&self, note_id: &str) -> Result<Option<Note>, Error> {
