@@ -9,6 +9,7 @@ services:
       - auth_service
       - firewall_service
       - health_service
+      - notes_service
 
   auth_service:
     build:
@@ -56,3 +57,20 @@ services:
       - "mesh1.proxy.enable=true"                  # REQUIRED: Enables discovery
       - "mesh1.proxy.port=3001"                    # Internal port (default: 3000)
       - "mesh1.proxy.spec_path=/api-docs/openapi.json" # Path to JSON spec (default: /api-docs/openapi.json)
+
+  notes_service:
+    build:
+      context: .
+      target: notes_service
+    environment:
+      - DATABASE_PATH=/data/notes.db
+      - PUBLIC_KEY_PATH=/secrets/public.pem
+      - LISTEN_PORT=3003
+    volumes:
+      - ./data:/data
+      - ./public.pem:/secrets/public.pem:ro
+    labels:
+      - "mesh1.proxy.enable=true"
+      - "mesh1.proxy.port=3003"
+      - "mesh1.proxy.spec_path=/api-docs/openapi.json"
+

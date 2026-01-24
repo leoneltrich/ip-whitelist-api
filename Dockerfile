@@ -34,3 +34,10 @@ WORKDIR /app
 RUN apk add --no-cache libgcc
 COPY --from=builder /app/target/release/health_service .
 CMD ["./health_service"]
+
+# --- Notes Service Image ---
+FROM alpine:3.20 AS notes_service
+WORKDIR /app
+RUN apk add --no-cache libgcc
+COPY --from=builder /app/target/release/notes_service .
+CMD ["./notes_service"]

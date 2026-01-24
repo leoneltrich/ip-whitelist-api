@@ -13,7 +13,7 @@ mod services;
 
 pub(crate) fn app(state: AppState) -> Router {
     let authenticated_routes = routes::authenticated_routes();
-    let swagger = SwaggerUi::new("swagger-ui").url("/api-docs/openapi.json", ApiDoc::openapi());
+    let swagger = SwaggerUi::new("/swagger-ui").url("/api-docs/openapi.json", ApiDoc::openapi());
     let admin_routes = routes::admin_routes();
 
     let public_api = Router::new().merge(swagger);
