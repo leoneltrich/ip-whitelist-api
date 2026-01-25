@@ -20,18 +20,21 @@ use utoipa_swagger_ui::SwaggerUi;
 pub struct ApiDoc;
 
 pub fn router(state: SharedHealthState) -> Router {
-    Router::new()
+    let aggregated_routes = Router::new()
         .merge(SwaggerUi::new("/swagger-ui").url("/api-docs/openapi.json", ApiDoc::openapi()))
         .route("/health", get(health_check))
         .route("/health/services", get(get_all_services))
-        .with_state(state)
+        .with_state(state);
+
+    Router::new().nest("/api/v1", aggregated_routes)
+
 }
 
 /// Quick system health check.
 /// Returns 200 if operational, 503 if major failure.
 #[utoipa::path(
     get,
-    path = "/health",
+    path = "/api/v1/health",
     responses(
         (status = 200, description = "System Operational", body = SystemHealth),
         (status = 503, description = "System Unavailable", body = SystemHealth)
@@ -49,7 +52,7 @@ async fn health_check(State(state): State<SharedHealthState>) -> (StatusCode, Js
 /// Get detailed status of all monitored services.
 #[utoipa::path(
     get,
-    path = "/health/services",
+    path = "/api/v1/health/services",
     responses(
         (status = 200, description = "List of all services", body = SystemHealth)
     )
@@ -83,7 +86,7 @@ mod tests {
         let response = app
             .oneshot(
                 Request::builder()
-                    .uri("/health")
+                    .uri("/api/v1/health")
                     .body(Body::empty())
                     .unwrap(),
             )
@@ -107,7 +110,7 @@ mod tests {
         let response = app
             .oneshot(
                 Request::builder()
-                    .uri("/health")
+                    .uri("/api/v1/health")
                     .body(Body::empty())
                     .unwrap(),
             )
@@ -131,7 +134,7 @@ mod tests {
         let response = app
             .oneshot(
                 Request::builder()
-                    .uri("/health")
+                    .uri("/api/v1/health")
                     .body(Body::empty())
                     .unwrap(),
             )

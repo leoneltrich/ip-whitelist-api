@@ -18,7 +18,7 @@ use shared::errors::AppError;
 
 #[utoipa::path(
     put,
-    path = "/users/profile",
+    path = "/api/v1/users/profile",
     request_body = UpdateProfileRequest,
     responses(
         (status = 200, description = "Profile updated"),
@@ -52,7 +52,7 @@ pub async fn self_update_user(
 
 #[utoipa::path(
     post,
-    path = "/admin/users",
+    path = "/api/v1/admin/users",
     request_body = CreateUserRequest,
     responses(
         (status = 201, description = "User created"),
@@ -78,7 +78,7 @@ pub async fn create_user(
 
 #[utoipa::path(
     put,
-    path = "/admin/users",
+    path = "/api/v1/admin/users",
     request_body = UpdateUserRequest,
     responses(
         (status = 200, description = "User updated"),
@@ -104,7 +104,7 @@ pub async fn admin_update_user(
 
 #[utoipa::path(
     delete,
-    path = "/admin/users/{username}",
+    path = "/api/v1/admin/users/{username}",
     params(
         ("username" = String, Path, description = "Username to delete")
     ),
@@ -132,7 +132,7 @@ pub async fn delete_user(
 
 #[utoipa::path(
     get,
-    path = "/admin/users",
+    path = "/api/v1/admin/users",
     responses(
         (status = 200, description = "List of all users retrieved successfully", body = UserListResponse),
         (status = 500, description = "Internal Server Error"),

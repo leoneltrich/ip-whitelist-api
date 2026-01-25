@@ -6,7 +6,7 @@ use shared::errors::AppError;
 
 #[utoipa::path(
     get,
-    path = "/token/expires",
+    path = "/api/v1/token/expires",
     responses(
         (status = 200, description = "Timestamp of expiry", body = TokenExpiresResponse),
         (status = 401, description = "Unauthorized"),

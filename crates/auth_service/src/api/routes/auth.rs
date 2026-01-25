@@ -8,7 +8,7 @@ use shared::errors::AppError;
 
 #[utoipa::path(
     post,
-    path = "/login",
+    path = "/api/v1/login",
     request_body = LoginRequest,
     responses(
         (status = 200, description = "Login successful", body = LoginResponse),

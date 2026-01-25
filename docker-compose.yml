@@ -26,7 +26,7 @@ services:
     labels:
       - "mesh1.proxy.enable=true"
       - "mesh1.proxy.port=3000"
-      - "mesh1.proxy.spec_path=/api-docs/openapi.json"
+      - "mesh1.proxy.spec_path=/api/v1/api-docs/openapi.json"
 
   health_service:
     build:
@@ -40,7 +40,7 @@ services:
     labels:
       - "mesh1.proxy.enable=true"
       - "mesh1.proxy.port=3002"
-      - "mesh1.proxy.spec_path=/api-docs/openapi.json"
+      - "mesh1.proxy.spec_path=/api/v1/api-docs/openapi.json"
 
   firewall_service:
     build:
@@ -56,7 +56,7 @@ services:
     labels:
       - "mesh1.proxy.enable=true"                  # REQUIRED: Enables discovery
       - "mesh1.proxy.port=3001"                    # Internal port (default: 3000)
-      - "mesh1.proxy.spec_path=/api-docs/openapi.json" # Path to JSON spec (default: /api-docs/openapi.json)
+      - "mesh1.proxy.spec_path=/api/v1/api-docs/openapi.json" # Path to JSON spec (default: /api-docs/openapi.json)
 
   notes_service:
     build:
@@ -74,5 +74,5 @@ services:
     labels:
       - "mesh1.proxy.enable=true"
       - "mesh1.proxy.port=3003"
-      - "mesh1.proxy.spec_path=/api-docs/openapi.json"
+      - "mesh1.proxy.spec_path=/api/v1/api-docs/openapi.json"
 

@@ -28,9 +28,11 @@ pub(crate) fn app(state: AppState) -> Router {
             shared::auth::middleware::auth::<AppState>,
         ));
 
-    Router::new()
+    let aggregated_routes = Router::new()
         .merge(public_api)
         .merge(secure_api)
         .merge(admin_api)
-        .with_state(state)
+        .with_state(state);
+
+    Router::new().nest("/api/v1", aggregated_routes)
 }

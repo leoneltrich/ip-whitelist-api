@@ -4,7 +4,8 @@ use crate::state::AppState;
 use axum::Router;
 use shared::auth::middleware;
 use utoipa::OpenApi;
-use utoipa_swagger_ui::SwaggerUi; // Import shared middleware
+use utoipa_swagger_ui::SwaggerUi;
+// Import shared middleware
 
 pub mod routes;
 pub mod services;
@@ -27,11 +28,13 @@ pub fn app(state: AppState) -> Router {
         .nest("/token", token)
         .layer(axum::middleware::from_fn_with_state(
             state.clone(),
-            middleware::auth::<AppState>, // Explicitly specify AppState
+            middleware::auth::<AppState>,
         ));
 
-    Router::new()
+    let aggregated_routes = Router::new()
         .merge(public_api)
         .merge(secure_api)
-        .with_state(state)
+        .with_state(state);
+
+    Router::new().nest("/api/v1", aggregated_routes)
 }
