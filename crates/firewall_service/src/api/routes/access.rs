@@ -14,7 +14,7 @@ use std::net::{IpAddr, SocketAddr};
 
 #[utoipa::path(
     post,
-    path = "/users/access",
+    path = "/api/v1/users/access",
     request_body = AccessRequest,
     responses(
         (status = 200, description = "Access granted", body = AccessResponse),
@@ -44,7 +44,7 @@ pub async fn request_access(
 
 #[utoipa::path(
     get,
-    path = "/users/access/{server}/status",
+    path = "/api/v1/users/access/{server}/status",
     params(
         ("server" = String, Path, description = "Server name to check")
     ),

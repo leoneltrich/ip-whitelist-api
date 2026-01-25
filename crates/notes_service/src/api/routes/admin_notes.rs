@@ -15,7 +15,7 @@ use shared::errors::AppError;
 
 #[utoipa::path(
     get,
-    path = "/admin/notes",
+    path = "/api/v1/admin/notes",
     responses(
         (status = 200, description = "List of all notes", body = NoteListResponse),
         (status = 401, description = "Unauthorized"),
@@ -39,7 +39,7 @@ pub async fn get_all_notes(
 
 #[utoipa::path(
     get,
-    path = "/admin/notes/{id}",
+    path = "/api/v1/admin/notes/{id}",
     params(
         ("id" = i64, Path, description = "Note id to retrieve")
     ),
@@ -69,7 +69,7 @@ pub async fn get_note_by_id(
 
 #[utoipa::path(
     put,
-    path = "/admin/notes",
+    path = "/api/v1/admin/notes",
     request_body = UpdateNoteRequest,
     responses(
         (status = 200, description = "Note updated successfully"),
@@ -98,7 +98,7 @@ pub async fn update_note(
 
 #[utoipa::path(
     delete,
-    path = "/admin/notes/{id}",
+    path = "/api/v1/admin/notes/{id}",
     params(
         ("id" = i64, Path, description = "Note id to delete")
     ),
@@ -129,7 +129,7 @@ pub async fn delete_note(
 
 #[utoipa::path(
     delete,
-    path = "/admin/notes/user/{id}",
+    path = "/api/v1/admin/notes/user/{id}",
     params(
         ("id" = String, Path, description = "User ID whose notes should be deleted")
     ),

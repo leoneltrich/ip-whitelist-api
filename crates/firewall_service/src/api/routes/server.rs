@@ -14,7 +14,7 @@ use shared::errors::AppError;
 
 #[utoipa::path(
     post,
-    path = "/admin/servers",
+    path = "/api/v1/admin/servers",
     request_body = CreateServerRequest,
     responses(
         (status = 201, description = "Server created"),
@@ -38,7 +38,7 @@ pub async fn create_server(
 
 #[utoipa::path(
     get,
-    path = "/admin/servers",
+    path = "/api/v1/admin/servers",
     responses(
         (status = 200, description = "List of servers", body = [ServerResponse]),
         (status = 401, description = "Unauthorized"),
@@ -53,7 +53,7 @@ pub async fn list_servers(State(state): State<AppState>) -> Result<impl IntoResp
 
 #[utoipa::path(
     get,
-    path = "/admin/servers/{name}",
+    path = "/api/v1/admin/servers/{name}",
     params(
         ("name" = String, Path, description = "Name of the server")
     ),
@@ -74,7 +74,7 @@ pub async fn get_server(
 
 #[utoipa::path(
     put,
-    path = "/admin/servers/{name}",
+    path = "/api/v1/admin/servers/{name}",
     params(
         ("name" = String, Path, description = "Name of the server to update")
     ),
@@ -102,7 +102,7 @@ pub async fn update_server(
 
 #[utoipa::path(
     delete,
-    path = "/admin/servers/{name}",
+    path = "/api/v1/admin/servers/{name}",
     params(
         ("name" = String, Path, description = "Name of the server to delete")
     ),
@@ -127,7 +127,7 @@ pub async fn delete_server(
 
 #[utoipa::path(
     get,
-    path = "/users/servers/{name}/exists",
+    path = "/api/v1/users/servers/{name}/exists",
     params(
         ("name" = String, Path, description = "Server name to check")
     ),
