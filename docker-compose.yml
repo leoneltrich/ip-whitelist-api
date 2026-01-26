@@ -15,6 +15,8 @@ services:
     build:
       context: .
       target: auth_service
+    ports:
+      - "3003:3000"
     environment:
       - DATABASE_PATH=/data/auth.db
       - PRIVATE_KEY_PATH=/secrets/private.pem
@@ -32,6 +34,8 @@ services:
     build:
       context: .
       target: health_service
+    ports:
+      - "3002:3002"
     environment:
       - HEALTH_CONFIG_PATH=/state/services.json
       - HEALTH_PORT=3002
@@ -46,6 +50,8 @@ services:
     build:
       context: .
       target: firewall_service
+    ports:
+      - "3001:3001"
     environment:
       - DATABASE_PATH=/data/firewall.db
       - PUBLIC_KEY_PATH=/secrets/public.pem

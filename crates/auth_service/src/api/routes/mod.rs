@@ -2,18 +2,29 @@ pub mod auth;
 pub mod token;
 pub mod user;
 
+use crate::api::docs::ApiDoc;
 use crate::state::AppState;
 use axum::routing::get;
 use axum::{
-    Router,
     routing::{delete, post, put},
+    Router,
 };
 use shared::auth::middleware::require_admin;
+use shared::health::routes::health_check;
+use utoipa::OpenApi;
+use utoipa_swagger_ui::SwaggerUi;
 
 pub fn public_routes() -> Router<AppState> {
     Router::new()
         .route("/login", post(auth::login))
-        .route("/health", get(shared::health::routes::health_check))
+        .route("/health", get(health_check))
+}
+
+pub(crate) fn docs_routes() -> Router {
+    Router::new().merge(
+        SwaggerUi::new("/api/v1/swagger-ui")
+            .url("/api/v1/api-docs/openapi.json", ApiDoc::openapi()),
+    )
 }
 
 pub fn token_routes() -> Router<AppState> {

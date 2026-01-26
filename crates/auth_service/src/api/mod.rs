@@ -1,10 +1,8 @@
-use crate::api::docs::ApiDoc;
+use crate::api::routes::docs_routes;
 use crate::state::AppState;
 // src/api/mod.rs
 use axum::Router;
 use shared::auth::middleware;
-use utoipa::OpenApi;
-use utoipa_swagger_ui::SwaggerUi;
 // Import shared middleware
 
 pub mod routes;
@@ -18,9 +16,10 @@ pub fn app(state: AppState) -> Router {
     let admin = routes::admin_routes();
     let token = routes::token_routes();
 
-    let swagger = SwaggerUi::new("/swagger-ui").url("/api-docs/openapi.json", ApiDoc::openapi());
+    let swagger = docs_routes();
 
-    let public_api = Router::new().merge(swagger).merge(routes::public_routes());
+    let public_api = Router::new()
+        .merge(routes::public_routes());
 
     let secure_api = Router::new()
         .nest("/admin", admin)
@@ -32,9 +31,11 @@ pub fn app(state: AppState) -> Router {
         ));
 
     let aggregated_routes = Router::new()
-        .merge(public_api)
         .merge(secure_api)
+        .merge(public_api)
         .with_state(state);
 
-    Router::new().nest("/api/v1", aggregated_routes)
+    Router::new()
+        .nest("/api/v1", aggregated_routes)
+        .merge(swagger)
 }

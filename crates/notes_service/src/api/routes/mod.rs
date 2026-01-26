@@ -16,10 +16,7 @@ pub(crate) fn authenticated_routes() -> Router<AppState> {
         .route("/notes/{id}", get(user_notes::get_note_by_id))
         .route("/notes", put(user_notes::update_note))
         .route("/notes/{id}", delete(user_notes::delete_note))
-        .route(
-            "/notes/user",
-            delete(user_notes::delete_all_notes_of_user),
-        )
+        .route("/notes/user", delete(user_notes::delete_all_notes_of_user))
 }
 
 pub(crate) fn admin_routes() -> Router<AppState> {
@@ -35,7 +32,12 @@ pub(crate) fn admin_routes() -> Router<AppState> {
 }
 
 pub(crate) fn public_routes() -> Router<AppState> {
-    Router::new()
-        .route("/health", get(health_check))
-        .merge(SwaggerUi::new("/swagger-ui").url("/api-docs/openapi.json", ApiDoc::openapi()))
+    Router::new().route("/health", get(health_check))
+}
+
+pub(crate) fn docs_routes() -> Router {
+    Router::new().merge(
+        SwaggerUi::new("/api/v1/swagger-ui")
+            .url("/api/v1/api-docs/openapi.json", ApiDoc::openapi()),
+    )
 }

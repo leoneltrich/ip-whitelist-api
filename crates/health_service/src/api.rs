@@ -1,6 +1,6 @@
 use crate::domain::{HealthStatus, ServiceHealth, SystemHealth};
 use crate::monitor::SharedHealthState;
-use axum::{Json, Router, extract::State, http::StatusCode, routing::get};
+use axum::{extract::State, http::StatusCode, routing::get, Json, Router};
 use utoipa::OpenApi;
 use utoipa_swagger_ui::SwaggerUi;
 
@@ -21,13 +21,20 @@ pub struct ApiDoc;
 
 pub fn router(state: SharedHealthState) -> Router {
     let aggregated_routes = Router::new()
-        .merge(SwaggerUi::new("/swagger-ui").url("/api-docs/openapi.json", ApiDoc::openapi()))
         .route("/health", get(health_check))
         .route("/health/services", get(get_all_services))
         .with_state(state);
 
-    Router::new().nest("/api/v1", aggregated_routes)
+    Router::new()
+        .nest("/api/v1", aggregated_routes)
+        .merge(docs_routes())
+}
 
+pub(crate) fn docs_routes() -> Router {
+    Router::new().merge(
+        SwaggerUi::new("/api/v1/swagger-ui")
+            .url("/api/v1/api-docs/openapi.json", ApiDoc::openapi()),
+    )
 }
 
 /// Quick system health check.
@@ -71,7 +78,8 @@ mod tests {
     };
     use std::sync::Arc;
     use tokio::sync::RwLock;
-    use tower::ServiceExt; // for `oneshot`
+    use tower::ServiceExt;
+    // for `oneshot`
 
     #[tokio::test]
     async fn test_health_check_returns_200_when_status_is_up() {

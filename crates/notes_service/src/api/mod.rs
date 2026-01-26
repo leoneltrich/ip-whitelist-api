@@ -10,6 +10,7 @@ mod services;
 
 pub(crate) fn app(state: AppState) -> Router {
     let public_routes = routes::public_routes();
+    let docs_routes = routes::docs_routes();
     let authenticated_routes = routes::authenticated_routes();
     let admin_routes = routes::admin_routes();
 
@@ -34,5 +35,7 @@ pub(crate) fn app(state: AppState) -> Router {
         .merge(admin_api)
         .with_state(state);
 
-    Router::new().nest("/api/v1", aggregated_routes)
+    Router::new()
+        .nest("/api/v1", aggregated_routes)
+        .merge(docs_routes)
 }
