@@ -45,5 +45,8 @@ pub struct LoginRequest {
 #[derive(Serialize, ToSchema)] // <--- Add ToSchema
 pub struct LoginResponse {
     #[schema(example = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...")]
-    pub token: String,
+    pub access_token: String,
+    #[schema(example = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...")]
+    pub refresh_token: String,
+
 }

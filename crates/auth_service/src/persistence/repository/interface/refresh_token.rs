@@ -1,7 +1,12 @@
+use sqlx::Error;
+use crate::models::database::refresh_token::RefreshToken;
+
 #[async_trait::async_trait]
 pub trait RefreshTokenRepository {
-    async fn delete_refresh_token(&self, refresh_token_hash: &str) -> Result<(), sqlx::Error>;
-    async fn get_refresh_token(&self, refresh_token_hash: &str) -> Result<Option<String>, sqlx::Error>;
-    async fn create_refresh_token(&self, refresh_token: &str) -> Result<(), sqlx::Error>;
-    async fn update_refresh_token(&self, refresh_token: &str) -> Result<(), sqlx::Error>;
+    async fn delete_refresh_token(&self, refresh_token_hash: &str) -> Result<usize, Error>;
+    async fn get_refresh_token(&self, refresh_token_hash: &str) -> Result<Option<RefreshToken>, Error>;
+    async fn create_refresh_token(&self, refresh_token: &RefreshToken) -> Result<usize, Error>;
+    async fn update_refresh_token(&self, refresh_token: &RefreshToken) -> Result<usize, Error>;
+    async fn revoke_refresh_token(&self, refresh_token_hash: &str) -> Result<usize, Error>;
+
 }

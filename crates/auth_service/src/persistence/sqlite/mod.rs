@@ -45,9 +45,8 @@ async fn create_users_table(pool: &SqlitePool) -> Result<(), Error> {
 
 async fn create_refresh_token_table(pool: &SqlitePool) -> Result<(), Error> {
     sqlx::query("CREATE TABLE refresh_tokens (
-        token_id TEXT PRIMARY KEY,
+        token_hash TEXT NOT NULL PRIMARY KEY,
         username TEXT NOT NULL,
-        token_hash TEXT NOT NULL,
         expires_at INTEGER NOT NULL,
         created_at INTEGER NOT NULL,
         is_revoked BOOLEAN DEFAULT 0,
