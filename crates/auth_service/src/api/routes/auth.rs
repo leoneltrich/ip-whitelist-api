@@ -1,8 +1,7 @@
 use crate::api::services::auth;
 use crate::state::AppState;
 use axum::http::StatusCode;
-use axum::{Json, extract::State, response::IntoResponse};
-use serde_json::json;
+use axum::{extract::State, response::IntoResponse, Json};
 use shared::auth::models::{LoginRequest, LoginResponse};
 use shared::errors::AppError;
 
@@ -23,10 +22,6 @@ pub async fn login(
 
     Ok((
         StatusCode::OK,
-        Json(json!({
-            "status": "success",
-            "message": "you are logged in",
-            "token": response.token
-        })),
+        Json(response),
     ))
 }

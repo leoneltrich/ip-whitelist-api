@@ -50,7 +50,7 @@ impl RefreshTokenRepository for SqliteRefreshTokenRepository {
 
     async fn update_refresh_token(&self, refresh_token: &RefreshToken) -> Result<usize, Error> {
         let result = sqlx::query("UPDATE refresh_tokens SET username = ?, expires_at = ?, created_at = ?, is_revoked = ? WHERE token_hash = ?")
-            .bind(refresh_token.username)
+            .bind(refresh_token.username.to_string())
             .bind(refresh_token.expires_at)
             .bind(refresh_token.created_at)
             .bind(refresh_token.is_revoked)
