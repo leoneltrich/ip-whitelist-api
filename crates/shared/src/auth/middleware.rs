@@ -2,11 +2,11 @@ use crate::auth::logic;
 use crate::auth::models::Claims;
 use crate::errors::AppError;
 use axum::{
-    Extension,
     extract::{Request, State},
     http::HeaderMap,
     middleware::Next,
     response::Response,
+    Extension,
 };
 
 /// A trait that must be implemented by the AppState of any service

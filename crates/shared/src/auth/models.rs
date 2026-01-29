@@ -1,6 +1,6 @@
 use chrono::{Duration, Utc};
 use serde::{Deserialize, Serialize};
-use utoipa::ToSchema; // <--- Import ToSchema
+use utoipa::ToSchema;
 
 // Token is valid for 24 hours
 const EXPIRATION_HOURS: i64 = 24;
@@ -34,7 +34,7 @@ impl Claims {
     }
 }
 
-#[derive(Deserialize, ToSchema)] // <--- Add ToSchema
+#[derive(Deserialize, ToSchema)]
 pub struct LoginRequest {
     #[schema(example = "admin")]
     pub username: String,
@@ -42,11 +42,12 @@ pub struct LoginRequest {
     pub password: String,
 }
 
-#[derive(Serialize, ToSchema)] // <--- Add ToSchema
+#[derive(Serialize, ToSchema)]
 pub struct LoginResponse {
     #[schema(example = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...")]
     pub access_token: String,
     #[schema(example = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...")]
     pub refresh_token: String,
-
 }
+
+

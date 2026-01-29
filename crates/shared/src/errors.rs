@@ -1,8 +1,8 @@
 // src/error.rs
 use axum::{
-    Json,
     http::StatusCode,
     response::{IntoResponse, Response},
+    Json,
 };
 use serde_json::json;
 
@@ -16,6 +16,8 @@ pub enum AppError {
     InvalidCredentials,
     InvalidToken,
     Forbidden,
+    BadRequest,
+    TokenExpired,
 }
 
 impl fmt::Display for AppError {
@@ -27,6 +29,8 @@ impl fmt::Display for AppError {
             AppError::InvalidCredentials => write!(f, "Invalid Credentials"),
             AppError::InvalidToken => write!(f, "Invalid Token"),
             AppError::Forbidden => write!(f, "Forbidden"),
+            AppError::BadRequest => write!(f, "Bad Request"),
+            AppError::TokenExpired => write!(f, "Token Expired"),
         }
     }
 }
@@ -37,23 +41,25 @@ impl std::error::Error for AppError {}
 // (In very large apps, you might split this, but for now, this is perfect).
 impl IntoResponse for AppError {
     fn into_response(self) -> Response {
-        let (status, error_message) = match self {
+        let (status, error) = match self {
             AppError::InternalServerError(msg) => (StatusCode::INTERNAL_SERVER_ERROR, msg),
-            AppError::NotFound => (StatusCode::NOT_FOUND, "Resource not found".to_string()),
+            AppError::NotFound => (StatusCode::NOT_FOUND, "resource_not_found".to_string()),
             AppError::Conflict(msg) => (StatusCode::CONFLICT, msg),
             AppError::InvalidCredentials => (
                 StatusCode::UNAUTHORIZED,
-                "Invalid username or password".to_string(),
+                "invalid_username_or_password".to_string(),
             ),
             AppError::InvalidToken => (
                 StatusCode::UNAUTHORIZED,
-                "Invalid, expired or missing token".to_string(),
+                "invalid_or_missing_token".to_string(),
             ),
-            AppError::Forbidden => (StatusCode::FORBIDDEN, "Permission denied".to_string()),
+            AppError::Forbidden => (StatusCode::FORBIDDEN, "permission_denied".to_string()),
+            AppError::BadRequest => (StatusCode::BAD_REQUEST, "bad_request".to_string()),
+            AppError::TokenExpired => (StatusCode::UNAUTHORIZED, "token_expired".to_string()),
         };
 
         let body = Json(json!({
-            "error": error_message,
+            "error": error,
         }));
 
         (status, body).into_response()

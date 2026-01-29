@@ -2,6 +2,7 @@
 use crate::auth::models::Claims;
 use crate::errors::AppError;
 use jsonwebtoken::{Algorithm, DecodingKey, EncodingKey, Header, Validation, decode, encode};
+use jsonwebtoken::errors::ErrorKind;
 
 /// Signs a JWT using the RS256 private key (PEM format).
 pub fn sign(claims: Claims, private_key_pem: &str) -> Result<String, AppError> {
@@ -19,8 +20,11 @@ pub fn verify(token: &str, public_key_pem: &str) -> Result<Claims, AppError> {
 
     let validation = Validation::new(Algorithm::RS256);
 
-    let token_data =
-        decode::<Claims>(token, &key, &validation).map_err(|_| AppError::InvalidToken)?;
-
-    Ok(token_data.claims)
+    match decode::<Claims>(token, &key, &validation) {
+        Ok(data) => Ok(data.claims),
+        Err(err) => match err.kind() {
+            ErrorKind::ExpiredSignature => Err(AppError::TokenExpired), // New variant
+            _ => Err(AppError::InvalidToken),
+        },
+    }
 }

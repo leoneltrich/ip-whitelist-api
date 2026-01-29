@@ -6,10 +6,10 @@ use crate::auth::jwt;
 /// This is pure business logic, decoupled from any web framework.
 pub fn verify_token_from_header(auth_header: &str, public_key: &str) -> Result<Claims, AppError> {
     if !auth_header.starts_with("Bearer ") {
-        return Err(AppError::InvalidToken);
+        return Err(AppError::BadRequest);
     }
 
     let token = &auth_header[7..];
 
-    jwt::verify(token, public_key).map_err(|_| AppError::InvalidToken)
+    jwt::verify(token, public_key)
 }
