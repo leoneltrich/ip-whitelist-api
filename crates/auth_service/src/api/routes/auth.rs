@@ -1,8 +1,9 @@
 use crate::api::services::auth;
+use crate::models::api::auth::{LoginRequest, LoginResponse, LogoutRequest, LogoutResponse};
 use crate::state::AppState;
 use axum::http::StatusCode;
 use axum::{extract::State, response::IntoResponse, Extension, Json};
-use shared::auth::models::{Claims, LoginRequest, LoginResponse, LogoutRequest, LogoutResponse};
+use shared::auth::models::Claims;
 use shared::errors::AppError;
 
 #[utoipa::path(
@@ -19,7 +20,13 @@ pub async fn login(
     State(state): State<AppState>,
     Json(payload): Json<LoginRequest>,
 ) -> Result<impl IntoResponse, AppError> {
-    let response = auth::login(&state, payload).await?;
+    let response = auth::login(
+        &*state.repositories.user,
+        &*state.repositories.refresh_token,
+        &state.config.private_key_pem,
+        payload,
+    )
+    .await?;
 
     Ok((StatusCode::OK, Json(response)))
 }
@@ -40,7 +47,7 @@ pub(crate) async fn logout(
     Json(payload): Json<LogoutRequest>,
 ) -> Result<impl IntoResponse, AppError> {
     let response = auth::logout(
-        &state.repositories.refresh_token,
+        &*state.repositories.refresh_token,
         &claims.sub,
         &payload.refresh_token,
     )

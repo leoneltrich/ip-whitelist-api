@@ -18,6 +18,7 @@ pub enum AppError {
     Forbidden,
     BadRequest,
     TokenExpired,
+    InvalidRefreshToken,
 }
 
 impl fmt::Display for AppError {
@@ -31,6 +32,7 @@ impl fmt::Display for AppError {
             AppError::Forbidden => write!(f, "Forbidden"),
             AppError::BadRequest => write!(f, "Bad Request"),
             AppError::TokenExpired => write!(f, "Token Expired"),
+            AppError::InvalidRefreshToken => write!(f, "Invalid Refresh Token"),
         }
     }
 }
@@ -47,15 +49,20 @@ impl IntoResponse for AppError {
             AppError::Conflict(msg) => (StatusCode::CONFLICT, msg),
             AppError::InvalidCredentials => (
                 StatusCode::UNAUTHORIZED,
-                "invalid_username_or_password".to_string(),
+                "invalid_credentials".to_string(),
             ),
             AppError::InvalidToken => (
                 StatusCode::UNAUTHORIZED,
-                "invalid_or_missing_token".to_string(),
+                "invalid_access_token".to_string(),
             ),
+
             AppError::Forbidden => (StatusCode::FORBIDDEN, "permission_denied".to_string()),
             AppError::BadRequest => (StatusCode::BAD_REQUEST, "bad_request".to_string()),
             AppError::TokenExpired => (StatusCode::UNAUTHORIZED, "token_expired".to_string()),
+            AppError::InvalidRefreshToken => (
+                StatusCode::UNAUTHORIZED,
+                "invalid_refresh_token".to_string(),
+            ),
         };
 
         let body = Json(json!({

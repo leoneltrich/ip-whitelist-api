@@ -68,4 +68,12 @@ impl RefreshTokenRepository for SqliteRefreshTokenRepository {
 
         Ok(result.rows_affected() as usize)
     }
+
+    async fn revoke_all_refresh_tokens_of_user(&self, username: &str) -> Result<usize, Error> {
+        let result = sqlx::query("UPDATE refresh_tokens SET is_revoked = 1 WHERE username = ?")
+            .bind(&username)
+            .execute(&self.pool)
+            .await?;
+        Ok(result.rows_affected() as usize)
+    }
 }

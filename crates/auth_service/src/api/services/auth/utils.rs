@@ -1,8 +1,8 @@
 use crate::models::database::refresh_token::RefreshToken;
 use crate::models::database::user::User;
 use crate::persistence::repository::interface::refresh_token::RefreshTokenRepository;
+use crate::persistence::repository::interface::user::UserRepository;
 use crate::security::hashing;
-use crate::state::AppState;
 use rand::Rng;
 use shared::auth::jwt;
 use shared::auth::models::Claims;
@@ -15,10 +15,10 @@ pub(crate) fn hash_refresh_token(token: &str) -> String {
     hashing::create_sha256_hash(token)
 }
 
-pub fn create_access_token(state: &&AppState, user: &User) -> Result<String, AppError> {
+pub fn create_access_token(private_key_pem: &String, user: &User) -> Result<String, AppError> {
     let claims = Claims::new(user.username.clone(), user.is_admin);
 
-    let access_token = jwt::sign(claims, &state.config.private_key_pem)?;
+    let access_token = jwt::sign(claims, private_key_pem)?;
     Ok(access_token)
 }
 
@@ -63,4 +63,14 @@ fn generate_plain_token() -> String {
     let random_bytes: [u8; 32] = rand::rng().random();
     let plain_token = hex::encode(random_bytes);
     plain_token
+}
+
+pub async fn get_user_optional(
+    repository: &dyn UserRepository,
+    username: &String,
+) -> Result<Option<User>, AppError> {
+    let user_option = repository.get_user_by_name(username).await.map_err(|_| {
+        AppError::InternalServerError("An internal server error occurred".to_string())
+    })?;
+    Ok(user_option)
 }
