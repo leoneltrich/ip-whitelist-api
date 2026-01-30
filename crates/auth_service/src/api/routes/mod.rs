@@ -28,7 +28,7 @@ pub(crate) fn docs_routes() -> Router {
 }
 
 pub fn token_routes() -> Router<AppState> {
-    Router::new()
+    Router::new().route("/refresh", post(token::refresh))
 }
 
 pub fn user_routes() -> Router<AppState> {

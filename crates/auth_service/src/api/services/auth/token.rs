@@ -1,11 +1,14 @@
-use crate::api::services::auth::utils::{create_access_token, create_refresh_token, get_user_optional, hash_refresh_token};
+use crate::api::services::auth::utils::{
+    create_access_token, create_refresh_token, get_user_optional, hash_refresh_token,
+};
 use crate::models::api::auth::TokenRefreshResponse;
 use crate::models::database::refresh_token::RefreshToken;
+use crate::models::database::user::User;
 use crate::persistence::repository::interface::refresh_token::RefreshTokenRepository;
 use crate::persistence::repository::interface::user::UserRepository;
 use shared::errors::AppError;
 
-async fn refresh(
+pub(crate) async fn refresh(
     refresh_token: &str,
     token_repository: &dyn RefreshTokenRepository,
     user_repository: &dyn UserRepository,
@@ -23,14 +26,7 @@ async fn refresh(
 
     revoke_refresh_token(token_repository, &refresh_token_hash).await?;
 
-    let user = match get_user_optional(user_repository, username).await? {
-        Some(user) => user,
-        None => {
-            return Err(AppError::InternalServerError(
-                "An internal server error occurred".to_string(),
-            ));
-        }
-    };
+    let user = get_user(user_repository, username).await?;
 
     let access_token = create_access_token(private_key_pem, &user)?;
     let refresh_token = create_refresh_token(username, token_repository).await?;
@@ -43,7 +39,25 @@ async fn refresh(
     Ok(response)
 }
 
-async fn revoke_refresh_token(token_repository: &dyn RefreshTokenRepository, refresh_token_hash: &String) -> Result<(), AppError> {
+async fn get_user(
+    user_repository: &dyn UserRepository,
+    username: &String,
+) -> Result<User, AppError> {
+    let user = match get_user_optional(user_repository, username).await? {
+        Some(user) => user,
+        None => {
+            return Err(AppError::InternalServerError(
+                "An internal server error occurred".to_string(),
+            ));
+        }
+    };
+    Ok(user)
+}
+
+async fn revoke_refresh_token(
+    token_repository: &dyn RefreshTokenRepository,
+    refresh_token_hash: &String,
+) -> Result<(), AppError> {
     token_repository
         .revoke_refresh_token(&refresh_token_hash)
         .await

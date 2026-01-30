@@ -9,6 +9,7 @@ use utoipa::OpenApi;
     paths(
         // --- Auth ---
         routes::auth::login,
+        routes::auth::logout,
 
         // --- Admin: User Management ---
         routes::user::create_user,
@@ -21,12 +22,18 @@ use utoipa::OpenApi;
 
         // --- Health check ---
         shared::health::routes::health_check
+
+        routes::token::refresh
     ),
     components(
         schemas(
             // Auth DTOs
             auth::LoginRequest,
             auth::LoginResponse,
+            auth::LogoutRequest,
+            auth::LogoutResponse,
+            auth::TokenRefreshRequest,
+            auth::TokenRefreshResponse,
 
             // User DTOs
             user::CreateUserRequest,

@@ -7,7 +7,7 @@ use crate::persistence::repository::interface::user::UserRepository;
 use crate::security::hashing;
 use shared::errors::AppError;
 
-mod token;
+pub(crate) mod token;
 mod utils;
 
 pub async fn login(
