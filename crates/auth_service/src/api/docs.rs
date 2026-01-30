@@ -1,6 +1,5 @@
 use crate::api::routes;
-use crate::models::api::{token, user};
-use shared::auth::models as auth;
+use crate::models::api::{user, auth};
 use shared::health::models as health;
 use utoipa::OpenApi;
 
@@ -21,7 +20,7 @@ use utoipa::OpenApi;
         routes::user::self_update_user,
 
         // --- Health check ---
-        shared::health::routes::health_check
+        shared::health::routes::health_check,
 
         routes::token::refresh
     ),
@@ -41,7 +40,7 @@ use utoipa::OpenApi;
             user::UpdateProfileRequest,
             user::UserResponse,
             user::UserListResponse,
-            token::TokenExpiresResponse,
+
             health::HealthResponse,
         )
     ),
