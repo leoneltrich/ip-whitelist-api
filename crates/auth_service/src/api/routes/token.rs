@@ -1,11 +1,10 @@
 use crate::api::services::auth;
-use crate::models::api::auth::{LogoutRequest, TokenRefreshRequest, TokenRefreshResponse};
+use crate::models::api::auth::{TokenRefreshRequest, TokenRefreshResponse};
 use crate::state::AppState;
 use axum::extract::State;
 use axum::http::StatusCode;
 use axum::response::IntoResponse;
-use axum::{Extension, Json};
-use shared::auth::models::Claims;
+use axum::Json;
 use shared::errors::AppError;
 
 #[utoipa::path(
@@ -20,15 +19,14 @@ use shared::errors::AppError;
 )]
 pub(crate) async fn refresh(
     State(state): State<AppState>,
-    Extension(claims): Extension<Claims>,
-    Json(payload): Json<LogoutRequest>,
+    Json(payload): Json<TokenRefreshRequest>,
 ) -> Result<impl IntoResponse, AppError> {
     let response = auth::token::refresh(
         &payload.refresh_token,
         &*state.repositories.refresh_token,
         &*state.repositories.user,
         &state.config.private_key_pem,
-        &claims.sub,
+        &payload.username,
     )
     .await?;
     Ok((StatusCode::OK, Json(response)))

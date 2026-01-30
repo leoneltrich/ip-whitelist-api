@@ -18,6 +18,7 @@ pub fn public_routes() -> Router<AppState> {
     Router::new()
         .route("/login", post(auth::login))
         .route("/health", get(health_check))
+        .route("/token/refresh", post(token::refresh))
 }
 
 pub(crate) fn docs_routes() -> Router {
@@ -28,7 +29,7 @@ pub(crate) fn docs_routes() -> Router {
 }
 
 pub fn token_routes() -> Router<AppState> {
-    Router::new().route("/refresh", post(token::refresh))
+    Router::new()
 }
 
 pub fn user_routes() -> Router<AppState> {

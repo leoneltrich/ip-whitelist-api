@@ -44,7 +44,7 @@ async fn create_users_table(pool: &SqlitePool) -> Result<(), Error> {
 }
 
 async fn create_refresh_token_table(pool: &SqlitePool) -> Result<(), Error> {
-    sqlx::query("CREATE TABLE refresh_tokens (
+    sqlx::query("CREATE TABLE IF NOT EXISTS refresh_tokens (
         token_hash TEXT NOT NULL PRIMARY KEY,
         username TEXT NOT NULL,
         expires_at INTEGER NOT NULL,
@@ -52,7 +52,7 @@ async fn create_refresh_token_table(pool: &SqlitePool) -> Result<(), Error> {
         is_revoked BOOLEAN DEFAULT 0,
         FOREIGN KEY(username) REFERENCES users(username) ON DELETE CASCADE
     );
-        CREATE INDEX idx_rt_username ON refresh_tokens(username);",
+        CREATE INDEX IF NOT EXISTS idx_rt_username ON refresh_tokens(username);",
     )
     .execute(pool)
     .await?;

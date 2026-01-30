@@ -35,6 +35,7 @@ pub struct LogoutRequest {
 pub struct TokenRefreshRequest {
     #[schema(example = "74789D50D50B0568B4132AC53976574361ED218057A0E7A82523918B78589A61")]
     pub refresh_token: String,
+    pub username: String,
 }
 
 #[derive(Serialize, ToSchema)]
