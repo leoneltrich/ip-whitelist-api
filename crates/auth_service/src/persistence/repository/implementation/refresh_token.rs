@@ -77,3 +77,149 @@ impl RefreshTokenRepository for SqliteRefreshTokenRepository {
         Ok(result.rows_affected() as usize)
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::initialization::initialize;
+    use crate::persistence::repository::implementation::user::SqliteUserRepository;
+    use crate::persistence::repository::interface::user::UserRepository;
+    use crate::models::database::user::User;
+
+    async fn setup_db() -> SqlitePool {
+        initialize(":memory:").await.unwrap()
+    }
+
+    async fn create_test_user(pool: &SqlitePool, username: &str) {
+        let user_repo = SqliteUserRepository::new(pool.clone());
+        let user = User {
+            username: username.to_string(),
+            password_hash: "hash".to_string(),
+            is_admin: false,
+        };
+        user_repo.create_user(&user).await.unwrap();
+    }
+
+    #[tokio::test]
+    async fn test_create_refresh_token_success() {
+        let pool = setup_db().await;
+        let repo = SqliteRefreshTokenRepository::new(pool.clone());
+        create_test_user(&pool, "testuser").await;
+
+        let token = RefreshToken {
+            token_hash: "tokenhash".to_string(),
+            username: "testuser".to_string(),
+            expires_at: 1000,
+            created_at: 500,
+            is_revoked: false,
+        };
+
+        let rows = repo.create_refresh_token(&token).await.unwrap();
+        assert_eq!(rows, 1);
+    }
+
+    #[tokio::test]
+    async fn test_get_refresh_token_found() {
+        let pool = setup_db().await;
+        let repo = SqliteRefreshTokenRepository::new(pool.clone());
+        create_test_user(&pool, "testuser").await;
+        let token_hash = "tokenhash";
+        repo.create_refresh_token(&RefreshToken {
+            token_hash: token_hash.to_string(),
+            username: "testuser".to_string(),
+            expires_at: 1000,
+            created_at: 500,
+            is_revoked: false,
+        }).await.unwrap();
+
+        let result = repo.get_refresh_token(token_hash).await.unwrap().unwrap();
+        assert_eq!(result.username, "testuser");
+    }
+
+    #[tokio::test]
+    async fn test_get_refresh_token_not_found() {
+        let pool = setup_db().await;
+        let repo = SqliteRefreshTokenRepository::new(pool);
+
+        let result = repo.get_refresh_token("nonexistent").await.unwrap();
+        assert!(result.is_none());
+    }
+
+    #[tokio::test]
+    async fn test_revoke_refresh_token_success() {
+        let pool = setup_db().await;
+        let repo = SqliteRefreshTokenRepository::new(pool.clone());
+        create_test_user(&pool, "testuser").await;
+        let token_hash = "tokenhash";
+        repo.create_refresh_token(&RefreshToken {
+            token_hash: token_hash.to_string(),
+            username: "testuser".to_string(),
+            expires_at: 1000,
+            created_at: 500,
+            is_revoked: false,
+        }).await.unwrap();
+
+        let rows = repo.revoke_refresh_token(token_hash).await.unwrap();
+        assert_eq!(rows, 1);
+
+        let revoked = repo.get_refresh_token(token_hash).await.unwrap().unwrap();
+        assert!(revoked.is_revoked);
+    }
+
+    #[tokio::test]
+    async fn test_revoke_all_refresh_tokens_of_user() {
+        let pool = setup_db().await;
+        let repo = SqliteRefreshTokenRepository::new(pool.clone());
+        create_test_user(&pool, "testuser").await;
+
+        repo.create_refresh_token(&RefreshToken {
+            token_hash: "t1".to_string(),
+            username: "testuser".to_string(),
+            expires_at: 1000,
+            created_at: 500,
+            is_revoked: false,
+        }).await.unwrap();
+        repo.create_refresh_token(&RefreshToken {
+            token_hash: "t2".to_string(),
+            username: "testuser".to_string(),
+            expires_at: 1000,
+            created_at: 500,
+            is_revoked: false,
+        }).await.unwrap();
+
+        let rows = repo.revoke_all_refresh_tokens_of_user("testuser").await.unwrap();
+        assert_eq!(rows, 2);
+        
+        assert!(repo.get_refresh_token("t1").await.unwrap().unwrap().is_revoked);
+        assert!(repo.get_refresh_token("t2").await.unwrap().unwrap().is_revoked);
+    }
+
+    #[tokio::test]
+    async fn test_foreign_key_cascade() {
+        let pool = setup_db().await;
+        let repo = SqliteRefreshTokenRepository::new(pool.clone());
+        let user_repo = SqliteUserRepository::new(pool);
+
+        let user = User {
+            username: "delete_me".to_string(),
+            password_hash: "hash".to_string(),
+            is_admin: false,
+        };
+        user_repo.create_user(&user).await.unwrap();
+
+        repo.create_refresh_token(&RefreshToken {
+            token_hash: "cascade_token".to_string(),
+            username: "delete_me".to_string(),
+            expires_at: 1000,
+            created_at: 500,
+            is_revoked: false,
+        }).await.unwrap();
+
+        // Delete user
+        user_repo.delete_user("delete_me").await.unwrap();
+
+        // Token should be gone due to ON DELETE CASCADE
+        let token = repo.get_refresh_token("cascade_token").await.unwrap();
+        assert!(token.is_none());
+    }
+}
