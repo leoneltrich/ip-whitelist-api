@@ -1,10 +1,10 @@
-use rand::Rng;
-use rand::distr::Alphanumeric;
 // src/initialization.rs
 use crate::models::database::user::User;
 use crate::persistence::repository::Repositories;
 use crate::persistence::sqlite;
 use crate::security::hashing;
+use rand::distr::Alphanumeric;
+use rand::RngExt;
 use sqlx::SqlitePool;
 
 pub async fn run_startup_sequence(

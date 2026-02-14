@@ -3,7 +3,7 @@ use crate::models::database::user::User;
 use crate::persistence::repository::interface::refresh_token::RefreshTokenRepository;
 use crate::persistence::repository::interface::user::UserRepository;
 use crate::security::hashing;
-use rand::Rng;
+use rand::RngExt;
 use shared::auth::jwt;
 use shared::auth::models::Claims;
 use shared::errors::AppError;

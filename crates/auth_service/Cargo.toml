@@ -12,9 +12,12 @@ serde_json = "1"
 sqlx = { version = "0.8.6", features = ["runtime-tokio", "sqlite", "macros"] }
 async-trait = "0.1.89"
 bcrypt = "0.18.0"
-rand = "0.9.2"
+rand = "0.10.0"
 utoipa = { version = "5.4.0", features = ["axum_extras"] }
 utoipa-swagger-ui = { version = "9.0.2", features = ["axum"] }
 hex = "0.4.3"
 sha2 = "0.10.9"
 chrono = "0.4.43"
+
+[dev-dependencies]
+mockall = "0.14.0"
