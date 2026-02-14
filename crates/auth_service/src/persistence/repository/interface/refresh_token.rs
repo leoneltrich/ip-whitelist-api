@@ -1,6 +1,7 @@
 use sqlx::Error;
 use crate::models::database::refresh_token::RefreshToken;
 
+#[cfg_attr(test, mockall::automock)]
 #[async_trait::async_trait]
 pub trait RefreshTokenRepository: Send + Sync {
     async fn delete_refresh_token(&self, refresh_token_hash: &str) -> Result<usize, Error>;

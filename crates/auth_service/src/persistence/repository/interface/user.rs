@@ -2,6 +2,7 @@ use crate::models::database::user::User;
 use async_trait::async_trait;
 use sqlx::Error;
 
+#[cfg_attr(test, mockall::automock)]
 #[async_trait]
 pub trait UserRepository: Send + Sync {
     /// Inserts a new user. Returns rows affected.

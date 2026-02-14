@@ -28,10 +28,6 @@ pub(crate) fn docs_routes() -> Router {
     )
 }
 
-pub fn token_routes() -> Router<AppState> {
-    Router::new()
-}
-
 pub fn user_routes() -> Router<AppState> {
     Router::new().route("/profile", put(user::self_update_user))
 }
