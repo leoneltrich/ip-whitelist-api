@@ -1,7 +1,7 @@
 use chrono::{Duration, Utc};
 use serde::{Deserialize, Serialize};
 // Token is valid for 24 hours
-const EXPIRATION_HOURS: i64 = 24;
+const EXPIRATION_MINUTES: i64 = 10;
 
 // Claims is internal logic (payload of the JWT), so we don't necessarily
 // need to expose it in the OpenAPI schema unless you have an endpoint
@@ -21,7 +21,7 @@ pub struct Claims {
 impl Claims {
     pub fn new(username: String, is_admin: bool) -> Self {
         let now = Utc::now();
-        let expiration = now + Duration::hours(EXPIRATION_HOURS);
+        let expiration = now + Duration::minutes(EXPIRATION_MINUTES);
 
         Self {
             sub: username,
