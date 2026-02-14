@@ -1,16 +1,12 @@
 use crate::api::routes::docs_routes;
 use crate::state::AppState;
-// src/api/mod.rs
-use axum::Router;
+use axum::{Router, extract::DefaultBodyLimit};
 use shared::auth::middleware;
-// Import shared middleware
 
 pub mod routes;
 pub mod services;
-// pub mod middleware; // Removed as it's empty
 mod docs;
 
-// Pass the repositories in here
 pub fn app(state: AppState) -> Router {
     let users = routes::user_routes();
     let admin = routes::admin_routes();
@@ -35,5 +31,6 @@ pub fn app(state: AppState) -> Router {
 
     Router::new()
         .nest("/api/v1", aggregated_routes)
+        .layer(DefaultBodyLimit::max(4096))
         .merge(swagger)
 }
