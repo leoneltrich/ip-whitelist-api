@@ -1,11 +1,13 @@
+use std::str::FromStr;
+use std::time::Duration;
 // src/initialization.rs
 use crate::models::database::user::User;
 use crate::persistence::repository::Repositories;
-use crate::persistence::sqlite;
 use crate::security::hashing;
 use rand::distr::Alphanumeric;
 use rand::RngExt;
-use sqlx::SqlitePool;
+use sqlx::{Error, SqlitePool};
+use sqlx::sqlite::{SqliteConnectOptions, SqlitePoolOptions};
 
 pub async fn run_startup_sequence(
     database_path: &str,
@@ -13,7 +15,7 @@ pub async fn run_startup_sequence(
     println!("Initializing Persistence Layer...");
 
     // We await the result here
-    let pool = sqlite::initialize(database_path).await?;
+    let pool = initialize(database_path).await?;
 
     println!("Database setup complete.");
 
@@ -63,5 +65,59 @@ async fn bootstrap_admin(repos: &Repositories) -> Result<(), Box<dyn std::error:
     println!("SAVE THIS PASSWORD NOW. IT WILL NOT BE SHOWN AGAIN.");
     println!("========================================================\n");
 
+    Ok(())
+}
+
+/// Establishes connection pool and runs schema migration
+pub async fn initialize(path: &str) -> Result<SqlitePool, Error> {
+    // 1. Configure Options
+    // create_if_missing(true) is key here.
+    let options = SqliteConnectOptions::from_str(&format!("sqlite://{}", path))?
+        .create_if_missing(true)
+        .foreign_keys(true);
+
+    // 2. Create the Pool
+    let pool = SqlitePoolOptions::new()
+        .max_connections(5)
+        .acquire_timeout(Duration::from_secs(3))
+        .connect_with(options)
+        .await?;
+
+    // 3. Run Schema Setup
+    // Since we are async now, we can await these directly.
+    create_users_table(&pool).await?;
+    create_refresh_token_table(&pool).await?;
+
+    Ok(pool)
+}
+
+async fn create_users_table(pool: &SqlitePool) -> Result<(), Error> {
+    // User Table
+    sqlx::query(
+        "CREATE TABLE IF NOT EXISTS users (
+            username TEXT PRIMARY KEY,
+            password_hash TEXT NOT NULL,
+            is_admin BOOLEAN NOT NULL DEFAULT 0
+        );",
+    )
+    .execute(pool)
+    .await?;
+
+    Ok(())
+}
+
+async fn create_refresh_token_table(pool: &SqlitePool) -> Result<(), Error> {
+    sqlx::query("CREATE TABLE IF NOT EXISTS refresh_tokens (
+        token_hash TEXT NOT NULL PRIMARY KEY,
+        username TEXT NOT NULL,
+        expires_at INTEGER NOT NULL,
+        created_at INTEGER NOT NULL,
+        is_revoked BOOLEAN DEFAULT 0,
+        FOREIGN KEY(username) REFERENCES users(username) ON DELETE CASCADE
+    );
+        CREATE INDEX IF NOT EXISTS idx_rt_username ON refresh_tokens(username);",
+    )
+    .execute(pool)
+    .await?;
     Ok(())
 }
