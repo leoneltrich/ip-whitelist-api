@@ -1,7 +1,11 @@
-use crate::models::api::user::{CreateUserRequest, UpdateUserRequest, UserResponse};
+use crate::models::api::user::{
+    CreateUserRequest, UpdateProfileRequest, UpdateUserRequest, UserResponse,
+};
 use crate::models::database::user::User;
+use crate::persistence::repository::interface::user::UserRepository;
 use crate::security::hashing;
 use crate::state::AppState;
+use shared::auth::models::Claims;
 use shared::errors::AppError;
 
 pub async fn create_user(state: &AppState, req: CreateUserRequest) -> Result<(), AppError> {
@@ -243,11 +247,12 @@ mod tests {
     #[tokio::test]
     async fn test_create_user_db_error_handling_no_panic() {
         let mut user_repo = MockUserRepository::new();
-        
+
         // Simulate a database error (e.g., connection lost)
-        user_repo.expect_get_user_by_name()
+        user_repo
+            .expect_get_user_by_name()
             .times(1)
-            .returning(|_| Err(sqlx::Error::PoolClosed)); 
+            .returning(|_| Err(sqlx::Error::PoolClosed));
 
         let state = setup_test_state(user_repo);
         let req = CreateUserRequest {
@@ -257,7 +262,30 @@ mod tests {
         };
 
         let result = create_user(&state, req).await;
-        
+
         assert!(matches!(result, Err(AppError::InternalServerError(_))));
     }
+}
+
+pub async fn sanitize_user_self_update_request(
+    state: &AppState,
+    claims: &Claims,
+    payload: UpdateProfileRequest,
+) -> Result<UpdateUserRequest, AppError> {
+    let current_user = state
+        .repositories
+        .user
+        .get_user_by_name(&claims.sub)
+        .await
+        .map_err(|_| {
+            AppError::InternalServerError("An internal server error occurred".to_string())
+        })?
+        .ok_or(AppError::NotFound)?;
+
+    let trusted_request = UpdateUserRequest {
+        username: claims.sub.clone(),
+        is_admin: current_user.is_admin,
+        password: payload.password,
+    };
+    Ok(trusted_request)
 }
