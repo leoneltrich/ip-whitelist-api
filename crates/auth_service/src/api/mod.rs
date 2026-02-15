@@ -90,9 +90,16 @@ mod tests {
     #[tokio::test]
     async fn test_public_route_health() {
         let (app, _) = setup_test_app();
+        let client_addr: std::net::SocketAddr = "1.2.3.4:1234".parse().unwrap();
 
         let response = app
-            .oneshot(Request::builder().uri("/api/v1/health").body(Body::empty()).unwrap())
+            .oneshot(
+                Request::builder()
+                    .uri("/api/v1/health")
+                    .extension(axum::extract::ConnectInfo(client_addr))
+                    .body(Body::empty())
+                    .unwrap(),
+            )
             .await
             .unwrap();
 
@@ -102,9 +109,16 @@ mod tests {
     #[tokio::test]
     async fn test_secure_route_unauthorized() {
         let (app, _) = setup_test_app();
+        let client_addr: std::net::SocketAddr = "1.2.3.4:1234".parse().unwrap();
 
         let response = app
-            .oneshot(Request::builder().uri("/api/v1/users/profile").body(Body::empty()).unwrap())
+            .oneshot(
+                Request::builder()
+                    .uri("/api/v1/users/profile")
+                    .extension(axum::extract::ConnectInfo(client_addr))
+                    .body(Body::empty())
+                    .unwrap(),
+            )
             .await
             .unwrap();
 
@@ -114,6 +128,7 @@ mod tests {
     #[tokio::test]
     async fn test_admin_route_forbidden_for_user() {
         let (app, priv_pem) = setup_test_app();
+        let client_addr: std::net::SocketAddr = "1.2.3.4:1234".parse().unwrap();
 
         let claims = Claims::new("testuser".to_string(), false);
         let token = jwt::sign(claims, &priv_pem).unwrap();
@@ -123,6 +138,7 @@ mod tests {
                 Request::builder()
                     .uri("/api/v1/admin/users")
                     .header("Authorization", format!("Bearer {}", token))
+                    .extension(axum::extract::ConnectInfo(client_addr))
                     .body(Body::empty())
                     .unwrap(),
             )
@@ -134,8 +150,6 @@ mod tests {
 
     #[tokio::test]
     async fn test_admin_route_accessible_by_admin() {
-        // We need to set an expectation on the mock because the handler will call it
-        // and we are testing the full end-to-end routing here.
 
         let mut user_repo = MockUserRepository::new();
         user_repo.expect_get_all_users().returning(|| Ok(vec![])).times(1);
@@ -161,10 +175,12 @@ mod tests {
 
         let claims = Claims::new("admin".to_string(), true);
         let token = jwt::sign(claims, &priv_pem).unwrap();
+        let client_addr: std::net::SocketAddr = "1.2.3.4:1234".parse().unwrap();
 
         let request = Request::builder()
             .uri("/api/v1/admin/users")
             .header("Authorization", format!("Bearer {}", token))
+            .extension(axum::extract::ConnectInfo(client_addr))
             .body(Body::empty())
             .unwrap();
 
@@ -175,24 +191,53 @@ mod tests {
         assert_eq!(response.status(), StatusCode::OK);
     }
 
-    #[tokio::test]
-    async fn test_body_limit_exceeded() {
-        let (app, _) = setup_test_app();
+        #[tokio::test]
+        async fn test_body_limit_exceeded() {
+            let (app, _) = setup_test_app();
+            let client_addr: std::net::SocketAddr = "1.2.3.4:1234".parse().unwrap();
+    
+            let large_body = vec![0u8; 5000];
+            
+            let response = app
+                .oneshot(
+                    Request::builder()
+                        .method("POST")
+                        .uri("/api/v1/login")
+                        .header("Content-Type", "application/json")
+                        .extension(axum::extract::ConnectInfo(client_addr))
+                        .body(Body::from(large_body))
+                        .unwrap(),
+                )
+                .await
+                .unwrap();
+    
+            assert_eq!(response.status(), StatusCode::PAYLOAD_TOO_LARGE);
+        }
+        #[tokio::test]
+    async fn test_global_rate_limit_enforced() {
+        let (router, _) = setup_test_app();
 
-        let large_body = vec![0u8; 5000];
+        let client_addr: std::net::SocketAddr = "1.2.3.4:1234".parse().unwrap();
 
-        let response = app
-            .oneshot(
-                Request::builder()
-                    .method("POST")
-                    .uri("/api/v1/login")
-                    .header("Content-Type", "application/json")
-                    .body(Body::from(large_body))
-                    .unwrap()
-            )
-            .await
+        for _ in 0..10 {
+            let req = Request::builder()
+                .uri("/api/v1/health")
+                .extension(axum::extract::ConnectInfo(client_addr))
+                .body(Body::empty())
+                .unwrap();
+            
+            let response: Response = router.clone().oneshot(req).await.unwrap();
+            assert_eq!(response.status(), StatusCode::OK);
+        }
+
+        // 11th request
+        let req = Request::builder()
+            .uri("/api/v1/health")
+            .extension(axum::extract::ConnectInfo(client_addr))
+            .body(Body::empty())
             .unwrap();
-
-        assert_eq!(response.status(), StatusCode::PAYLOAD_TOO_LARGE);
+        
+        let response: Response = router.oneshot(req).await.unwrap();
+        assert_eq!(response.status(), StatusCode::TOO_MANY_REQUESTS);
     }
 }
