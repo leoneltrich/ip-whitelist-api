@@ -5,10 +5,10 @@ use crate::models::api::user::{
 };
 use crate::state::AppState;
 use axum::{
-    Extension, Json,
-    extract::{Path, State},
-    http::StatusCode,
+    extract::{Path, State}, http::StatusCode,
     response::IntoResponse,
+    Extension,
+    Json,
 };
 use serde_json::json;
 use shared::auth::models::Claims;
@@ -31,9 +31,19 @@ pub async fn self_update_user(
     Extension(claims): Extension<Claims>,
     Json(payload): Json<UpdateProfileRequest>,
 ) -> Result<impl IntoResponse, AppError> {
+    let current_user = state
+        .repositories
+        .user
+        .get_user_by_name(&claims.sub)
+        .await
+        .map_err(|_| {
+            AppError::InternalServerError("An internal server error occurred".to_string())
+        })?
+        .ok_or(AppError::NotFound)?;
+
     let trusted_request = UpdateUserRequest {
         username: claims.sub,
-        is_admin: claims.is_admin,
+        is_admin: current_user.is_admin,
         password: payload.password,
     };
 
