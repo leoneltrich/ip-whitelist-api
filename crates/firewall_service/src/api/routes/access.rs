@@ -3,14 +3,15 @@ use crate::models::api::access::{AccessRequest, AccessResponse, AccessStatusResp
 use crate::state::AppState;
 use axum::extract::Path;
 use axum::{
-    Extension, Json,
-    extract::{ConnectInfo, State},
-    http::HeaderMap,
+    extract::{ConnectInfo, State}, http::HeaderMap,
     response::IntoResponse,
+    Extension,
+    Json,
 };
 use shared::auth::models::Claims;
 use shared::errors::AppError;
-use std::net::{IpAddr, SocketAddr};
+use std::net::SocketAddr;
+use shared::utils;
 
 #[utoipa::path(
     post,
@@ -34,7 +35,7 @@ pub async fn request_access(
 ) -> Result<impl IntoResponse, AppError> {
     // 1. Determine the Real IP
     // Priority: X-Forwarded-For Header -> Direct Connection
-    let ip = get_real_ip(&headers, addr).unwrap_or(addr.ip());
+    let ip = utils::get_real_ip(&headers, addr).unwrap_or(addr.ip());
 
     // 2. Call Service
     let response = services::access::grant_access(&state, req, ip, &claims.sub).await?;
@@ -61,7 +62,7 @@ pub async fn check_access_status(
     headers: HeaderMap,
     ConnectInfo(addr): ConnectInfo<SocketAddr>,
 ) -> Result<Json<AccessStatusResponse>, AppError> {
-    let ip = get_real_ip(&headers, addr).ok_or(AppError::InternalServerError(
+    let ip = utils::get_real_ip(&headers, addr).ok_or(AppError::InternalServerError(
         "Could not determine IP".into(),
     ))?;
 
@@ -70,27 +71,3 @@ pub async fn check_access_status(
     Ok(Json(response))
 }
 
-/// Hardened IP Extraction
-///
-/// Strictly enforces trusted headers.
-fn get_real_ip(headers: &HeaderMap, addr: SocketAddr) -> Option<IpAddr> {
-    // The order of those is important to give the CF header a higher priority than the X-Real-IP
-    if let Some(ip) = extract_header(headers, "CF-Connecting-IP") {
-        return Some(ip);
-    }
-
-    // The order of those is important to give the X-Real-IP header a higher priority than the src
-    if let Some(ip) = extract_header(headers, "X-Real-IP") {
-        return Some(ip);
-    }
-
-    Some(addr.ip())
-}
-
-/// Helper to extract and parse a single IP header
-fn extract_header(headers: &HeaderMap, key: &str) -> Option<IpAddr> {
-    headers
-        .get(key)
-        .and_then(|hv| hv.to_str().ok())
-        .and_then(|s| s.trim().parse::<IpAddr>().ok())
-}
