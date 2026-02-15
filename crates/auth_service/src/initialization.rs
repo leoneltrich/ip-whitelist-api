@@ -58,7 +58,7 @@ async fn bootstrap_admin(repos: &Repositories) -> Result<(), Box<dyn std::error:
 
     // 5. Print Credentials to Terminal (Critical Step)
     println!("\n========================================================");
-    println!("DEFAULT ADMIN CREATED");
+    println!("DEFAULT ADMIN CREATED, CHANGE PASSWORD IMMEDIATELY:");
     println!("Username: {}", admin_username);
     println!("Password: {}", password_plain);
     println!("SAVE THIS PASSWORD NOW. IT WILL NOT BE SHOWN AGAIN.");

@@ -239,4 +239,25 @@ mod tests {
         assert_eq!(users[0].username, "u1");
         assert!(users[0].is_admin);
     }
+
+    #[tokio::test]
+    async fn test_create_user_db_error_handling_no_panic() {
+        let mut user_repo = MockUserRepository::new();
+        
+        // Simulate a database error (e.g., connection lost)
+        user_repo.expect_get_user_by_name()
+            .times(1)
+            .returning(|_| Err(sqlx::Error::PoolClosed)); 
+
+        let state = setup_test_state(user_repo);
+        let req = CreateUserRequest {
+            username: "any_user".into(),
+            password: "any_password".into(),
+            is_admin: false,
+        };
+
+        let result = create_user(&state, req).await;
+        
+        assert!(matches!(result, Err(AppError::InternalServerError(_))));
+    }
 }

@@ -81,6 +81,7 @@ mod tests {
     use super::*;
     use crate::models::api::auth::LoginRequest;
     use crate::models::database::user::User;
+    use crate::models::database::refresh_token::RefreshToken;
     use crate::persistence::repository::interface::refresh_token::MockRefreshTokenRepository;
     use crate::persistence::repository::interface::user::MockUserRepository;
     use crate::security::hashing;
@@ -225,6 +226,18 @@ mod tests {
         let mut token_repo = MockRefreshTokenRepository::new();
         let username = "testuser";
         let refresh_token = "some_token";
+        let token_hash = hash_refresh_token(refresh_token);
+
+        token_repo.expect_get_refresh_token()
+            .with(mockall::predicate::eq(token_hash.clone()))
+            .times(1)
+            .returning(move |_| Ok(Some(RefreshToken {
+                token_hash: token_hash.clone(),
+                username: "testuser".to_string(),
+                expires_at: 1000,
+                created_at: 500,
+                is_revoked: false,
+            })));
 
         token_repo
             .expect_revoke_refresh_token()
@@ -244,6 +257,18 @@ mod tests {
         let mut token_repo = MockRefreshTokenRepository::new();
         let username = "testuser";
         let refresh_token = "some_token";
+        let token_hash = hash_refresh_token(refresh_token);
+
+        token_repo.expect_get_refresh_token()
+            .with(mockall::predicate::eq(token_hash.clone()))
+            .times(1)
+            .returning(move |_| Ok(Some(RefreshToken {
+                token_hash: token_hash.clone(),
+                username: "testuser".to_string(),
+                expires_at: 1000,
+                created_at: 500,
+                is_revoked: false,
+            })));
 
         token_repo
             .expect_revoke_refresh_token()
@@ -256,5 +281,31 @@ mod tests {
         if let Err(AppError::InternalServerError(msg)) = result {
             assert_eq!(msg, "An error occurred during the refresh token revocation");
         }
+    }
+
+    #[tokio::test]
+    async fn test_logout_prevent_idor_attack() {
+        let mut token_repo = MockRefreshTokenRepository::new();
+        
+        let current_user = "user_a";
+        let token_of_b = "token_belonging_to_b";
+
+        // 1. The token exists in DB but belongs to "user_b"
+        token_repo.expect_get_refresh_token()
+            .returning(move |_| Ok(Some(RefreshToken {
+                token_hash: "some_hash".into(),
+                username: "user_b".into(), 
+                expires_at: 1000,
+                created_at: 500,
+                is_revoked: false,
+            })));
+
+        // 2. Verification: revoke_refresh_token should NEVER be called
+        token_repo.expect_revoke_refresh_token().times(0);
+
+        let result = logout(&token_repo, current_user, token_of_b).await;
+
+        // 3. Result should be an error
+        assert!(matches!(result, Err(AppError::InvalidRefreshToken)));
     }
 }

@@ -160,3 +160,62 @@ pub async fn get_all_users(State(state): State<AppState>) -> Result<impl IntoRes
 
     Ok((StatusCode::OK, Json(response)))
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::persistence::repository::interface::user::MockUserRepository;
+    use crate::persistence::repository::interface::refresh_token::MockRefreshTokenRepository;
+    use crate::persistence::repository::Repositories;
+    use crate::config::AppConfig;
+    use crate::models::database::user::User;
+    use axum::extract::State;
+    use axum::{Extension, Json};
+    use std::sync::Arc;
+
+    fn setup_test_state(user_repo: MockUserRepository) -> AppState {
+        let repositories = Repositories {
+            user: Arc::new(user_repo),
+            refresh_token: Arc::new(MockRefreshTokenRepository::new()),
+        };
+        let config = AppConfig {
+            private_key_pem: "dummy".to_string(),
+            public_key_pem: "dummy".to_string(),
+            database_path: "dummy".to_string(),
+        };
+        AppState::new(config, repositories)
+    }
+
+    #[tokio::test]
+    async fn test_self_update_user_prevents_admin_escalation() {
+        let mut user_repo = MockUserRepository::new();
+        
+        // 1. Database says the user is NOT an admin
+        user_repo.expect_get_user_by_name()
+            .returning(|_| Ok(Some(User {
+                username: "attacker".into(),
+                password_hash: "hash".into(),
+                is_admin: false, // The ground truth
+            })));
+        
+        // 2. Verification: The subsequent update MUST be called with is_admin: false
+        user_repo.expect_update_user()
+            .withf(|user_to_update| user_to_update.is_admin == false)
+            .returning(|_| Ok(1))
+            .times(1);
+
+        let state = setup_test_state(user_repo);
+        
+        // 3. The incoming JWT claims incorrectly (or maliciously) say is_admin: true
+        let claims = Claims::new("attacker".into(), true);
+        let payload = UpdateProfileRequest { password: "new_password".into() };
+
+        let result = self_update_user(
+            State(state),
+            Extension(claims),
+            Json(payload)
+        ).await;
+
+        assert!(result.is_ok());
+    }
+}
