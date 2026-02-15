@@ -24,6 +24,7 @@ pub fn app(state: AppState) -> Router {
 
     let users = routes::user_routes();
     let admin = routes::admin_routes();
+    let private = routes::private_routes();
 
     let swagger = docs_routes();
 
@@ -33,6 +34,7 @@ pub fn app(state: AppState) -> Router {
     let secure_api = Router::new()
         .nest("/admin", admin)
         .nest("/users", users)
+        .merge(private)
         .layer(axum::middleware::from_fn_with_state(
             state.clone(),
             middleware::auth::<AppState>,

@@ -21,6 +21,10 @@ pub fn public_routes() -> Router<AppState> {
         .route("/token/refresh", post(token::refresh))
 }
 
+pub fn private_routes() -> Router<AppState> {
+    Router::new().route("/logout", post(auth::logout))
+}
+
 pub(crate) fn docs_routes() -> Router {
     Router::new().merge(
         SwaggerUi::new("/api/v1/swagger-ui")
