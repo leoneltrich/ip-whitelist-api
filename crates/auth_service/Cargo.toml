@@ -18,6 +18,7 @@ utoipa-swagger-ui = { version = "9.0.2", features = ["axum"] }
 hex = "0.4.3"
 sha2 = "0.10.9"
 chrono = "0.4.43"
+tower_governor = "0.8.0"
 
 [dev-dependencies]
 mockall = "0.14.0"

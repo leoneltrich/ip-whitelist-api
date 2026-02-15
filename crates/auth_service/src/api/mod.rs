@@ -1,13 +1,27 @@
 use crate::api::routes::docs_routes;
 use crate::state::AppState;
-use axum::{Router, extract::DefaultBodyLimit};
+use axum::{extract::DefaultBodyLimit, Router};
 use shared::auth::middleware;
+use shared::rate_limiting::SmartIpExtractor;
+use std::sync::Arc;
+use tower_governor::governor::GovernorConfigBuilder;
+use tower_governor::GovernorLayer;
 
 pub mod routes;
 pub mod services;
 mod docs;
 
 pub fn app(state: AppState) -> Router {
+
+    let rate_limit = Arc::new(
+        GovernorConfigBuilder::default()
+            .per_second(5)
+            .burst_size(10)
+            .key_extractor(SmartIpExtractor)
+            .finish()
+            .unwrap()
+    );
+
     let users = routes::user_routes();
     let admin = routes::admin_routes();
 
@@ -32,6 +46,7 @@ pub fn app(state: AppState) -> Router {
     Router::new()
         .nest("/api/v1", aggregated_routes)
         .layer(DefaultBodyLimit::max(4096))
+        .layer(GovernorLayer::new(rate_limit.clone()))
         .merge(swagger)
 }
 
@@ -39,17 +54,17 @@ pub fn app(state: AppState) -> Router {
 mod tests {
     use super::*;
     use crate::config::AppConfig;
-    use crate::persistence::repository::Repositories;
-    use crate::persistence::repository::interface::user::MockUserRepository;
     use crate::persistence::repository::interface::refresh_token::MockRefreshTokenRepository;
+    use crate::persistence::repository::interface::user::MockUserRepository;
+    use crate::persistence::repository::Repositories;
     use axum::body::Body;
     use axum::response::Response;
     use http::{Request, StatusCode};
-    use tower::ServiceExt;
-    use std::sync::Arc;
+    use rsa::pkcs8::{EncodePrivateKey, EncodePublicKey};
     use shared::auth::jwt;
     use shared::auth::models::Claims;
-    use rsa::pkcs8::{EncodePrivateKey, EncodePublicKey};
+    use std::sync::Arc;
+    use tower::ServiceExt;
 
     fn setup_test_app() -> (Router, String) {
         let mut rng = rand::rng();
@@ -121,10 +136,10 @@ mod tests {
     async fn test_admin_route_accessible_by_admin() {
         // We need to set an expectation on the mock because the handler will call it
         // and we are testing the full end-to-end routing here.
-        
+
         let mut user_repo = MockUserRepository::new();
         user_repo.expect_get_all_users().returning(|| Ok(vec![])).times(1);
-        
+
         let mut rng = rand::rng();
         let priv_key = rsa::RsaPrivateKey::new(&mut rng, 2048).unwrap();
         let priv_pem = priv_key.to_pkcs8_pem(rsa::pkcs8::LineEnding::LF).unwrap().to_string();
@@ -146,7 +161,7 @@ mod tests {
 
         let claims = Claims::new("admin".to_string(), true);
         let token = jwt::sign(claims, &priv_pem).unwrap();
-        
+
         let request = Request::builder()
             .uri("/api/v1/admin/users")
             .header("Authorization", format!("Bearer {}", token))
@@ -165,7 +180,7 @@ mod tests {
         let (app, _) = setup_test_app();
 
         let large_body = vec![0u8; 5000];
-        
+
         let response = app
             .oneshot(
                 Request::builder()
