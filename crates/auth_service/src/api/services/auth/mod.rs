@@ -46,6 +46,19 @@ pub(crate) async fn logout(
     refresh_token: &str,
 ) -> Result<LogoutResponse, AppError> {
     let token_hash = hash_refresh_token(refresh_token);
+
+    let stored_token = repository
+        .get_refresh_token(&token_hash)
+        .await
+        .map_err(|_| {
+            AppError::InternalServerError("An internal server error occurred".to_string())
+        })?
+        .ok_or(AppError::InvalidRefreshToken)?;
+
+    if stored_token.username != user {
+        return Err(AppError::InvalidRefreshToken);
+    }
+
     repository
         .revoke_refresh_token(&token_hash)
         .await
@@ -66,12 +79,12 @@ pub(crate) async fn logout(
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::persistence::repository::interface::user::MockUserRepository;
-    use crate::persistence::repository::interface::refresh_token::MockRefreshTokenRepository;
-    use crate::models::database::user::User;
     use crate::models::api::auth::LoginRequest;
+    use crate::models::database::user::User;
+    use crate::persistence::repository::interface::refresh_token::MockRefreshTokenRepository;
+    use crate::persistence::repository::interface::user::MockUserRepository;
     use crate::security::hashing;
-    use rsa::{RsaPrivateKey, pkcs8::EncodePrivateKey};
+    use rsa::{pkcs8::EncodePrivateKey, RsaPrivateKey};
     use std::sync::OnceLock;
 
     static TEST_PRIVATE_KEY: OnceLock<String> = OnceLock::new();
@@ -81,7 +94,10 @@ mod tests {
             let mut rng = rand::rng();
             let bits = 2048;
             let priv_key = RsaPrivateKey::new(&mut rng, bits).expect("failed to generate a key");
-            priv_key.to_pkcs8_pem(rsa::pkcs8::LineEnding::LF).expect("failed to encode key").to_string()
+            priv_key
+                .to_pkcs8_pem(rsa::pkcs8::LineEnding::LF)
+                .expect("failed to encode key")
+                .to_string()
         })
     }
 
@@ -102,16 +118,20 @@ mod tests {
             is_admin: false,
         };
 
-        user_repo.expect_get_user_by_name()
+        user_repo
+            .expect_get_user_by_name()
             .with(mockall::predicate::eq(username.clone()))
             .times(1)
-            .returning(move |_| Ok(Some(User {
-                username: username.clone(),
-                password_hash: user.password_hash.clone(),
-                is_admin: user.is_admin,
-            })));
+            .returning(move |_| {
+                Ok(Some(User {
+                    username: username.clone(),
+                    password_hash: user.password_hash.clone(),
+                    is_admin: user.is_admin,
+                }))
+            });
 
-        token_repo.expect_create_refresh_token()
+        token_repo
+            .expect_create_refresh_token()
             .times(1)
             .returning(|_| Ok(1));
 
@@ -137,13 +157,16 @@ mod tests {
         let username = "testuser".to_string();
         let password_hash = hashing::hash_password("correct_password").unwrap();
 
-        user_repo.expect_get_user_by_name()
+        user_repo
+            .expect_get_user_by_name()
             .times(1)
-            .returning(move |_| Ok(Some(User {
-                username: username.clone(),
-                password_hash: password_hash.clone(),
-                is_admin: false,
-            })));
+            .returning(move |_| {
+                Ok(Some(User {
+                    username: username.clone(),
+                    password_hash: password_hash.clone(),
+                    is_admin: false,
+                }))
+            });
 
         let req = LoginRequest {
             username: "testuser".to_string(),
@@ -161,7 +184,8 @@ mod tests {
         let token_repo = MockRefreshTokenRepository::new();
         let private_key = "dummy".to_string();
 
-        user_repo.expect_get_user_by_name()
+        user_repo
+            .expect_get_user_by_name()
             .times(1)
             .returning(|_| Ok(None));
 
@@ -181,7 +205,8 @@ mod tests {
         let token_repo = MockRefreshTokenRepository::new();
         let private_key = "dummy".to_string();
 
-        user_repo.expect_get_user_by_name()
+        user_repo
+            .expect_get_user_by_name()
             .times(1)
             .returning(|_| Err(sqlx::Error::RowNotFound));
 
@@ -201,7 +226,8 @@ mod tests {
         let username = "testuser";
         let refresh_token = "some_token";
 
-        token_repo.expect_revoke_refresh_token()
+        token_repo
+            .expect_revoke_refresh_token()
             .times(1)
             .returning(|_| Ok(1));
 
@@ -219,7 +245,8 @@ mod tests {
         let username = "testuser";
         let refresh_token = "some_token";
 
-        token_repo.expect_revoke_refresh_token()
+        token_repo
+            .expect_revoke_refresh_token()
             .times(1)
             .returning(|_| Err(sqlx::Error::RowNotFound));
 

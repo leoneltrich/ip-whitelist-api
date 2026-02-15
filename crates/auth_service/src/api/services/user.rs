@@ -5,15 +5,16 @@ use crate::state::AppState;
 use shared::errors::AppError;
 
 pub async fn create_user(state: &AppState, req: CreateUserRequest) -> Result<(), AppError> {
-    if state
+    let existing_user = state
         .repositories
         .user
         .get_user_by_name(&req.username)
         .await
-        .unwrap()
-        .is_none()
-        == false
-    {
+        .map_err(|_| {
+            AppError::InternalServerError("An internal server error occurred".to_string())
+        })?;
+
+    if existing_user.is_some() {
         return Err(AppError::Conflict(format!(
             "User {} already exists",
             req.username
@@ -94,10 +95,10 @@ pub async fn get_all_users(state: &AppState) -> Result<Vec<UserResponse>, AppErr
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::persistence::repository::interface::user::MockUserRepository;
-    use crate::persistence::repository::interface::refresh_token::MockRefreshTokenRepository;
-    use crate::persistence::repository::Repositories;
     use crate::config::AppConfig;
+    use crate::persistence::repository::interface::refresh_token::MockRefreshTokenRepository;
+    use crate::persistence::repository::interface::user::MockUserRepository;
+    use crate::persistence::repository::Repositories;
     use std::sync::Arc;
 
     fn setup_test_state(user_repo: MockUserRepository) -> AppState {
@@ -118,14 +119,13 @@ mod tests {
         let mut user_repo = MockUserRepository::new();
         let username = "newuser".to_string();
 
-        user_repo.expect_get_user_by_name()
+        user_repo
+            .expect_get_user_by_name()
             .with(mockall::predicate::eq(username.clone()))
             .times(1)
             .returning(|_| Ok(None));
 
-        user_repo.expect_create_user()
-            .times(1)
-            .returning(|_| Ok(1));
+        user_repo.expect_create_user().times(1).returning(|_| Ok(1));
 
         let state = setup_test_state(user_repo);
         let req = CreateUserRequest {
@@ -143,14 +143,17 @@ mod tests {
         let mut user_repo = MockUserRepository::new();
         let username = "existinguser".to_string();
 
-        user_repo.expect_get_user_by_name()
+        user_repo
+            .expect_get_user_by_name()
             .with(mockall::predicate::eq(username.clone()))
             .times(1)
-            .returning(move |_| Ok(Some(User {
-                username: username.clone(),
-                password_hash: "hash".to_string(),
-                is_admin: false,
-            })));
+            .returning(move |_| {
+                Ok(Some(User {
+                    username: username.clone(),
+                    password_hash: "hash".to_string(),
+                    is_admin: false,
+                }))
+            });
 
         let state = setup_test_state(user_repo);
         let req = CreateUserRequest {
@@ -166,9 +169,7 @@ mod tests {
     #[tokio::test]
     async fn test_update_user_success() {
         let mut user_repo = MockUserRepository::new();
-        user_repo.expect_update_user()
-            .times(1)
-            .returning(|_| Ok(1));
+        user_repo.expect_update_user().times(1).returning(|_| Ok(1));
 
         let state = setup_test_state(user_repo);
         let req = UpdateUserRequest {
@@ -184,9 +185,7 @@ mod tests {
     #[tokio::test]
     async fn test_update_user_not_found() {
         let mut user_repo = MockUserRepository::new();
-        user_repo.expect_update_user()
-            .times(1)
-            .returning(|_| Ok(0));
+        user_repo.expect_update_user().times(1).returning(|_| Ok(0));
 
         let state = setup_test_state(user_repo);
         let req = UpdateUserRequest {
@@ -202,7 +201,8 @@ mod tests {
     #[tokio::test]
     async fn test_delete_user_success() {
         let mut user_repo = MockUserRepository::new();
-        user_repo.expect_delete_user()
+        user_repo
+            .expect_delete_user()
             .with(mockall::predicate::eq("user".to_string()))
             .times(1)
             .returning(|_| Ok(1));
@@ -215,12 +215,20 @@ mod tests {
     #[tokio::test]
     async fn test_get_all_users() {
         let mut user_repo = MockUserRepository::new();
-        user_repo.expect_get_all_users()
-            .times(1)
-            .returning(|| Ok(vec![
-                User { username: "u1".to_string(), password_hash: "h1".to_string(), is_admin: true },
-                User { username: "u2".to_string(), password_hash: "h2".to_string(), is_admin: false },
-            ]));
+        user_repo.expect_get_all_users().times(1).returning(|| {
+            Ok(vec![
+                User {
+                    username: "u1".to_string(),
+                    password_hash: "h1".to_string(),
+                    is_admin: true,
+                },
+                User {
+                    username: "u2".to_string(),
+                    password_hash: "h2".to_string(),
+                    is_admin: false,
+                },
+            ])
+        });
 
         let state = setup_test_state(user_repo);
         let result = get_all_users(&state).await;
