@@ -4,9 +4,32 @@ use axum::{
     response::{IntoResponse, Response},
     Json,
 };
-use serde_json::json;
-
+use serde::Serialize;
 use std::fmt;
+use utoipa::ToSchema;
+
+#[derive(Serialize, ToSchema, Debug, Clone, Copy)]
+#[serde(rename_all = "snake_case")]
+pub enum ErrorCode {
+    InternalServerError,
+    ResourceNotFound,
+    Conflict,
+    InvalidCredentials,
+    InvalidAccessToken,
+    PermissionDenied,
+    BadRequest,
+    TokenExpired,
+    InvalidRefreshToken,
+}
+
+#[derive(Serialize, ToSchema)]
+pub struct ErrorResponse {
+    /// The machine-readable error code slug
+    pub error: ErrorCode,
+    /// A human-readable message providing more context
+    #[schema(example = "The provided refresh token is expired or revoked")]
+    pub message: Option<String>,
+}
 
 #[derive(Debug)]
 pub enum AppError {
@@ -16,7 +39,7 @@ pub enum AppError {
     InvalidCredentials,
     InvalidToken,
     Forbidden,
-    BadRequest,
+    BadRequest(String),
     TokenExpired,
     InvalidRefreshToken,
 }
@@ -30,7 +53,7 @@ impl fmt::Display for AppError {
             AppError::InvalidCredentials => write!(f, "Invalid Credentials"),
             AppError::InvalidToken => write!(f, "Invalid Token"),
             AppError::Forbidden => write!(f, "Forbidden"),
-            AppError::BadRequest => write!(f, "Bad Request"),
+            AppError::BadRequest(msg) => write!(f, "Bad Request: {}", msg),
             AppError::TokenExpired => write!(f, "Token Expired"),
             AppError::InvalidRefreshToken => write!(f, "Invalid Refresh Token"),
         }
@@ -39,35 +62,39 @@ impl fmt::Display for AppError {
 
 impl std::error::Error for AppError {}
 
-// We still implement IntoResponse here so it can be used directly in handlers.
-// (In very large apps, you might split this, but for now, this is perfect).
 impl IntoResponse for AppError {
     fn into_response(self) -> Response {
-        let (status, error) = match self {
-            AppError::InternalServerError(msg) => (StatusCode::INTERNAL_SERVER_ERROR, msg),
-            AppError::NotFound => (StatusCode::NOT_FOUND, "resource_not_found".to_string()),
-            AppError::Conflict(msg) => (StatusCode::CONFLICT, msg),
+        let (status, code, msg) = match self {
+            AppError::InternalServerError(msg) => {
+                (StatusCode::INTERNAL_SERVER_ERROR, ErrorCode::InternalServerError, Some(msg))
+            }
+            AppError::NotFound => (StatusCode::NOT_FOUND, ErrorCode::ResourceNotFound, None),
+            AppError::Conflict(msg) => (StatusCode::CONFLICT, ErrorCode::Conflict, Some(msg)),
             AppError::InvalidCredentials => (
                 StatusCode::UNAUTHORIZED,
-                "invalid_credentials".to_string(),
+                ErrorCode::InvalidCredentials,
+                None,
             ),
             AppError::InvalidToken => (
                 StatusCode::UNAUTHORIZED,
-                "invalid_access_token".to_string(),
+                ErrorCode::InvalidAccessToken,
+                None,
             ),
 
-            AppError::Forbidden => (StatusCode::FORBIDDEN, "permission_denied".to_string()),
-            AppError::BadRequest => (StatusCode::BAD_REQUEST, "bad_request".to_string()),
-            AppError::TokenExpired => (StatusCode::UNAUTHORIZED, "token_expired".to_string()),
+            AppError::Forbidden => (StatusCode::FORBIDDEN, ErrorCode::PermissionDenied, None),
+            AppError::BadRequest(msg) => (StatusCode::BAD_REQUEST, ErrorCode::BadRequest, Some(msg)),
+            AppError::TokenExpired => (StatusCode::UNAUTHORIZED, ErrorCode::TokenExpired, None),
             AppError::InvalidRefreshToken => (
                 StatusCode::UNAUTHORIZED,
-                "invalid_refresh_token".to_string(),
+                ErrorCode::InvalidRefreshToken,
+                None,
             ),
         };
 
-        let body = Json(json!({
-            "error": error,
-        }));
+        let body = Json(ErrorResponse {
+            error: code,
+            message: msg,
+        });
 
         (status, body).into_response()
     }
