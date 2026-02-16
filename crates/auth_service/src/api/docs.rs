@@ -1,5 +1,6 @@
 use crate::api::routes;
 use crate::models::api::{user, auth};
+use shared::errors::utoipa_errors as err;
 use shared::health::models as health;
 use utoipa::OpenApi;
 
@@ -42,6 +43,16 @@ use utoipa::OpenApi;
             user::UserListResponse,
 
             health::HealthResponse,
+
+            // Errors
+            err::InternalServerErrorResponse,
+            err::NotFoundErrorResponse,
+            err::ConflictErrorResponse,
+            err::BadRequestErrorResponse,
+            err::PermissionErrorResponse,
+            err::LoginAuthErrorResponse,
+            err::TokenRefreshErrorResponse,
+            err::AccessAuthErrorResponse,
         )
     ),
     tags(

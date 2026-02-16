@@ -6,6 +6,7 @@ use axum::http::StatusCode;
 use axum::response::IntoResponse;
 use axum::Json;
 use shared::errors::app_errors::AppError;
+use shared::errors::utoipa_errors::{BadRequestErrorResponse, InternalServerErrorResponse, TokenRefreshErrorResponse};
 
 #[utoipa::path(
     post,
@@ -13,8 +14,9 @@ use shared::errors::app_errors::AppError;
     request_body = TokenRefreshRequest,
     responses(
         (status = 200, description = "Refresh successful", body = TokenRefreshResponse),
-        (status = 401, description = "Invalid refresh token"),
-        (status = 500, description = "An internal server error occurred")
+        (status = 400, description = "Invalid request", body = BadRequestErrorResponse),
+        (status = 401, description = "Invalid refresh token", body = TokenRefreshErrorResponse),
+        (status = 500, description = "An internal server error occurred", body = InternalServerErrorResponse)
     )
 )]
 pub(crate) async fn refresh(

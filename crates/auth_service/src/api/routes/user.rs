@@ -1,4 +1,3 @@
-// Import the service module
 use crate::api::services::{user as user_service, user};
 use crate::models::api::user::{
     CreateUserRequest, UpdateProfileRequest, UpdateUserRequest, UserListResponse,
@@ -13,7 +12,7 @@ use axum::{
 use serde_json::json;
 use shared::auth::models::Claims;
 use shared::errors::app_errors::AppError;
-
+use shared::errors::utoipa_errors::{AccessAuthErrorResponse, BadRequestErrorResponse, ConflictErrorResponse, InternalServerErrorResponse, NotFoundErrorResponse, PermissionErrorResponse};
 // Self-routes
 
 #[utoipa::path(
@@ -22,7 +21,11 @@ use shared::errors::app_errors::AppError;
     request_body = UpdateProfileRequest,
     responses(
         (status = 200, description = "Profile updated"),
-        (status = 401, description = "Unauthorized")
+        (status = 400, description = "Invalid request", body = BadRequestErrorResponse),
+        (status = 401, description = "Unauthenticated", body = AccessAuthErrorResponse),
+        (status = 403, description = "Unauthorized", body = PermissionErrorResponse),
+        (status = 404, description = "Resource not found", body = NotFoundErrorResponse),
+        (status = 500, description = "An internal server error occurred", body = InternalServerErrorResponse)
     ),
     security(("jwt" = []))
 )]
@@ -52,8 +55,12 @@ pub async fn self_update_user(
     request_body = CreateUserRequest,
     responses(
         (status = 201, description = "User created"),
-        (status = 409, description = "Username already exists"),
-        (status = 403, description = "Forbidden")
+        (status = 400, description = "Invalid request", body = BadRequestErrorResponse),
+        (status = 401, description = "Unauthenticated", body = AccessAuthErrorResponse),
+        (status = 403, description = "Unauthorized", body = PermissionErrorResponse),
+        (status = 404, description = "Resource not found", body = NotFoundErrorResponse),
+        (status = 409, description = "Username already exists", body = ConflictErrorResponse),
+        (status = 500, description = "An internal server error occurred", body = InternalServerErrorResponse)
     ),
     security(("jwt" = []))
 )]
@@ -78,8 +85,12 @@ pub async fn create_user(
     request_body = UpdateUserRequest,
     responses(
         (status = 200, description = "User updated"),
-        (status = 404, description = "User not found"),
-        (status = 403, description = "Forbidden")
+        (status = 400, description = "Invalid request", body = BadRequestErrorResponse),
+        (status = 401, description = "Unauthenticated", body = AccessAuthErrorResponse),
+        (status = 403, description = "Unauthorized", body = PermissionErrorResponse),
+        (status = 404, description = "User not found", body = NotFoundErrorResponse),
+        (status = 409, description = "Username already exists", body = ConflictErrorResponse),
+        (status = 500, description = "An internal server error occurred", body = InternalServerErrorResponse)
     ),
     security(("jwt" = []))
 )]
@@ -105,9 +116,12 @@ pub async fn admin_update_user(
         ("username" = String, Path, description = "Username to delete")
     ),
     responses(
-        (status = 204, description = "User deleted"), // 204 No Content or 200 OK depending on impl
-        (status = 404, description = "User not found"),
-        (status = 403, description = "Forbidden")
+        (status = 204, description = "User deleted"),
+        (status = 400, description = "Invalid request", body = BadRequestErrorResponse),
+        (status = 401, description = "Unauthenticated", body = AccessAuthErrorResponse),
+        (status = 403, description = "Unauthorized", body = PermissionErrorResponse),
+        (status = 404, description = "User not found", body = NotFoundErrorResponse),
+        (status = 500, description = "An internal server error occurred", body = InternalServerErrorResponse)
     ),
     security(("jwt" = []))
 )]
@@ -131,8 +145,11 @@ pub async fn delete_user(
     path = "/api/v1/admin/users",
     responses(
         (status = 200, description = "List of all users retrieved successfully", body = UserListResponse),
-        (status = 500, description = "Internal Server Error"),
-        (status = 401, description = "Unauthorized")
+        (status = 400, description = "Invalid request", body = BadRequestErrorResponse),
+        (status = 401, description = "Unauthenticated", body = AccessAuthErrorResponse),
+        (status = 403, description = "Unauthorized", body = PermissionErrorResponse),
+        (status = 404, description = "Resource not found", body = NotFoundErrorResponse),
+        (status = 500, description = "An internal server error occurred", body = InternalServerErrorResponse)
     ),
     security(("jwt" = []))
 )]

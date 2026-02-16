@@ -45,6 +45,7 @@ pub async fn create_user(state: &AppState, req: CreateUserRequest) -> Result<(),
 }
 
 pub async fn update_user(state: &AppState, req: UpdateUserRequest) -> Result<(), AppError> {
+    // TODO Handle the case where a username is updated to an already existing name -> Conflict, currently it looks like this just returns a 500
     let password_hash = hashing::hash_password(&req.password)
         .map_err(|_| AppError::InternalServerError("Password hashing failed".to_string()))?;
 

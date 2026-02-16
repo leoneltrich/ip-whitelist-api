@@ -5,6 +5,7 @@ use axum::http::StatusCode;
 use axum::{extract::State, response::IntoResponse, Extension, Json};
 use shared::auth::models::Claims;
 use shared::errors::app_errors::AppError;
+use shared::errors::utoipa_errors::{BadRequestErrorResponse, InternalServerErrorResponse, LoginAuthErrorResponse, TokenRefreshErrorResponse};
 
 #[utoipa::path(
     post,
@@ -12,8 +13,9 @@ use shared::errors::app_errors::AppError;
     request_body = LoginRequest,
     responses(
         (status = 200, description = "Login successful", body = LoginResponse),
-        (status = 401, description = "Invalid credentials"),
-        (status = 500, description = "An internal server error occurred")
+        (status = 400, description = "Invalid request", body = BadRequestErrorResponse),
+        (status = 401, description = "Invalid credentials", body = LoginAuthErrorResponse),
+        (status = 500, description = "An internal server error occurred", body = InternalServerErrorResponse)
     )
 )]
 pub async fn login(
@@ -37,8 +39,9 @@ pub async fn login(
     request_body = LogoutRequest,
     responses(
         (status = 200, description = "Logout successful", body = LogoutResponse),
-        (status = 401, description = "You are not logged in"),
-        (status = 500, description = "An internal server error occurred")
+        (status = 400, description = "Invalid request", body = BadRequestErrorResponse),
+        (status = 401, description = "Invalid refresh token", body = TokenRefreshErrorResponse),
+        (status = 500, description = "An internal server error occurred", body = InternalServerErrorResponse)
     )
 )]
 pub(crate) async fn logout(
