@@ -29,7 +29,7 @@ where
     let auth_header_value = headers
         .get("Authorization")
         .and_then(|value| value.to_str().ok())
-        .ok_or(AppError::InvalidToken)?;
+        .ok_or(AppError::InvalidAccessToken)?;
 
     let claims = logic::verify_token_from_header(auth_header_value, state.public_key_pem())?;
 
@@ -46,7 +46,7 @@ pub async fn require_admin(
     next: Next,
 ) -> Result<Response, AppError> {
     if !claims.is_admin {
-        return Err(AppError::Forbidden);
+        return Err(AppError::PermissionDenied);
     }
     Ok(next.run(request).await)
 }

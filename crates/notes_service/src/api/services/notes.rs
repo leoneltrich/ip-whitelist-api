@@ -70,7 +70,7 @@ pub(crate) async fn get_own_note_by_id(
     let owner = get_note_owner(note_repository, &note_id).await?;
 
     if owner != claims.sub {
-        return Err(AppError::Forbidden);
+        return Err(AppError::PermissionDenied);
     }
 
     get_note_by_id(note_repository, note_id).await
@@ -95,7 +95,7 @@ pub(crate) async fn update_own_note(
     let note_owner = get_note_owner(note_repository, &payload.id).await?;
 
     if note_owner != claims.sub {
-        return Err(AppError::Forbidden);
+        return Err(AppError::PermissionDenied);
     }
 
     update_note(note_repository, &payload).await
@@ -146,7 +146,7 @@ pub(crate) async fn delete_own_note(
     let note_owner = get_note_owner(note_repository, &note_id).await?;
 
     if note_owner != claims.sub {
-        return Err(AppError::Forbidden);
+        return Err(AppError::PermissionDenied);
     }
 
     delete_note(note_repository, note_id).await

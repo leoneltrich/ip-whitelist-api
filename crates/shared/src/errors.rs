@@ -8,38 +8,108 @@ use serde::Serialize;
 use std::fmt;
 use utoipa::ToSchema;
 
+/// The "Master" list of all possible error codes in the system.
+/// This is used for the actual JSON serialization at runtime.
 #[derive(Serialize, ToSchema, Debug, Clone, Copy)]
 #[serde(rename_all = "snake_case")]
 pub enum ErrorCode {
     InternalServerError,
     ResourceNotFound,
     Conflict,
+    BadRequest,
     InvalidCredentials,
     InvalidAccessToken,
     PermissionDenied,
-    BadRequest,
     TokenExpired,
     InvalidRefreshToken,
 }
 
-#[derive(Serialize, ToSchema)]
-pub struct ErrorResponse {
+#[derive(Serialize, ToSchema, Debug, Clone, Copy)]
+#[serde(rename_all = "snake_case")]
+pub enum CommonErrorCodes {
+    InternalServerError,
+    ResourceNotFound,
+    Conflict,
+    BadRequest,
+}
+
+#[derive(Serialize, ToSchema, Debug, Clone, Copy)]
+#[serde(rename_all = "snake_case")]
+pub enum LoginSpecificCodes {
+    InvalidCredentials,
+}
+
+#[derive(Serialize, ToSchema, Debug, Clone, Copy)]
+#[serde(rename_all = "snake_case")]
+pub enum RefreshSpecificErrorCodes {
+    InvalidRefreshToken,
+}
+
+#[derive(Serialize, ToSchema, Debug, Clone, Copy)]
+#[serde(rename_all = "snake_case")]
+pub enum SecuredErrorCodes {
+    InvalidAccessToken,
+    PermissionDenied,
+    TokenExpired,
+}
+
+#[derive(Serialize, ToSchema, Debug, Clone, Copy)]
+#[serde(untagged)]
+pub enum PublicErrorCodes {
+    Common(CommonErrorCodes),
+}
+
+#[derive(Serialize, ToSchema, Debug, Clone, Copy)]
+#[serde(untagged)]
+pub enum ProtectedErrorCodes {
+    Common(CommonErrorCodes),
+    Secured(SecuredErrorCodes),
+}
+
+#[derive(Serialize, ToSchema, Debug, Clone, Copy)]
+#[serde(untagged)]
+pub enum RefreshErrorCodes {
+    Common(CommonErrorCodes),
+    Refresh(RefreshSpecificErrorCodes),
+}
+
+#[derive(Serialize, ToSchema, Debug, Clone, Copy)]
+#[serde(untagged)]
+pub enum LoginErrorCodes {
+    Common(CommonErrorCodes),
+    Login(LoginSpecificCodes),
+}
+
+/// The generic wrapper for all error responses in the OpenAPI spec.
+/// Use ErrorResponse<LoginErrorCodes>, etc., in your route documentation.
+#[derive(Serialize, ToSchema, Debug)]
+pub struct ErrorResponse<T: ToSchema> {
     /// The machine-readable error code slug
-    pub error: ErrorCode,
+    pub error: T,
     /// A human-readable message providing more context
     #[schema(example = "The provided refresh token is expired or revoked")]
     pub message: Option<String>,
 }
 
-#[derive(Debug)]
+/// The actual struct returned by into_response at runtime.
+/// This avoids needing to specify a generic type in the IntoResponse implementation.
+#[derive(Serialize, Debug)]
+pub struct MainErrorResponse {
+    /// The machine-readable error code slug
+    pub error: ErrorCode,
+    /// A human-readable message providing more context
+    pub message: Option<String>,
+}
+
+#[derive(Debug, Clone)]
 pub enum AppError {
     InternalServerError(String),
     NotFound,
     Conflict(String),
-    InvalidCredentials,
-    InvalidToken,
-    Forbidden,
     BadRequest(String),
+    InvalidCredentials,
+    InvalidAccessToken,
+    PermissionDenied,
     TokenExpired,
     InvalidRefreshToken,
 }
@@ -50,10 +120,10 @@ impl fmt::Display for AppError {
             AppError::InternalServerError(msg) => write!(f, "Internal Server Error: {}", msg),
             AppError::NotFound => write!(f, "Resource Not Found"),
             AppError::Conflict(msg) => write!(f, "Conflict: {}", msg),
-            AppError::InvalidCredentials => write!(f, "Invalid Credentials"),
-            AppError::InvalidToken => write!(f, "Invalid Token"),
-            AppError::Forbidden => write!(f, "Forbidden"),
             AppError::BadRequest(msg) => write!(f, "Bad Request: {}", msg),
+            AppError::InvalidCredentials => write!(f, "Invalid Credentials"),
+            AppError::InvalidAccessToken => write!(f, "Invalid Access Token"),
+            AppError::PermissionDenied => write!(f, "Permission Denied"),
             AppError::TokenExpired => write!(f, "Token Expired"),
             AppError::InvalidRefreshToken => write!(f, "Invalid Refresh Token"),
         }
@@ -70,19 +140,18 @@ impl IntoResponse for AppError {
             }
             AppError::NotFound => (StatusCode::NOT_FOUND, ErrorCode::ResourceNotFound, None),
             AppError::Conflict(msg) => (StatusCode::CONFLICT, ErrorCode::Conflict, Some(msg)),
+            AppError::BadRequest(msg) => (StatusCode::BAD_REQUEST, ErrorCode::BadRequest, Some(msg)),
             AppError::InvalidCredentials => (
                 StatusCode::UNAUTHORIZED,
                 ErrorCode::InvalidCredentials,
                 None,
             ),
-            AppError::InvalidToken => (
+            AppError::InvalidAccessToken => (
                 StatusCode::UNAUTHORIZED,
                 ErrorCode::InvalidAccessToken,
                 None,
             ),
-
-            AppError::Forbidden => (StatusCode::FORBIDDEN, ErrorCode::PermissionDenied, None),
-            AppError::BadRequest(msg) => (StatusCode::BAD_REQUEST, ErrorCode::BadRequest, Some(msg)),
+            AppError::PermissionDenied => (StatusCode::FORBIDDEN, ErrorCode::PermissionDenied, None),
             AppError::TokenExpired => (StatusCode::UNAUTHORIZED, ErrorCode::TokenExpired, None),
             AppError::InvalidRefreshToken => (
                 StatusCode::UNAUTHORIZED,
@@ -91,7 +160,7 @@ impl IntoResponse for AppError {
             ),
         };
 
-        let body = Json(ErrorResponse {
+        let body = Json(MainErrorResponse {
             error: code,
             message: msg,
         });

@@ -23,7 +23,7 @@ pub fn verify(token: &str, public_key_pem: &str) -> Result<Claims, AppError> {
         Ok(data) => Ok(data.claims),
         Err(err) => match err.kind() {
             ErrorKind::ExpiredSignature => Err(AppError::TokenExpired),
-            _ => Err(AppError::InvalidToken),
+            _ => Err(AppError::InvalidAccessToken),
         },
     }
 }
