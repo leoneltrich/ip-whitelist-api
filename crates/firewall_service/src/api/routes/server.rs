@@ -10,7 +10,7 @@ use axum::{
     response::IntoResponse,
 };
 use serde_json::json;
-use shared::errors::AppError;
+use shared::errors::app_errors::AppError;
 
 #[utoipa::path(
     post,

@@ -12,7 +12,7 @@ use axum::{
 };
 use serde_json::json;
 use shared::auth::models::Claims;
-use shared::errors::AppError;
+use shared::errors::app_errors::AppError;
 
 // Self-routes
 

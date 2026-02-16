@@ -4,7 +4,7 @@ use crate::state::AppState;
 use axum::http::StatusCode;
 use axum::{extract::State, response::IntoResponse, Extension, Json};
 use shared::auth::models::Claims;
-use shared::errors::AppError;
+use shared::errors::app_errors::AppError;
 
 #[utoipa::path(
     post,

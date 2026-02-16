@@ -6,7 +6,7 @@ use crate::persistence::repository::interface::user::UserRepository;
 use crate::security::hashing;
 use crate::state::AppState;
 use shared::auth::models::Claims;
-use shared::errors::AppError;
+use shared::errors::app_errors::AppError;
 
 pub async fn create_user(state: &AppState, req: CreateUserRequest) -> Result<(), AppError> {
     let existing_user = state

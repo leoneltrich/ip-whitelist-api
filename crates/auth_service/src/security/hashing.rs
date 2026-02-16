@@ -1,6 +1,6 @@
 use bcrypt::{hash, verify, DEFAULT_COST};
 use sha2::{Digest, Sha256};
-use shared::errors::AppError;
+use shared::errors::app_errors::AppError;
 
 /// Hash a password using the standard application configuration.
 pub fn hash_password(password: &str) -> Result<String, AppError> {

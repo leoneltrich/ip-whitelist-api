@@ -4,7 +4,7 @@ use crate::models::api::note::{CreateNoteRequest, UpdateNoteRequest};
 use crate::models::database::note::{NewNote, Note, UpdateNote};
 use crate::persistence::repository::interface::notes::NoteRepository;
 use shared::auth::models::Claims;
-use shared::errors::AppError;
+use shared::errors::app_errors::AppError;
 
 pub(crate) async fn create_note(
     note_repository: &dyn NoteRepository,

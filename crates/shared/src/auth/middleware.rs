@@ -1,6 +1,6 @@
 use crate::auth::logic;
 use crate::auth::models::Claims;
-use crate::errors::AppError;
+use crate::errors::app_errors::AppError;
 use axum::{
     extract::{Request, State},
     http::HeaderMap,

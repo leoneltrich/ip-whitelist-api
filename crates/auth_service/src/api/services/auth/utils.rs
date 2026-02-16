@@ -6,7 +6,7 @@ use crate::security::hashing;
 use rand::RngExt;
 use shared::auth::jwt;
 use shared::auth::models::Claims;
-use shared::errors::AppError;
+use shared::errors::app_errors::AppError;
 use sqlx::Error;
 
 const THIRTY_DAYS_IN_SECONDS: i64 = 60 * 60 * 24 * 30;

@@ -1,4 +1,4 @@
-use shared::errors::AppError;
+use shared::errors::app_errors::AppError;
 use crate::persistence::repository::interface::notes::NoteRepository;
 
 pub(crate) fn get_deletion_error() -> AppError {

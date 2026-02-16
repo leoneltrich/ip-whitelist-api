@@ -6,7 +6,7 @@ use crate::models::database::refresh_token::RefreshToken;
 use crate::models::database::user::User;
 use crate::persistence::repository::interface::refresh_token::RefreshTokenRepository;
 use crate::persistence::repository::interface::user::UserRepository;
-use shared::errors::AppError;
+use shared::errors::app_errors::AppError;
 
 pub(crate) async fn refresh(
     refresh_token: &str,

@@ -1,8 +1,8 @@
 use crate::models::api::access::{AccessRequest, AccessResponse, AccessStatusResponse};
-use crate::models::database::whitelist::WhitelistEntry; // Import the model
+use crate::models::database::whitelist::WhitelistEntry;
 use crate::state::AppState;
-use chrono::Utc; // Import Chrono for timestamps
-use shared::errors::AppError;
+use chrono::Utc; 
+use shared::errors::app_errors::AppError;
 use std::net::IpAddr;
 use std::time::Duration;
 

@@ -9,7 +9,7 @@ use axum::{
     Json,
 };
 use shared::auth::models::Claims;
-use shared::errors::AppError;
+use shared::errors::app_errors::AppError;
 use std::net::SocketAddr;
 use shared::utils;
 

@@ -1,6 +1,6 @@
 use super::FirewallBackend;
 use async_trait::async_trait;
-use shared::errors::AppError;
+use shared::errors::app_errors::AppError;
 use std::net::IpAddr;
 use std::process::Command;
 use std::time::Duration;

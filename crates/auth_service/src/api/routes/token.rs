@@ -5,7 +5,7 @@ use axum::extract::State;
 use axum::http::StatusCode;
 use axum::response::IntoResponse;
 use axum::Json;
-use shared::errors::AppError;
+use shared::errors::app_errors::AppError;
 
 #[utoipa::path(
     post,

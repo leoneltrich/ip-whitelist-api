@@ -1,5 +1,5 @@
 use crate::auth::models::Claims;
-use crate::errors::AppError;
+use crate::errors::app_errors::AppError;
 use crate::auth::jwt;
 
 /// Verifies an "Authorization" header value and returns the claims.

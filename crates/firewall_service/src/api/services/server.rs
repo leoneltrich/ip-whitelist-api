@@ -1,7 +1,7 @@
 use crate::models::api::server::{CreateServerRequest, ServerResponse, UpdateServerRequest};
 use crate::models::database::server::Server;
 use crate::persistence::repository::Repositories;
-use shared::errors::AppError;
+use shared::errors::app_errors::AppError;
 use sqlx::error::ErrorKind;
 
 // --- CREATE ---

@@ -5,7 +5,7 @@ use crate::models::api::auth::{LoginRequest, LoginResponse, LogoutResponse};
 use crate::persistence::repository::interface::refresh_token::RefreshTokenRepository;
 use crate::persistence::repository::interface::user::UserRepository;
 use crate::security::hashing;
-use shared::errors::AppError;
+use shared::errors::app_errors::AppError;
 
 pub(crate) mod token;
 mod utils;
