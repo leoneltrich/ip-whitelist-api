@@ -89,7 +89,6 @@ pub async fn create_user(
         (status = 401, description = "Unauthenticated", body = AccessAuthErrorResponse),
         (status = 403, description = "Unauthorized", body = PermissionErrorResponse),
         (status = 404, description = "User not found", body = NotFoundErrorResponse),
-        (status = 409, description = "Username already exists", body = ConflictErrorResponse),
         (status = 500, description = "An internal server error occurred", body = InternalServerErrorResponse)
     ),
     security(("jwt" = []))
