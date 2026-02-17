@@ -20,9 +20,7 @@ pub(crate) async fn refresh(
     let stored_refresh_token =
         get_stored_refresh_token(token_repository, &refresh_token_hash).await?;
 
-    if let Some(value) = validate_refresh_token(stored_refresh_token, username) {
-        return value;
-    }
+    validate_refresh_token(stored_refresh_token, username, token_repository).await?;
 
     revoke_refresh_token(token_repository, &refresh_token_hash).await?;
 
@@ -87,34 +85,45 @@ async fn get_stored_refresh_token(
     Ok(stored_refresh_token)
 }
 
-fn validate_refresh_token( // TODO If the conditions are violated all other tokens of the user owning this one should be revoked
+async fn validate_refresh_token(
     stored_refresh_token: RefreshToken,
     username: &str,
-) -> Option<Result<TokenRefreshResponse, AppError>> {
+    repo: &dyn RefreshTokenRepository,
+) -> Result<(), AppError> {
     let current_time = chrono::Utc::now().timestamp();
 
     if stored_refresh_token.is_revoked {
-        return Some(Err(AppError::InvalidRefreshToken));
-    }
-
-    if stored_refresh_token.expires_at < current_time {
-        return Some(Err(AppError::InvalidRefreshToken));
+        repo.revoke_all_refresh_tokens_of_user(&stored_refresh_token.username)
+            .await
+            .map_err(|_| {
+                AppError::InternalServerError("An internal server error occurred".to_string())
+            })?;
+        return Err(AppError::InvalidRefreshToken);
     }
 
     if stored_refresh_token.username != username {
-        return Some(Err(AppError::InvalidRefreshToken));
+        repo.revoke_all_refresh_tokens_of_user(&stored_refresh_token.username)
+            .await
+            .map_err(|_| {
+                AppError::InternalServerError("An internal server error occurred".to_string())
+            })?;
+        return Err(AppError::InvalidRefreshToken);
     }
 
-    None
+    if stored_refresh_token.expires_at < current_time {
+        return Err(AppError::InvalidRefreshToken);
+    }
+
+    Ok(())
 }
 
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::persistence::repository::interface::user::MockUserRepository;
-    use crate::persistence::repository::interface::refresh_token::MockRefreshTokenRepository;
     use crate::models::database::user::User;
-    use rsa::{RsaPrivateKey, pkcs8::EncodePrivateKey};
+    use crate::persistence::repository::interface::refresh_token::MockRefreshTokenRepository;
+    use crate::persistence::repository::interface::user::MockUserRepository;
+    use rsa::{pkcs8::EncodePrivateKey, RsaPrivateKey};
     use std::sync::OnceLock;
 
     static TEST_PRIVATE_KEY: OnceLock<String> = OnceLock::new();
@@ -124,7 +133,10 @@ mod tests {
             let mut rng = rand::rng();
             let bits = 2048;
             let priv_key = RsaPrivateKey::new(&mut rng, bits).expect("failed to generate a key");
-            priv_key.to_pkcs8_pem(rsa::pkcs8::LineEnding::LF).expect("failed to encode key").to_string()
+            priv_key
+                .to_pkcs8_pem(rsa::pkcs8::LineEnding::LF)
+                .expect("failed to encode key")
+                .to_string()
         })
     }
 
@@ -147,37 +159,52 @@ mod tests {
             is_revoked: false,
         };
 
-        token_repo.expect_get_refresh_token()
+        token_repo
+            .expect_get_refresh_token()
             .with(mockall::predicate::eq(token_hash.clone()))
             .times(1)
-            .returning(move |_| Ok(Some(RefreshToken {
-                token_hash: stored_token.token_hash.clone(),
-                username: stored_token.username.clone(),
-                expires_at: stored_token.expires_at,
-                created_at: stored_token.created_at,
-                is_revoked: stored_token.is_revoked,
-            })));
+            .returning(move |_| {
+                Ok(Some(RefreshToken {
+                    token_hash: stored_token.token_hash.clone(),
+                    username: stored_token.username.clone(),
+                    expires_at: stored_token.expires_at,
+                    created_at: stored_token.created_at,
+                    is_revoked: stored_token.is_revoked,
+                }))
+            });
 
-        token_repo.expect_revoke_refresh_token()
+        token_repo
+            .expect_revoke_refresh_token()
             .with(mockall::predicate::eq(token_hash.clone()))
             .times(1)
             .returning(|_| Ok(1));
 
         let username_clone = username.clone();
-        user_repo.expect_get_user_by_name()
+        user_repo
+            .expect_get_user_by_name()
             .with(mockall::predicate::eq(username.clone()))
             .times(1)
-            .returning(move |_| Ok(Some(User {
-                username: username_clone.clone(),
-                password_hash: "hash".to_string(),
-                is_admin: false,
-            })));
+            .returning(move |_| {
+                Ok(Some(User {
+                    username: username_clone.clone(),
+                    password_hash: "hash".to_string(),
+                    is_admin: false,
+                }))
+            });
 
-        token_repo.expect_create_refresh_token()
+        token_repo
+            .expect_create_refresh_token()
             .times(1)
             .returning(|_| Ok(1));
 
-        let result = refresh(refresh_token, &token_repo, &user_repo, &private_key, &username).await;
+        let result = refresh(
+            refresh_token,
+            &token_repo,
+            &user_repo,
+            &private_key,
+            &username,
+        )
+        .await;
 
         assert!(result.is_ok());
         let response = result.unwrap();
@@ -196,17 +223,27 @@ mod tests {
         let token_hash = hash_refresh_token(refresh_token);
 
         let username_clone = username.clone();
-        token_repo.expect_get_refresh_token()
+        token_repo
+            .expect_get_refresh_token()
             .times(1)
-            .returning(move |_| Ok(Some(RefreshToken {
-                token_hash: token_hash.clone(),
-                username: username_clone.clone(),
-                expires_at: chrono::Utc::now().timestamp() + 3600,
-                created_at: chrono::Utc::now().timestamp(),
-                is_revoked: true,
-            })));
+            .returning(move |_| {
+                Ok(Some(RefreshToken {
+                    token_hash: token_hash.clone(),
+                    username: username_clone.clone(),
+                    expires_at: chrono::Utc::now().timestamp() + 3600,
+                    created_at: chrono::Utc::now().timestamp(),
+                    is_revoked: true,
+                }))
+            });
 
-        let result = refresh(refresh_token, &token_repo, &user_repo, &private_key, &username).await;
+        let result = refresh(
+            refresh_token,
+            &token_repo,
+            &user_repo,
+            &private_key,
+            &username,
+        )
+        .await;
 
         assert!(matches!(result, Err(AppError::InvalidRefreshToken)));
     }
@@ -222,17 +259,27 @@ mod tests {
         let token_hash = hash_refresh_token(refresh_token);
 
         let username_clone = username.clone();
-        token_repo.expect_get_refresh_token()
+        token_repo
+            .expect_get_refresh_token()
             .times(1)
-            .returning(move |_| Ok(Some(RefreshToken {
-                token_hash: token_hash.clone(),
-                username: username_clone.clone(),
-                expires_at: chrono::Utc::now().timestamp() - 3600,
-                created_at: chrono::Utc::now().timestamp() - 7200,
-                is_revoked: false,
-            })));
+            .returning(move |_| {
+                Ok(Some(RefreshToken {
+                    token_hash: token_hash.clone(),
+                    username: username_clone.clone(),
+                    expires_at: chrono::Utc::now().timestamp() - 3600,
+                    created_at: chrono::Utc::now().timestamp() - 7200,
+                    is_revoked: false,
+                }))
+            });
 
-        let result = refresh(refresh_token, &token_repo, &user_repo, &private_key, &username).await;
+        let result = refresh(
+            refresh_token,
+            &token_repo,
+            &user_repo,
+            &private_key,
+            &username,
+        )
+        .await;
 
         assert!(matches!(result, Err(AppError::InvalidRefreshToken)));
     }
@@ -248,17 +295,27 @@ mod tests {
         let refresh_token = "token_of_a";
         let token_hash = hash_refresh_token(refresh_token);
 
-        token_repo.expect_get_refresh_token()
+        token_repo
+            .expect_get_refresh_token()
             .times(1)
-            .returning(move |_| Ok(Some(RefreshToken {
-                token_hash: token_hash.clone(),
-                username: real_owner.clone(),
-                expires_at: chrono::Utc::now().timestamp() + 3600,
-                created_at: chrono::Utc::now().timestamp(),
-                is_revoked: false,
-            })));
+            .returning(move |_| {
+                Ok(Some(RefreshToken {
+                    token_hash: token_hash.clone(),
+                    username: real_owner.clone(),
+                    expires_at: chrono::Utc::now().timestamp() + 3600,
+                    created_at: chrono::Utc::now().timestamp(),
+                    is_revoked: false,
+                }))
+            });
 
-        let result = refresh(refresh_token, &token_repo, &user_repo, &private_key, &attacker).await;
+        let result = refresh(
+            refresh_token,
+            &token_repo,
+            &user_repo,
+            &private_key,
+            &attacker,
+        )
+        .await;
 
         assert!(matches!(result, Err(AppError::InvalidRefreshToken)));
     }
@@ -270,13 +327,16 @@ mod tests {
         let private_key = "dummy".to_string();
         let username = "user".to_string();
 
-        token_repo.expect_get_refresh_token()
+        token_repo
+            .expect_get_refresh_token()
             .times(1)
             .returning(|_| Err(sqlx::Error::RowNotFound));
 
         let result = refresh("token", &token_repo, &user_repo, &private_key, &username).await;
 
-        assert!(matches!(result, Err(AppError::InternalServerError(msg)) if msg == "An internal server error occurred validating the refresh token"));
+        assert!(
+            matches!(result, Err(AppError::InternalServerError(msg)) if msg == "An internal server error occurred validating the refresh token")
+        );
     }
 
     #[tokio::test]
@@ -287,23 +347,29 @@ mod tests {
         let username = "user".to_string();
         let token_hash = hash_refresh_token("token");
 
-        token_repo.expect_get_refresh_token()
+        token_repo
+            .expect_get_refresh_token()
             .times(1)
-            .returning(move |_| Ok(Some(RefreshToken {
-                token_hash: token_hash.clone(),
-                username: "user".to_string(),
-                expires_at: chrono::Utc::now().timestamp() + 3600,
-                created_at: chrono::Utc::now().timestamp(),
-                is_revoked: false,
-            })));
+            .returning(move |_| {
+                Ok(Some(RefreshToken {
+                    token_hash: token_hash.clone(),
+                    username: "user".to_string(),
+                    expires_at: chrono::Utc::now().timestamp() + 3600,
+                    created_at: chrono::Utc::now().timestamp(),
+                    is_revoked: false,
+                }))
+            });
 
-        token_repo.expect_revoke_refresh_token()
+        token_repo
+            .expect_revoke_refresh_token()
             .times(1)
             .returning(|_| Err(sqlx::Error::RowNotFound));
 
         let result = refresh("token", &token_repo, &user_repo, &private_key, &username).await;
 
-        assert!(matches!(result, Err(AppError::InternalServerError(msg)) if msg == "An internal server error occurred revoking the original refresh token"));
+        assert!(
+            matches!(result, Err(AppError::InternalServerError(msg)) if msg == "An internal server error occurred revoking the original refresh token")
+        );
     }
 
     #[tokio::test]
@@ -314,25 +380,33 @@ mod tests {
         let username = "user".to_string();
         let token_hash = hash_refresh_token("token");
 
-        token_repo.expect_get_refresh_token()
+        token_repo
+            .expect_get_refresh_token()
             .times(1)
-            .returning(move |_| Ok(Some(RefreshToken {
-                token_hash: token_hash.clone(),
-                username: "user".to_string(),
-                expires_at: chrono::Utc::now().timestamp() + 3600,
-                created_at: chrono::Utc::now().timestamp(),
-                is_revoked: false,
-            })));
+            .returning(move |_| {
+                Ok(Some(RefreshToken {
+                    token_hash: token_hash.clone(),
+                    username: "user".to_string(),
+                    expires_at: chrono::Utc::now().timestamp() + 3600,
+                    created_at: chrono::Utc::now().timestamp(),
+                    is_revoked: false,
+                }))
+            });
 
-        token_repo.expect_revoke_refresh_token().returning(|_| Ok(1));
+        token_repo
+            .expect_revoke_refresh_token()
+            .returning(|_| Ok(1));
 
-        user_repo.expect_get_user_by_name()
+        user_repo
+            .expect_get_user_by_name()
             .times(1)
             .returning(|_| Ok(None));
 
         let result = refresh("token", &token_repo, &user_repo, &private_key, &username).await;
 
-        assert!(matches!(result, Err(AppError::InternalServerError(msg)) if msg == "An internal server error occurred"));
+        assert!(
+            matches!(result, Err(AppError::InternalServerError(msg)) if msg == "An internal server error occurred")
+        );
     }
 
     #[tokio::test]
@@ -343,25 +417,32 @@ mod tests {
         let username = "user".to_string();
         let token_hash = hash_refresh_token("token");
 
-        token_repo.expect_get_refresh_token()
-            .returning(move |_| Ok(Some(RefreshToken {
+        token_repo.expect_get_refresh_token().returning(move |_| {
+            Ok(Some(RefreshToken {
                 token_hash: token_hash.clone(),
                 username: "user".to_string(),
                 expires_at: chrono::Utc::now().timestamp() + 3600,
                 created_at: chrono::Utc::now().timestamp(),
                 is_revoked: false,
-            })));
+            }))
+        });
 
-        token_repo.expect_revoke_refresh_token().returning(|_| Ok(1));
-        user_repo.expect_get_user_by_name().returning(|_| Ok(Some(User {
-            username: "user".to_string(),
-            password_hash: "hash".to_string(),
-            is_admin: false,
-        })));
+        token_repo
+            .expect_revoke_refresh_token()
+            .returning(|_| Ok(1));
+        user_repo.expect_get_user_by_name().returning(|_| {
+            Ok(Some(User {
+                username: "user".to_string(),
+                password_hash: "hash".to_string(),
+                is_admin: false,
+            }))
+        });
 
         let result = refresh("token", &token_repo, &user_repo, &private_key, &username).await;
 
-        assert!(matches!(result, Err(AppError::InternalServerError(msg)) if msg == "Token creation failed"));
+        assert!(
+            matches!(result, Err(AppError::InternalServerError(msg)) if msg == "Token creation failed")
+        );
     }
 
     #[tokio::test]
@@ -372,11 +453,19 @@ mod tests {
         let username = "user".to_string();
 
         // Simulate DB returning None (token doesn't exist/is forged)
-        token_repo.expect_get_refresh_token()
+        token_repo
+            .expect_get_refresh_token()
             .times(1)
             .returning(|_| Ok(None));
 
-        let result = refresh("forged_token", &token_repo, &user_repo, &private_key, &username).await;
+        let result = refresh(
+            "forged_token",
+            &token_repo,
+            &user_repo,
+            &private_key,
+            &username,
+        )
+        .await;
 
         assert!(matches!(result, Err(AppError::InvalidRefreshToken)));
     }
@@ -386,34 +475,53 @@ mod tests {
         let mut user_repo = MockUserRepository::new();
         let mut token_repo = MockRefreshTokenRepository::new();
         let username = "user".to_string();
-        
+
         let now = chrono::Utc::now().timestamp();
 
-        // Case 1: Token expires EXACTLY now. 
-        // Logic: if expires_at < current_time { Error } 
+        // Case 1: Token expires EXACTLY now.
+        // Logic: if expires_at < current_time { Error }
         // So expires_at == now should technically still be valid for that exact second.
-        token_repo.expect_get_refresh_token()
+        token_repo
+            .expect_get_refresh_token()
             .times(1)
-            .returning(move |_| Ok(Some(RefreshToken {
-                token_hash: "hash".to_string(),
-                username: "user".to_string(),
-                expires_at: now, // Exactly at current time
-                created_at: now - 3600,
-                is_revoked: false,
-            })));
+            .returning(move |_| {
+                Ok(Some(RefreshToken {
+                    token_hash: "hash".to_string(),
+                    username: "user".to_string(),
+                    expires_at: now, // Exactly at current time
+                    created_at: now - 3600,
+                    is_revoked: false,
+                }))
+            });
 
         // If it's accepted, it will try to revoke it
-        token_repo.expect_revoke_refresh_token().returning(|_| Ok(1));
-        user_repo.expect_get_user_by_name().returning(move |_| Ok(Some(User {
-            username: "user".to_string(),
-            password_hash: "hash".to_string(),
-            is_admin: false,
-        })));
-        token_repo.expect_create_refresh_token().returning(|_| Ok(1));
+        token_repo
+            .expect_revoke_refresh_token()
+            .returning(|_| Ok(1));
+        user_repo.expect_get_user_by_name().returning(move |_| {
+            Ok(Some(User {
+                username: "user".to_string(),
+                password_hash: "hash".to_string(),
+                is_admin: false,
+            }))
+        });
+        token_repo
+            .expect_create_refresh_token()
+            .returning(|_| Ok(1));
 
-        let result = refresh("token", &token_repo, &user_repo, get_test_rsa_key(), &username).await;
-        
+        let result = refresh(
+            "token",
+            &token_repo,
+            &user_repo,
+            get_test_rsa_key(),
+            &username,
+        )
+        .await;
+
         // This confirms the boundary behavior: exact match is the last valid second.
-        assert!(result.is_ok(), "Token expiring exactly now should be valid for the duration of this second");
+        assert!(
+            result.is_ok(),
+            "Token expiring exactly now should be valid for the duration of this second"
+        );
     }
 }
