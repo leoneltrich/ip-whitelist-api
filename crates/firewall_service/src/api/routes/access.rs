@@ -11,6 +11,7 @@ use axum::{
 use shared::auth::models::Claims;
 use shared::errors::app_errors::AppError;
 use std::net::SocketAddr;
+use shared::errors::utoipa_errors::{AccessAuthErrorResponse, BadRequestErrorResponse, InternalServerErrorResponse, NotFoundErrorResponse, PermissionErrorResponse};
 use shared::utils;
 
 #[utoipa::path(
@@ -19,8 +20,11 @@ use shared::utils;
     request_body = AccessRequest,
     responses(
         (status = 200, description = "Access granted", body = AccessResponse),
-        (status = 401, description = "Unauthorized"),
-        (status = 500, description = "Firewall backend error")
+        (status = 400, description = "Invalid request", body = BadRequestErrorResponse),
+        (status = 401, description = "Unauthenticated", body = AccessAuthErrorResponse),
+        (status = 403, description = "Unauthorized", body = PermissionErrorResponse),
+        (status = 404, description = "Resource not found", body = NotFoundErrorResponse),
+        (status = 500, description = "An internal server error occurred", body = InternalServerErrorResponse)
     ),
     security(
         ("jwt" = [])
@@ -33,11 +37,11 @@ pub async fn request_access(
     ConnectInfo(addr): ConnectInfo<SocketAddr>,
     Json(req): Json<AccessRequest>,
 ) -> Result<impl IntoResponse, AppError> {
-    // 1. Determine the Real IP
-    // Priority: X-Forwarded-For Header -> Direct Connection
-    let ip = utils::get_real_ip(&headers, addr).unwrap_or(addr.ip());
 
-    // 2. Call Service
+    let ip = utils::get_real_ip(&headers, addr).ok_or(AppError::InternalServerError(
+        "Could not determine IP".into(),
+    ))?;
+
     let response = services::access::grant_access(&state, req, ip, &claims.sub).await?;
 
     Ok(Json(response))
@@ -51,7 +55,11 @@ pub async fn request_access(
     ),
     responses(
         (status = 200, description = "Status retrieved", body = AccessStatusResponse),
-        (status = 401, description = "Unauthorized")
+        (status = 400, description = "Invalid request", body = BadRequestErrorResponse),
+        (status = 401, description = "Unauthenticated", body = AccessAuthErrorResponse),
+        (status = 403, description = "Unauthorized", body = PermissionErrorResponse),
+        (status = 404, description = "Resource not found", body = NotFoundErrorResponse),
+        (status = 500, description = "An internal server error occurred", body = InternalServerErrorResponse)
     ),
     security(("jwt" = []))
 )]

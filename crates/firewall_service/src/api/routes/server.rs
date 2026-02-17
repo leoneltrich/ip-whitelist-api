@@ -11,6 +11,7 @@ use axum::{
 };
 use serde_json::json;
 use shared::errors::app_errors::AppError;
+use shared::errors::utoipa_errors::{AccessAuthErrorResponse, BadRequestErrorResponse, ConflictErrorResponse, InternalServerErrorResponse, NotFoundErrorResponse, PermissionErrorResponse};
 
 #[utoipa::path(
     post,
@@ -18,9 +19,11 @@ use shared::errors::app_errors::AppError;
     request_body = CreateServerRequest,
     responses(
         (status = 201, description = "Server created"),
-        (status = 409, description = "Server name already exists"),
-        (status = 401, description = "Unauthorized"),
-        (status = 403, description = "Forbidden (Non-admins)")
+        (status = 400, description = "Invalid request", body = BadRequestErrorResponse),
+        (status = 401, description = "Unauthenticated", body = AccessAuthErrorResponse),
+        (status = 403, description = "Unauthorized", body = PermissionErrorResponse),
+        (status = 409, description = "Server already exists", body = ConflictErrorResponse),
+        (status = 500, description = "An internal server error occurred", body = InternalServerErrorResponse)
     ),
     security(("jwt" = []))
 )]
@@ -41,8 +44,10 @@ pub async fn create_server(
     path = "/api/v1/admin/servers",
     responses(
         (status = 200, description = "List of servers", body = [ServerResponse]),
-        (status = 401, description = "Unauthorized"),
-        (status = 403, description = "Forbidden")
+        (status = 400, description = "Invalid request", body = BadRequestErrorResponse),
+        (status = 401, description = "Unauthenticated", body = AccessAuthErrorResponse),
+        (status = 403, description = "Unauthorized", body = PermissionErrorResponse),
+        (status = 500, description = "An internal server error occurred", body = InternalServerErrorResponse)
     ),
     security(("jwt" = []))
 )]
@@ -59,8 +64,11 @@ pub async fn list_servers(State(state): State<AppState>) -> Result<impl IntoResp
     ),
     responses(
         (status = 200, description = "Server details", body = ServerResponse),
-        (status = 404, description = "Server not found"),
-        (status = 403, description = "Forbidden")
+        (status = 400, description = "Invalid request", body = BadRequestErrorResponse),
+        (status = 401, description = "Unauthenticated", body = AccessAuthErrorResponse),
+        (status = 403, description = "Unauthorized", body = PermissionErrorResponse),
+        (status = 404, description = "Resource not found", body = NotFoundErrorResponse),
+        (status = 500, description = "An internal server error occurred", body = InternalServerErrorResponse)
     ),
     security(("jwt" = []))
 )]
@@ -81,9 +89,12 @@ pub async fn get_server(
     request_body = UpdateServerRequest,
     responses(
         (status = 200, description = "Server updated"),
-        (status = 404, description = "Server not found"),
-        (status = 409, description = "New server name conflict"),
-        (status = 403, description = "Forbidden")
+        (status = 400, description = "Invalid request", body = BadRequestErrorResponse),
+        (status = 401, description = "Unauthenticated", body = AccessAuthErrorResponse),
+        (status = 403, description = "Unauthorized", body = PermissionErrorResponse),
+        (status = 404, description = "Resource not found", body = NotFoundErrorResponse),
+        (status = 409, description = "Server already exists", body = ConflictErrorResponse),
+        (status = 500, description = "An internal server error occurred", body = InternalServerErrorResponse)
     ),
     security(("jwt" = []))
 )]
@@ -108,8 +119,11 @@ pub async fn update_server(
     ),
     responses(
         (status = 200, description = "Server deleted"),
-        (status = 404, description = "Server not found"),
-        (status = 403, description = "Forbidden")
+        (status = 400, description = "Invalid request", body = BadRequestErrorResponse),
+        (status = 401, description = "Unauthenticated", body = AccessAuthErrorResponse),
+        (status = 403, description = "Unauthorized", body = PermissionErrorResponse),
+        (status = 404, description = "Resource not found", body = NotFoundErrorResponse),
+        (status = 500, description = "An internal server error occurred", body = InternalServerErrorResponse)
     ),
     security(("jwt" = []))
 )]
@@ -133,7 +147,10 @@ pub async fn delete_server(
     ),
     responses(
         (status = 200, description = "Check result", body = ServerExistsResponse),
-        (status = 401, description = "Unauthorized"),
+        (status = 400, description = "Invalid request", body = BadRequestErrorResponse),
+        (status = 401, description = "Unauthenticated", body = AccessAuthErrorResponse),
+        (status = 403, description = "Unauthorized", body = PermissionErrorResponse),
+        (status = 500, description = "An internal server error occurred", body = InternalServerErrorResponse)
     ),
     security(("jwt" = []))
 )]

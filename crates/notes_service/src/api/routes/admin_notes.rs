@@ -12,14 +12,17 @@ use axum::{
 use serde_json::json;
 use shared::auth::models::Claims;
 use shared::errors::app_errors::AppError;
+use shared::errors::utoipa_errors::{AccessAuthErrorResponse, BadRequestErrorResponse, InternalServerErrorResponse, NotFoundErrorResponse, PermissionErrorResponse};
 
 #[utoipa::path(
     get,
     path = "/api/v1/admin/notes",
     responses(
         (status = 200, description = "List of all notes", body = NoteListResponse),
-        (status = 401, description = "Unauthorized"),
-        (status = 500, description = "Internal Server Error")
+        (status = 400, description = "Invalid request", body = BadRequestErrorResponse),
+        (status = 401, description = "Unauthenticated", body = AccessAuthErrorResponse),
+        (status = 403, description = "Unauthorized", body = PermissionErrorResponse),
+        (status = 500, description = "An internal server error occurred", body = InternalServerErrorResponse)
     ),
     security(("jwt" = []))
 )]
@@ -45,10 +48,11 @@ pub async fn get_all_notes(
     ),
     responses(
         (status = 200, description = "The retrieved note", body = SingleNoteResponse),
-        (status = 401, description = "Unauthorized"),
-        (status = 403, description = "Forbidden - User does not have permission to view the note"),
-        (status = 404, description = "Note not found"),
-        (status = 500, description = "Internal Server Error")
+        (status = 400, description = "Invalid request", body = BadRequestErrorResponse),
+        (status = 401, description = "Unauthenticated", body = AccessAuthErrorResponse),
+        (status = 403, description = "Unauthorized", body = PermissionErrorResponse),
+        (status = 404, description = "Resource not found", body = NotFoundErrorResponse),
+        (status = 500, description = "An internal server error occurred", body = InternalServerErrorResponse)
     ),
     security(("jwt" = []))
 )]
@@ -73,10 +77,11 @@ pub async fn get_note_by_id(
     request_body = UpdateNoteRequest,
     responses(
         (status = 200, description = "Note updated successfully"),
-        (status = 401, description = "Unauthorized"),
-        (status = 403, description = "Forbidden - User does not have permission to update the note"),
-        (status = 404, description = "Note not found"),
-        (status = 500, description = "Internal Server Error")
+        (status = 400, description = "Invalid request", body = BadRequestErrorResponse),
+        (status = 401, description = "Unauthenticated", body = AccessAuthErrorResponse),
+        (status = 403, description = "Unauthorized", body = PermissionErrorResponse),
+        (status = 404, description = "Resource not found", body = NotFoundErrorResponse),
+        (status = 500, description = "An internal server error occurred", body = InternalServerErrorResponse)
     ),
     security(("jwt" = []))
 )]
@@ -104,10 +109,11 @@ pub async fn update_note(
     ),
     responses(
         (status = 204, description = "Note deleted successfully"),
-        (status = 401, description = "Unauthorized"),
-        (status = 403, description = "Forbidden - User is not admin"),
-        (status = 404, description = "Note not found"),
-        (status = 500, description = "Internal Server Error")
+        (status = 400, description = "Invalid request", body = BadRequestErrorResponse),
+        (status = 401, description = "Unauthenticated", body = AccessAuthErrorResponse),
+        (status = 403, description = "Unauthorized", body = PermissionErrorResponse),
+        (status = 404, description = "Resource not found", body = NotFoundErrorResponse),
+        (status = 500, description = "An internal server error occurred", body = InternalServerErrorResponse)
     ),
     security(("jwt" = []))
 )]
@@ -135,9 +141,10 @@ pub async fn delete_note(
     ),
     responses(
         (status = 204, description = "All notes for the user deleted"),
-        (status = 401, description = "Unauthorized"),
-        (status = 403, description = "Forbidden - Only an admin can perform this action"),
-        (status = 500, description = "Internal Server Error")
+        (status = 400, description = "Invalid request", body = BadRequestErrorResponse),
+        (status = 401, description = "Unauthenticated", body = AccessAuthErrorResponse),
+        (status = 403, description = "Unauthorized", body = PermissionErrorResponse),
+        (status = 500, description = "An internal server error occurred", body = InternalServerErrorResponse)
     ),
     security(("jwt" = []))
 )]
