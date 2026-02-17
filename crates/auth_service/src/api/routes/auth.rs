@@ -16,7 +16,8 @@ use shared::errors::utoipa_errors::{BadRequestErrorResponse, InternalServerError
         (status = 400, description = "Invalid request", body = BadRequestErrorResponse),
         (status = 401, description = "Invalid credentials", body = LoginAuthErrorResponse),
         (status = 500, description = "An internal server error occurred", body = InternalServerErrorResponse)
-    )
+    ),
+    tags = ["Auth"]
 )]
 pub async fn login(
     State(state): State<AppState>,
@@ -42,7 +43,8 @@ pub async fn login(
         (status = 400, description = "Invalid request", body = BadRequestErrorResponse),
         (status = 401, description = "Invalid refresh token", body = TokenRefreshErrorResponse),
         (status = 500, description = "An internal server error occurred", body = InternalServerErrorResponse)
-    )
+    ),
+    tags = ["Auth"]
 )]
 pub(crate) async fn logout(
     State(state): State<AppState>,

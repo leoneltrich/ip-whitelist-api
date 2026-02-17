@@ -17,7 +17,8 @@ use shared::errors::utoipa_errors::{BadRequestErrorResponse, InternalServerError
         (status = 400, description = "Invalid request", body = BadRequestErrorResponse),
         (status = 401, description = "Invalid refresh token", body = TokenRefreshErrorResponse),
         (status = 500, description = "An internal server error occurred", body = InternalServerErrorResponse)
-    )
+    ),
+    tags = ["Auth"]
 )]
 pub(crate) async fn refresh(
     State(state): State<AppState>,

@@ -87,7 +87,7 @@ async fn get_stored_refresh_token(
     Ok(stored_refresh_token)
 }
 
-fn validate_refresh_token(
+fn validate_refresh_token( // TODO If the conditions are violated all other tokens of the user owning this one should be revoked
     stored_refresh_token: RefreshToken,
     username: &str,
 ) -> Option<Result<TokenRefreshResponse, AppError>> {

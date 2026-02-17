@@ -56,10 +56,10 @@ use utoipa::OpenApi;
         )
     ),
     tags(
-        (name = "Auth", description = "Authentication and Tokens"),
+        (name = "Auth", description = "Authentication (Login, Logout, Refresh Token)"),
         (name = "Admin", description = "System Administration (Users)"),
-        (name = "User", description = "User Self-Service"),
-        (name = "Token", description = "JWT Token Management")
+        (name = "User", description = "User Self-Service to update profile"),
+        (name = "Health", description = "Health Check")
     ),
     // Attach the Security Scheme (JWT Bearer)
     modifiers(&SecurityAddon)

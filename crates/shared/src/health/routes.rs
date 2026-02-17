@@ -6,7 +6,8 @@ use crate::health::models::HealthResponse;
     path = "/api/v1/health",
     responses(
         (status = 200, description = "Service is healthy", body = HealthResponse)
-    )
+    ),
+    tags = ["Health"]
 )]
 pub async fn health_check() -> impl IntoResponse {
     let response = HealthResponse {

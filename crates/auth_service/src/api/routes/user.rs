@@ -27,7 +27,8 @@ use shared::errors::utoipa_errors::{AccessAuthErrorResponse, BadRequestErrorResp
         (status = 404, description = "Resource not found", body = NotFoundErrorResponse),
         (status = 500, description = "An internal server error occurred", body = InternalServerErrorResponse)
     ),
-    security(("jwt" = []))
+    security(("jwt" = [])),
+    tags = ["User"]
 )]
 pub async fn self_update_user(
     State(state): State<AppState>,
@@ -62,7 +63,8 @@ pub async fn self_update_user(
         (status = 409, description = "Username already exists", body = ConflictErrorResponse),
         (status = 500, description = "An internal server error occurred", body = InternalServerErrorResponse)
     ),
-    security(("jwt" = []))
+    security(("jwt" = [])),
+    tags = ["Admin"]
 )]
 pub async fn create_user(
     State(state): State<AppState>,
@@ -91,7 +93,8 @@ pub async fn create_user(
         (status = 404, description = "User not found", body = NotFoundErrorResponse),
         (status = 500, description = "An internal server error occurred", body = InternalServerErrorResponse)
     ),
-    security(("jwt" = []))
+    security(("jwt" = [])),
+    tags = ["Admin"]
 )]
 pub async fn admin_update_user(
     State(state): State<AppState>,
@@ -122,7 +125,8 @@ pub async fn admin_update_user(
         (status = 404, description = "User not found", body = NotFoundErrorResponse),
         (status = 500, description = "An internal server error occurred", body = InternalServerErrorResponse)
     ),
-    security(("jwt" = []))
+    security(("jwt" = [])),
+    tags = ["Admin"]
 )]
 pub async fn delete_user(
     State(state): State<AppState>,
@@ -150,7 +154,8 @@ pub async fn delete_user(
         (status = 404, description = "Resource not found", body = NotFoundErrorResponse),
         (status = 500, description = "An internal server error occurred", body = InternalServerErrorResponse)
     ),
-    security(("jwt" = []))
+    security(("jwt" = [])),
+    tags = ["Admin"]
 )]
 pub async fn get_all_users(State(state): State<AppState>) -> Result<impl IntoResponse, AppError> {
     let users = user_service::get_all_users(&state).await?;
