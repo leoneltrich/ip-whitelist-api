@@ -44,6 +44,7 @@ pub async fn login(
         (status = 401, description = "Invalid refresh token", body = TokenRefreshErrorResponse),
         (status = 500, description = "An internal server error occurred", body = InternalServerErrorResponse)
     ),
+    security(("jwt" = [])),
     tags = ["Auth"]
 )]
 pub(crate) async fn logout(
