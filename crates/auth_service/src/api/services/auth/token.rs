@@ -7,6 +7,7 @@ use crate::models::database::user::User;
 use crate::persistence::repository::interface::refresh_token::RefreshTokenRepository;
 use crate::persistence::repository::interface::user::UserRepository;
 use shared::errors::app_errors::AppError;
+use tracing::{debug, error, info, warn};
 
 pub(crate) async fn refresh(
     refresh_token: &str,
@@ -28,6 +29,10 @@ pub(crate) async fn refresh(
 
     let access_token = create_access_token(private_key_pem, &user)?;
     let refresh_token = create_refresh_token(username, token_repository).await?;
+    info!(
+        "Issued new refresh and access tokens for user: {}",
+        &user.username
+    );
 
     let response = TokenRefreshResponse {
         access_token,
@@ -44,6 +49,7 @@ async fn get_user(
     let user = match get_user_optional(user_repository, username).await? {
         Some(user) => user,
         None => {
+            warn!("User {} not found in database", username);
             return Err(AppError::InternalServerError(
                 "An internal server error occurred".to_string(),
             ));
@@ -59,11 +65,15 @@ async fn revoke_refresh_token(
     token_repository
         .revoke_refresh_token(&refresh_token_hash)
         .await
-        .map_err(|_| {
-            AppError::InternalServerError(
-                "An internal server error occurred revoking the original refresh token".to_string(),
-            )
+        .map_err(|e| {
+            error!(
+                "Failed to revoke refresh token: {}. Error: {:#?}",
+                refresh_token_hash, e
+            );
+            AppError::InternalServerError("An internal server error occurred".to_string())
         })?;
+
+    debug!("Revoked refresh token with hash: {}", refresh_token_hash);
     Ok(())
 }
 
@@ -74,10 +84,9 @@ async fn get_stored_refresh_token(
     let stored_refresh_token = match repository
         .get_refresh_token(&refresh_token_hash)
         .await
-        .map_err(|_| {
-            AppError::InternalServerError(
-                "An internal server error occurred validating the refresh token".to_string(),
-            )
+        .map_err(|e| {
+            error!("An error occurred accessing the database: {}", e);
+            AppError::InternalServerError("An internal server error occurred".to_string())
         })? {
         Some(token) => token,
         None => return Err(AppError::InvalidRefreshToken),
@@ -92,25 +101,36 @@ async fn validate_refresh_token(
 ) -> Result<(), AppError> {
     let current_time = chrono::Utc::now().timestamp();
 
-    if stored_refresh_token.is_revoked {
+    if stored_refresh_token.is_revoked { // TODO verify that the log message is not cut off
+        warn!(
+            "Possible identity theft attempt detected (revoked refresh token reuse): revoked refresh token with hash: {}. Revoking all other refresh tokens of user: {}.",
+            &stored_refresh_token.token_hash, &stored_refresh_token.username
+        );
         repo.revoke_all_refresh_tokens_of_user(&stored_refresh_token.username)
             .await
-            .map_err(|_| {
+            .map_err(|e| {
+                error!("An error occurred revoking all refresh tokens: {}", e);
                 AppError::InternalServerError("An internal server error occurred".to_string())
             })?;
         return Err(AppError::InvalidRefreshToken);
     }
 
     if stored_refresh_token.username != username {
+        warn!(
+            "Possible identity theft attempt detected (stored username doesn't match request): revoked refresh token with hash: {}. Revoking all other refresh tokens of user: {}.",
+            &stored_refresh_token.token_hash, &stored_refresh_token.username
+        );
         repo.revoke_all_refresh_tokens_of_user(&stored_refresh_token.username)
             .await
-            .map_err(|_| {
+            .map_err(|e| {
+                error!("An error occurred revoking all refresh tokens: {}", e);
                 AppError::InternalServerError("An internal server error occurred".to_string())
             })?;
         return Err(AppError::InvalidRefreshToken);
     }
 
     if stored_refresh_token.expires_at < current_time {
+        info!("Expired refresh token used");
         return Err(AppError::InvalidRefreshToken);
     }
 
