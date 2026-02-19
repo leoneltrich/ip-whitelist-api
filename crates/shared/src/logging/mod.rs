@@ -67,6 +67,7 @@ pub fn init_logging(config: &LogConfig) -> Option<WorkerGuard> {
         let registry = registry.with(file_layer.with_filter(tracing_subscriber::filter::LevelFilter::from_level(level)));
         registry.init();
     } else {
+        println!("No log file path specified, logging to stdout only");
         registry.init();
     }
 
