@@ -2,11 +2,11 @@ use crate::models::api::user::{
     CreateUserRequest, UpdateProfileRequest, UpdateUserRequest, UserResponse,
 };
 use crate::models::database::user::User;
-use crate::persistence::repository::interface::user::UserRepository;
 use crate::security::hashing;
 use crate::state::AppState;
 use shared::auth::models::Claims;
 use shared::errors::app_errors::AppError;
+use tracing::{debug, error, info};
 
 pub async fn create_user(state: &AppState, req: CreateUserRequest) -> Result<(), AppError> {
     let existing_user = state
@@ -14,19 +14,26 @@ pub async fn create_user(state: &AppState, req: CreateUserRequest) -> Result<(),
         .user
         .get_user_by_name(&req.username)
         .await
-        .map_err(|_| {
+        .map_err(|e| {
+            error!("An error occurred accessing the database: {}", e);
             AppError::InternalServerError("An internal server error occurred".to_string())
         })?;
 
     if existing_user.is_some() {
+        info!(
+            "User {} already exists and won't be recreated",
+            &req.username
+        );
         return Err(AppError::Conflict(format!(
             "User {} already exists",
             req.username
         )));
     }
 
-    let password_hash = hashing::hash_password(&req.password)
-        .map_err(|_| AppError::InternalServerError("Password hashing failed".to_string()))?;
+    let password_hash = hashing::hash_password(&req.password).map_err(|e| {
+        error!("An error occurred hashing the password: {}", e);
+        AppError::InternalServerError("Password hashing failed".to_string())
+    })?;
 
     let user = User {
         username: req.username,
@@ -34,19 +41,32 @@ pub async fn create_user(state: &AppState, req: CreateUserRequest) -> Result<(),
         is_admin: req.is_admin,
     };
 
+    info!("Creating user {}", &user.username);
     state
         .repositories
         .user
         .create_user(&user)
         .await
-        .map_err(|e| AppError::InternalServerError(e.to_string()))?;
+        .map_err(|e| {
+            error!(
+                "An error occurred accessing the database creating the user: {}",
+                e
+            );
+            AppError::InternalServerError("An internal server error occurred".to_string())
+        })?;
 
+    info!(
+        "Successfully created user with username: {}",
+        &user.username
+    );
     Ok(())
 }
 
 pub async fn update_user(state: &AppState, req: UpdateUserRequest) -> Result<(), AppError> {
-    let password_hash = hashing::hash_password(&req.password)
-        .map_err(|_| AppError::InternalServerError("Password hashing failed".to_string()))?;
+    let password_hash = hashing::hash_password(&req.password).map_err(|e| {
+        error!("An error occurred hashing the password: {}", e);
+        AppError::InternalServerError("An internal server error occurred".to_string())
+    })?;
 
     let user = User {
         username: req.username,
@@ -59,12 +79,23 @@ pub async fn update_user(state: &AppState, req: UpdateUserRequest) -> Result<(),
         .user
         .update_user(&user)
         .await
-        .map_err(|e| AppError::InternalServerError(e.to_string()))?;
+        .map_err(|e| {
+            error!("An error occurred accessing the database: {}", e);
+            AppError::InternalServerError("An internal server error occurred".to_string())
+        })?;
 
     if rows == 0 {
+        info!(
+            "No user with username {} found in database.",
+            &user.username
+        );
         return Err(AppError::NotFound);
     }
 
+    info!(
+        "Successfully updated user with username: {}",
+        &user.username
+    );
     Ok(())
 }
 
@@ -74,24 +105,28 @@ pub async fn delete_user(state: &AppState, username: String) -> Result<(), AppEr
         .user
         .delete_user(&username)
         .await
-        .map_err(|e| AppError::InternalServerError(e.to_string()))?;
+        .map_err(|e| {
+            error!("An error occurred accessing the database: {}", e);
+            AppError::InternalServerError("An internal server error occurred".to_string())
+        })?;
 
     if rows == 0 {
+        info!("No user with username {} found in database.", &username);
         return Err(AppError::NotFound);
     }
 
+    info!("Successfully deleted user with username: {}", &username);
     Ok(())
 }
 
 pub async fn get_all_users(state: &AppState) -> Result<Vec<UserResponse>, AppError> {
-    let users = state
-        .repositories
-        .user
-        .get_all_users()
-        .await
-        .map_err(|e| AppError::InternalServerError(e.to_string()))?;
+    let users = state.repositories.user.get_all_users().await.map_err(|e| {
+        error!("An error occurred accessing the database: {}", e);
+        AppError::InternalServerError("An internal server error occurred".to_string())
+    })?;
 
     let response: Vec<UserResponse> = users.into_iter().map(UserResponse::from).collect();
+    debug!("Found {} users in database", response.len());
 
     Ok(response)
 }
@@ -103,8 +138,8 @@ mod tests {
     use crate::persistence::repository::interface::refresh_token::MockRefreshTokenRepository;
     use crate::persistence::repository::interface::user::MockUserRepository;
     use crate::persistence::repository::Repositories;
-    use std::sync::Arc;
     use shared::logging::models::LogConfig;
+    use std::sync::Arc;
 
     fn setup_test_state(user_repo: MockUserRepository) -> AppState {
         let repositories = Repositories {
