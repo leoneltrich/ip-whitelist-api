@@ -1,12 +1,12 @@
 pub mod models;
 
-use crate::logging::models::{LogConfig, LogFormat, LogRotation};
 use std::path::Path;
 use tracing_appender::non_blocking::WorkerGuard;
 use tracing_appender::rolling::{Rotation, RollingFileAppender};
 use tracing_subscriber::fmt::format::FmtSpan;
 use tracing_subscriber::prelude::*;
 use tracing_subscriber::{fmt, Registry};
+use crate::logging::models::{LogConfig, LogFormat, LogRotation};
 
 pub fn init_logging(config: &LogConfig) -> Option<WorkerGuard> {
     let mut guard = None;
