@@ -1,12 +1,12 @@
 pub mod models;
 
+use crate::logging::models::{LogConfig, LogFormat, LogRotation};
 use std::path::Path;
 use tracing_appender::non_blocking::WorkerGuard;
-use tracing_appender::rolling::{Rotation, RollingFileAppender};
+use tracing_appender::rolling::{RollingFileAppender, Rotation};
 use tracing_subscriber::fmt::format::FmtSpan;
 use tracing_subscriber::prelude::*;
 use tracing_subscriber::{fmt, Registry};
-use crate::logging::models::{LogConfig, LogFormat, LogRotation};
 
 pub fn init_logging(config: &LogConfig) -> Option<WorkerGuard> {
     let mut guard = None;
@@ -14,15 +14,13 @@ pub fn init_logging(config: &LogConfig) -> Option<WorkerGuard> {
     let level: tracing::Level = config.level.into();
 
     let stdout_layer = fmt::layer()
+        .pretty()
         .with_target(true)
         .with_line_number(true)
         .with_thread_ids(true)
         .with_span_events(FmtSpan::CLOSE);
 
-    let stdout_layer = match config.format {
-        LogFormat::Json => stdout_layer.json().boxed(),
-        LogFormat::Text => stdout_layer.boxed(),
-    };
+    let stdout_layer = stdout_layer.boxed();
 
     let registry = Registry::default()
         .with(stdout_layer.with_filter(tracing_subscriber::filter::LevelFilter::from_level(level)));

@@ -21,6 +21,11 @@ services:
       - DATABASE_PATH=/data/auth.db
       - PRIVATE_KEY_PATH=/secrets/private.pem
       - PUBLIC_KEY_PATH=/secrets/public.pem
+      - LOG_LEVEL=info
+      - LOG_FORMAT=json
+      - LOG_ROTATION=daily
+      - LOG_FILE_PATH=/var/log/auth.log
+      - LOG_MAX_FILES=5
     volumes:
       - ./data/auth.db:/data/auth.db
       - ./private.pem:/secrets/private.pem:ro

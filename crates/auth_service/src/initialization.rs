@@ -1,22 +1,23 @@
-use std::str::FromStr;
-use std::time::Duration;
 use crate::models::database::user::User;
 use crate::persistence::repository::Repositories;
 use crate::security::hashing;
 use rand::distr::Alphanumeric;
 use rand::RngExt;
-use sqlx::{Error, SqlitePool};
 use sqlx::sqlite::{SqliteConnectOptions, SqlitePoolOptions};
+use sqlx::{Error, SqlitePool};
+use std::str::FromStr;
+use std::time::Duration;
+use tracing::log::debug;
+use tracing::{error, info};
 
 pub async fn run_startup_sequence(
     database_path: &str,
 ) -> Result<SqlitePool, Box<dyn std::error::Error>> {
-    println!("Initializing Persistence Layer...");
+    debug!("Initializing persistence layer");
 
-    // We await the result here
     let pool = initialize(database_path).await?;
 
-    println!("Database setup complete.");
+    info!("Database initialized.");
 
     let repos = Repositories::new(pool.clone());
     bootstrap_admin(&repos).await?;
@@ -27,36 +28,33 @@ pub async fn run_startup_sequence(
 async fn bootstrap_admin(repos: &Repositories) -> Result<(), Box<dyn std::error::Error>> {
     let admin_username = "admin";
 
-    // Check if admin already exists
     if repos.user.get_user_by_name(admin_username).await?.is_some() {
-        println!("Admin user already exists. Skipping creation...");
-        return Ok(()); // Admin exists, nothing to do.
+        info!("Admin user already exists. Skipping admin user creation.");
+        return Ok(());
     }
 
-    println!("No admin user found. Creating default admin...");
+    info!("Creating default admin user.");
 
-    // 1. Generate Random Password (32 chars)
     let password_plain: String = rand::rng()
         .sample_iter(&Alphanumeric)
         .take(32)
         .map(char::from)
         .collect();
 
-    // 2. Hash the password (Never store plain text!)
     let password_hash = hashing::hash_password(&password_plain)
-        .map_err(|_| "Password hashing failed".to_string())?;
+        .map_err(|e| {
+            error!("An error occurred hashing the password: {:#?}", e);
+            "Password hashing failed".to_string()
+        })?;
 
-    // 3. Create the User Model
     let admin_user = User {
         username: admin_username.to_string(),
         password_hash,
         is_admin: true,
     };
 
-    // 4. Save to DB
     repos.user.create_user(&admin_user).await?;
 
-    // 5. Print Credentials to Terminal (Critical Step)
     println!("\n========================================================");
     println!("DEFAULT ADMIN CREATED, CHANGE PASSWORD IMMEDIATELY:");
     println!("Username: {}", admin_username);
@@ -68,29 +66,28 @@ async fn bootstrap_admin(repos: &Repositories) -> Result<(), Box<dyn std::error:
 
 /// Establishes connection pool and runs schema migration
 pub async fn initialize(path: &str) -> Result<SqlitePool, Error> {
-    // 1. Configure Options
-    // create_if_missing(true) is key here.
     let options = SqliteConnectOptions::from_str(&format!("sqlite://{}", path))?
         .create_if_missing(true)
         .foreign_keys(true);
 
-    // 2. Create the Pool
+    info!("Connecting to database at {}", path);
     let pool = SqlitePoolOptions::new()
         .max_connections(5)
         .acquire_timeout(Duration::from_secs(3))
         .connect_with(options)
         .await?;
 
-    // 3. Run Schema Setup
-    // Since we are async now, we can await these directly.
+    info!("Database connection established");
+    info!("Running database migrations");
+    info!("Setting up table: users");
     create_users_table(&pool).await?;
+    info!("Setting up table: refresh_tokens");
     create_refresh_token_table(&pool).await?;
 
     Ok(pool)
 }
 
 async fn create_users_table(pool: &SqlitePool) -> Result<(), Error> {
-    // User Table
     sqlx::query(
         "CREATE TABLE IF NOT EXISTS users (
             username TEXT PRIMARY KEY,
