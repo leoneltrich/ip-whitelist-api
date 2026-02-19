@@ -1,10 +1,11 @@
 use crate::api::services::auth::utils::{
-    create_access_token, create_refresh_token, hash_refresh_token,
+    create_access_token, create_refresh_token,
 };
 use crate::models::api::auth::{LoginRequest, LoginResponse, LogoutResponse};
 use crate::persistence::repository::interface::refresh_token::RefreshTokenRepository;
 use crate::persistence::repository::interface::user::UserRepository;
 use crate::security::hashing;
+use crate::security::hashing::create_sha256_hash;
 use shared::errors::app_errors::AppError;
 use tracing::{error, info, warn};
 
@@ -50,7 +51,7 @@ pub(crate) async fn logout(
     user: &str,
     refresh_token: &str,
 ) -> Result<LogoutResponse, AppError> {
-    let token_hash = hash_refresh_token(refresh_token);
+    let token_hash = create_sha256_hash(refresh_token);
 
     let stored_token = repository
         .get_refresh_token(&token_hash)
@@ -237,7 +238,7 @@ mod tests {
         let mut token_repo = MockRefreshTokenRepository::new();
         let username = "testuser";
         let refresh_token = "some_token";
-        let token_hash = hash_refresh_token(refresh_token);
+        let token_hash = create_sha256_hash(refresh_token);
 
         token_repo
             .expect_get_refresh_token()
@@ -271,7 +272,7 @@ mod tests {
         let mut token_repo = MockRefreshTokenRepository::new();
         let username = "testuser";
         let refresh_token = "some_token";
-        let token_hash = hash_refresh_token(refresh_token);
+        let token_hash = create_sha256_hash(refresh_token);
 
         token_repo
             .expect_get_refresh_token()

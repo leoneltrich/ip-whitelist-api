@@ -3,6 +3,7 @@ use crate::models::database::user::User;
 use crate::persistence::repository::interface::refresh_token::RefreshTokenRepository;
 use crate::persistence::repository::interface::user::UserRepository;
 use crate::security::hashing;
+use crate::security::hashing::create_sha256_hash;
 use rand::RngExt;
 use shared::auth::jwt;
 use shared::auth::models::Claims;
@@ -11,10 +12,6 @@ use sqlx::Error;
 use tracing::{debug, error};
 
 const THIRTY_DAYS_IN_SECONDS: i64 = 60 * 60 * 24 * 30;
-
-pub(crate) fn hash_refresh_token(token: &str) -> String {
-    hashing::create_sha256_hash(token)
-}
 
 pub fn create_access_token(private_key_pem: &String, user: &User) -> Result<String, AppError> {
     let claims = Claims::new(user.username.clone(), user.is_admin);
@@ -49,7 +46,7 @@ async fn save_refresh_token(
     username: &str,
     refresh_token_repository: &dyn RefreshTokenRepository,
 ) -> Result<usize, Error> {
-    let hashed_token = hash_refresh_token(plain_token);
+    let hashed_token = create_sha256_hash(plain_token);
     let current_time = chrono::Utc::now().timestamp();
     let expires_at = current_time + THIRTY_DAYS_IN_SECONDS;
 

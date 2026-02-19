@@ -1,11 +1,12 @@
 use crate::api::services::auth::utils::{
-    create_access_token, create_refresh_token, get_user_optional, hash_refresh_token,
+    create_access_token, create_refresh_token, get_user_optional,
 };
 use crate::models::api::auth::TokenRefreshResponse;
 use crate::models::database::refresh_token::RefreshToken;
 use crate::models::database::user::User;
 use crate::persistence::repository::interface::refresh_token::RefreshTokenRepository;
 use crate::persistence::repository::interface::user::UserRepository;
+use crate::security::hashing::create_sha256_hash;
 use shared::errors::app_errors::AppError;
 use tracing::{debug, error, info, warn};
 
@@ -16,7 +17,7 @@ pub(crate) async fn refresh(
     private_key_pem: &String,
     username: &String,
 ) -> Result<TokenRefreshResponse, AppError> {
-    let refresh_token_hash = hash_refresh_token(refresh_token);
+    let refresh_token_hash = create_sha256_hash(refresh_token);
 
     let stored_refresh_token =
         get_stored_refresh_token(token_repository, &refresh_token_hash).await?;
@@ -101,7 +102,8 @@ async fn validate_refresh_token(
 ) -> Result<(), AppError> {
     let current_time = chrono::Utc::now().timestamp();
 
-    if stored_refresh_token.is_revoked { // TODO verify that the log message is not cut off
+    if stored_refresh_token.is_revoked {
+        // TODO verify that the log message is not cut off
         warn!(
             "Possible identity theft attempt detected (revoked refresh token reuse): revoked refresh token with hash: {}. Revoking all other refresh tokens of user: {}.",
             &stored_refresh_token.token_hash, &stored_refresh_token.username
@@ -169,7 +171,7 @@ mod tests {
 
         let username = "testuser".to_string();
         let refresh_token = "valid_token";
-        let token_hash = hash_refresh_token(refresh_token);
+        let token_hash = create_sha256_hash(refresh_token);
 
         let stored_token = RefreshToken {
             token_hash: token_hash.clone(),
@@ -240,7 +242,7 @@ mod tests {
 
         let username = "testuser".to_string();
         let refresh_token = "revoked_token";
-        let token_hash = hash_refresh_token(refresh_token);
+        let token_hash = create_sha256_hash(refresh_token);
 
         let username_clone = username.clone();
         token_repo
@@ -255,6 +257,12 @@ mod tests {
                     is_revoked: true,
                 }))
             });
+
+        token_repo
+            .expect_revoke_all_refresh_tokens_of_user()
+            .with(mockall::predicate::eq(username.clone()))
+            .times(1)
+            .returning(|_| Ok(1));
 
         let result = refresh(
             refresh_token,
@@ -276,7 +284,7 @@ mod tests {
 
         let username = "testuser".to_string();
         let refresh_token = "expired_token";
-        let token_hash = hash_refresh_token(refresh_token);
+        let token_hash = create_sha256_hash(refresh_token);
 
         let username_clone = username.clone();
         token_repo
@@ -313,20 +321,27 @@ mod tests {
         let real_owner = "user_a".to_string();
         let attacker = "user_b".to_string();
         let refresh_token = "token_of_a";
-        let token_hash = hash_refresh_token(refresh_token);
+        let token_hash = create_sha256_hash(refresh_token);
 
-        token_repo
-            .expect_get_refresh_token()
-            .times(1)
-            .returning(move |_| {
+        token_repo.expect_get_refresh_token().times(1).returning({
+            let h = token_hash.clone();
+            let u = real_owner.clone();
+            move |_| {
                 Ok(Some(RefreshToken {
-                    token_hash: token_hash.clone(),
-                    username: real_owner.clone(),
+                    token_hash: h.clone(),
+                    username: u.clone(),
                     expires_at: chrono::Utc::now().timestamp() + 3600,
                     created_at: chrono::Utc::now().timestamp(),
                     is_revoked: false,
                 }))
-            });
+            }
+        });
+
+        token_repo
+            .expect_revoke_all_refresh_tokens_of_user()
+            .with(mockall::predicate::eq(real_owner.clone()))
+            .times(1)
+            .returning(|_| Ok(1));
 
         let result = refresh(
             refresh_token,
@@ -355,7 +370,7 @@ mod tests {
         let result = refresh("token", &token_repo, &user_repo, &private_key, &username).await;
 
         assert!(
-            matches!(result, Err(AppError::InternalServerError(msg)) if msg == "An internal server error occurred validating the refresh token")
+            matches!(result, Err(AppError::InternalServerError(msg)) if msg == "An internal server error occurred")
         );
     }
 
@@ -365,7 +380,7 @@ mod tests {
         let mut token_repo = MockRefreshTokenRepository::new();
         let private_key = "dummy".to_string();
         let username = "user".to_string();
-        let token_hash = hash_refresh_token("token");
+        let token_hash = create_sha256_hash("token");
 
         token_repo
             .expect_get_refresh_token()
@@ -388,7 +403,7 @@ mod tests {
         let result = refresh("token", &token_repo, &user_repo, &private_key, &username).await;
 
         assert!(
-            matches!(result, Err(AppError::InternalServerError(msg)) if msg == "An internal server error occurred revoking the original refresh token")
+            matches!(result, Err(AppError::InternalServerError(msg)) if msg == "An internal server error occurred")
         );
     }
 
@@ -398,7 +413,7 @@ mod tests {
         let mut token_repo = MockRefreshTokenRepository::new();
         let private_key = "dummy".to_string();
         let username = "user".to_string();
-        let token_hash = hash_refresh_token("token");
+        let token_hash = create_sha256_hash("token");
 
         token_repo
             .expect_get_refresh_token()
@@ -435,7 +450,7 @@ mod tests {
         let mut token_repo = MockRefreshTokenRepository::new();
         let private_key = "invalid-key".to_string();
         let username = "user".to_string();
-        let token_hash = hash_refresh_token("token");
+        let token_hash = create_sha256_hash("token");
 
         token_repo.expect_get_refresh_token().returning(move |_| {
             Ok(Some(RefreshToken {
