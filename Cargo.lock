@@ -807,12 +807,12 @@ dependencies = [
  "async-trait",
  "axum",
  "chrono",
- "rand 0.9.2",
  "serde",
  "serde_json",
  "shared",
  "sqlx",
  "tokio",
+ "tracing",
  "utoipa",
  "utoipa-swagger-ui",
 ]

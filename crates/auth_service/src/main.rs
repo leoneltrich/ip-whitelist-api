@@ -33,6 +33,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     let app = api::app(app_state);
     let listener = TcpListener::bind("0.0.0.0:3000").await?;
     info!("Listening on port 3000");
+    info!("Startup complete.");
     axum::serve(
         listener,
         app.into_make_service_with_connect_info::<std::net::SocketAddr>(),
