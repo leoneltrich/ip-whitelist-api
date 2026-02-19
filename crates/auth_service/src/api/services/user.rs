@@ -104,6 +104,7 @@ mod tests {
     use crate::persistence::repository::interface::user::MockUserRepository;
     use crate::persistence::repository::Repositories;
     use std::sync::Arc;
+    use shared::logging::models::LogConfig;
 
     fn setup_test_state(user_repo: MockUserRepository) -> AppState {
         let repositories = Repositories {
@@ -114,6 +115,7 @@ mod tests {
             private_key_pem: "dummy".to_string(),
             public_key_pem: "dummy".to_string(),
             database_path: "dummy".to_string(),
+            log_config: LogConfig::new_dummy(),
         };
         AppState::new(config, repositories)
     }

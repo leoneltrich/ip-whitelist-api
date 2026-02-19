@@ -170,4 +170,14 @@ impl LogConfig {
             max_files,
         }
     }
+
+    pub fn new_dummy() -> Self {
+        Self {
+            level: LogLevel::Debug,
+            format: LogFormat::Text,
+            rotation: LogRotation::Never,
+            file_path: None,
+            max_files: 1,
+        }
+    }
 }

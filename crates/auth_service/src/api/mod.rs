@@ -67,6 +67,7 @@ mod tests {
     use shared::auth::models::Claims;
     use std::sync::Arc;
     use tower::ServiceExt;
+    use shared::logging::models::LogConfig;
 
     fn setup_test_app() -> (Router, String) {
         let mut rng = rand::rng();
@@ -78,6 +79,7 @@ mod tests {
             private_key_pem: priv_pem.clone(),
             public_key_pem: pub_pem,
             database_path: "dummy".to_string(),
+            log_config: LogConfig::new_dummy(),
         };
 
         let repos = Repositories {
@@ -165,6 +167,7 @@ mod tests {
             private_key_pem: priv_pem.clone(),
             public_key_pem: pub_pem,
             database_path: "dummy".to_string(),
+            log_config: LogConfig::new_dummy(),
         };
 
         let repos = Repositories {
