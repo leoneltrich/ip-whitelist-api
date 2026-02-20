@@ -1,6 +1,11 @@
 use crate::domain::{HealthStatus, ServiceHealth, SystemHealth};
 use crate::monitor::SharedHealthState;
+use axum::extract::DefaultBodyLimit;
 use axum::{extract::State, http::StatusCode, routing::get, Json, Router};
+use shared::rate_limiting::SmartIpExtractor;
+use std::sync::Arc;
+use tower_governor::governor::GovernorConfigBuilder;
+use tower_governor::GovernorLayer;
 use utoipa::OpenApi;
 use utoipa_swagger_ui::SwaggerUi;
 
@@ -20,6 +25,15 @@ use utoipa_swagger_ui::SwaggerUi;
 pub struct ApiDoc;
 
 pub fn router(state: SharedHealthState) -> Router {
+    let rate_limit = Arc::new(
+        GovernorConfigBuilder::default()
+            .per_second(5)
+            .burst_size(10)
+            .key_extractor(SmartIpExtractor)
+            .finish()
+            .unwrap()
+    );
+
     let aggregated_routes = Router::new()
         .route("/health", get(health_check))
         .route("/health/services", get(get_all_services))
@@ -27,6 +41,8 @@ pub fn router(state: SharedHealthState) -> Router {
 
     Router::new()
         .nest("/api/v1", aggregated_routes)
+        .layer(DefaultBodyLimit::max(4096))
+        .layer(GovernorLayer::new(rate_limit.clone()))
         .merge(docs_routes())
 }
 

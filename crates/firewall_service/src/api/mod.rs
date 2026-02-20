@@ -1,14 +1,27 @@
 use crate::state::AppState;
+use axum::extract::DefaultBodyLimit;
 use axum::Router;
 use shared::auth::middleware;
-// Import shared middleware
+use std::sync::Arc;
+use tower_governor::governor::GovernorConfigBuilder;
+use tower_governor::GovernorLayer;
+
+use shared::rate_limiting::SmartIpExtractor;
 
 pub mod routes;
 pub mod services;
-// pub mod middleware; // Removed as it's empty
 mod docs;
 
 pub fn app(state: AppState) -> Router {
+    let rate_limit = Arc::new(
+        GovernorConfigBuilder::default()
+            .per_second(5)
+            .burst_size(10)
+            .key_extractor(SmartIpExtractor)
+            .finish()
+            .unwrap()
+    );
+
     let public_api = Router::new().merge(routes::public_routes());
 
     let doc_routes = routes::docs_routes();
@@ -28,5 +41,7 @@ pub fn app(state: AppState) -> Router {
 
     Router::new()
         .nest("/api/v1", aggregated_routes)
+        .layer(DefaultBodyLimit::max(4096))
+        .layer(GovernorLayer::new(rate_limit.clone()))
         .merge(doc_routes)
 }
