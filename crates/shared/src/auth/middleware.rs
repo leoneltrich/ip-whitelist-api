@@ -8,6 +8,8 @@ use axum::{
     response::Response,
     Extension,
 };
+use log::info;
+use tracing::debug;
 
 /// A trait that must be implemented by the AppState of any service
 /// that wishes to use the generic `auth` middleware.
@@ -29,12 +31,18 @@ where
     let auth_header_value = headers
         .get("Authorization")
         .and_then(|value| value.to_str().ok())
-        .ok_or(AppError::InvalidAccessToken)?;
+        .ok_or_else(|| {
+            info!("Authorization header not found in request");
+            AppError::InvalidAccessToken
+        })?;
 
     let claims = logic::verify_token_from_header(auth_header_value, state.public_key_pem())?;
 
+    debug!("Authenticated user: {}", claims.sub);
+    debug!("Inserting claims");
     request.extensions_mut().insert(claims);
 
+    debug!("Running next middleware");
     Ok(next.run(request).await)
 }
 
@@ -46,7 +54,10 @@ pub async fn require_admin(
     next: Next,
 ) -> Result<Response, AppError> {
     if !claims.is_admin {
+        info!("Non-admin user attempted to access admin-only endpoint");
         return Err(AppError::PermissionDenied);
     }
+
+    debug!("Access granted to admin user: {}", claims.sub);
     Ok(next.run(request).await)
 }

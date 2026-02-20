@@ -2720,6 +2720,7 @@ dependencies = [
  "axum",
  "chrono",
  "jsonwebtoken",
+ "log",
  "serde",
  "serde_json",
  "tower_governor",
