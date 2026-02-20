@@ -2,16 +2,18 @@ use sqlx::sqlite::{SqliteConnectOptions, SqlitePoolOptions};
 use sqlx::SqlitePool;
 use std::str::FromStr;
 use std::time::Duration;
+use tracing::log::info;
 
 pub async fn run_startup_sequence(
     database_path: &str,
 ) -> Result<SqlitePool, Box<dyn std::error::Error>> {
-    println!("Initializing Persistence Layer...");
+    info!("Initializing Persistence Layer...");
 
     let options = SqliteConnectOptions::from_str(&format!("sqlite://{}", database_path))?
         .create_if_missing(true)
         .foreign_keys(true);
 
+    info!("Connecting to database...");
     let pool = SqlitePoolOptions::new()
         .max_connections(5)
         .acquire_timeout(Duration::from_secs(3))
@@ -20,10 +22,14 @@ pub async fn run_startup_sequence(
 
     create_schema(&pool).await?;
 
+    info!("Database initialized successfully.");
     Ok(pool)
 }
 
 async fn create_schema(pool: &SqlitePool) -> Result<(), sqlx::Error> {
+    info!("Creating schema...");
+
+    info!("Creating table notes...");
     sqlx::query(
         r#"CREATE TABLE IF NOT EXISTS notes (
               note_id INTEGER PRIMARY KEY AUTOINCREMENT,

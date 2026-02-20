@@ -5,7 +5,7 @@ use chrono::Utc;
 use shared::errors::app_errors::AppError;
 use std::net::IpAddr;
 use std::time::Duration;
-use tracing::{debug, error, info};
+use tracing::{error, info};
 
 const ACCESS_DURATION_SECS: u64 = 12 * 60 * 60;
 

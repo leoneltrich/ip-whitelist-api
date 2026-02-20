@@ -1,7 +1,5 @@
 use crate::api::services::notes;
-use crate::models::api::note::{
-    NoteListResponse, SingleNoteResponse, UpdateNoteRequest,
-};
+use crate::models::api::note::{NoteListResponse, SingleNoteResponse, UpdateNoteRequest};
 use crate::state::AppState;
 use axum::{
     extract::{Path, State}, http::StatusCode,
@@ -12,7 +10,10 @@ use axum::{
 use serde_json::json;
 use shared::auth::models::Claims;
 use shared::errors::app_errors::AppError;
-use shared::errors::utoipa_errors::{AccessAuthErrorResponse, BadRequestErrorResponse, InternalServerErrorResponse, NotFoundErrorResponse, PermissionErrorResponse};
+use shared::errors::utoipa_errors::{
+    AccessAuthErrorResponse, BadRequestErrorResponse, InternalServerErrorResponse,
+    NotFoundErrorResponse, PermissionErrorResponse,
+};
 
 #[utoipa::path(
     get,
@@ -59,7 +60,7 @@ pub async fn get_all_notes(
 pub async fn get_note_by_id(
     State(state): State<AppState>,
     Path(note_id): Path<i64>,
-    Extension(claims): Extension<Claims>
+    Extension(claims): Extension<Claims>,
 ) -> Result<impl IntoResponse, AppError> {
     let note = notes::get_note_by_id_as_admin(&*state.repositories.note, note_id).await?;
 

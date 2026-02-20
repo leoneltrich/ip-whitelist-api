@@ -1,11 +1,8 @@
 use chrono::{Duration, Utc};
 use serde::{Deserialize, Serialize};
-// Token is valid for 24 hours
 const EXPIRATION_MINUTES: i64 = 10;
 
-// Claims is internal logic (payload of the JWT), so we don't necessarily
-// need to expose it in the OpenAPI schema unless you have an endpoint
-// that returns raw claims.
+
 #[derive(Debug, Serialize, Deserialize, Clone)]
 pub struct Claims {
     /// User ID

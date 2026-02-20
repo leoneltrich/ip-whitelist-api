@@ -1729,6 +1729,7 @@ dependencies = [
  "axum",
  "chrono",
  "http",
+ "log",
  "serde",
  "serde_json",
  "shared",
