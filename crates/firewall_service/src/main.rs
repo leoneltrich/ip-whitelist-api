@@ -1,8 +1,8 @@
 use crate::config::AppConfig;
+use shared::logging::init_logging;
 use std::sync::Arc;
 use tokio::net::TcpListener;
 use tracing::{error, info};
-use shared::logging::init_logging;
 
 mod api;
 mod config;
@@ -14,9 +14,9 @@ mod system;
 
 use crate::persistence::repository::Repositories;
 use crate::state::AppState;
-use crate::system::firewall::FirewallBackend;
 use crate::system::firewall::mock::MockFirewall;
 use crate::system::firewall::nftables::NftablesFirewall;
+use crate::system::firewall::FirewallBackend;
 
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn std::error::Error>> {
@@ -26,7 +26,6 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     info!("Firewall Service starting up...");
 
     let pool = initialization::run_startup_sequence(&config.database_path).await?;
-    info!("Database connection established");
 
     let repositories = Repositories::new(pool);
     info!("Repositories initialized");

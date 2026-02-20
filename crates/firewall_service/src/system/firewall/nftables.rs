@@ -4,6 +4,8 @@ use shared::errors::app_errors::AppError;
 use std::net::IpAddr;
 use std::process::Command;
 use std::time::Duration;
+use tracing::log::debug;
+use tracing::{error, info};
 
 pub struct NftablesFirewall {
     table: String,
@@ -24,17 +26,18 @@ impl NftablesFirewall {
 
     /// Helper to execute an nft command safely
     fn run_nft_cmd(&self, args: &[&str]) -> Result<(), AppError> {
-        let output = Command::new("nft")
-            .args(args)
-            .output()
-            .map_err(|e| AppError::InternalServerError(format!("Failed to execute nft: {}", e)))?;
+        debug!("Running nft command with args: {:?}", args);
+        let output = Command::new("nft").args(args).output().map_err(|e| {
+            error!("Failed to run nft command: {}", e);
+            AppError::InternalServerError("An internal server error occurred".to_string())
+        })?;
 
         if !output.status.success() {
             let stderr = String::from_utf8_lossy(&output.stderr);
-            return Err(AppError::InternalServerError(format!(
-                "NFTables error: {}",
-                stderr
-            )));
+            error!("nft command failed with error: {}", stderr);
+            return Err(AppError::InternalServerError(
+                "An internal server error occurred".to_string(),
+            ));
         }
 
         Ok(())
@@ -44,7 +47,7 @@ impl NftablesFirewall {
 #[async_trait]
 impl FirewallBackend for NftablesFirewall {
     async fn setup(&self) -> Result<(), AppError> {
-        println!("Integrating with Main NFTables (inet filter)...");
+        info!("Integrating with Main NFTables (inet filter)...");
 
         self.run_nft_cmd(&[
             "add",
@@ -60,12 +63,15 @@ impl FirewallBackend for NftablesFirewall {
         let check_cmd = Command::new("nft")
             .args(&["list", "chain", "inet", &self.table, &self.chain])
             .output()
-            .map_err(|e| AppError::InternalServerError(format!("Failed to check nft: {}", e)))?;
+            .map_err(|e| {
+                error!("Failed to list chain: {}", e);
+                AppError::InternalServerError("An internal server error occurred".to_string())
+            })?;
 
         let existing_rules = String::from_utf8_lossy(&check_cmd.stdout);
 
         if !existing_rules.contains(&set_ref) {
-            println!("Rule not found. Inserting whitelist rule...");
+            info!("Rule not found. Inserting whitelist rule...");
             self.run_nft_cmd(&[
                 "insert",
                 "rule",
@@ -81,7 +87,7 @@ impl FirewallBackend for NftablesFirewall {
                 "accept",
             ])?;
         } else {
-            println!("Whitelist rule already exists in the main chain. Skipping insertion.");
+            info!("Whitelist rule already exists in the main chain. Skipping insertion.");
         }
 
         Ok(())
@@ -100,7 +106,7 @@ impl FirewallBackend for NftablesFirewall {
         // Element format: { 1.2.3.4 . 8080 }
         let element_content = format!("{} . {}", ip_str, port_str);
 
-        // 1. DELETE (Reset Timer)
+        // (Reset Timer)
         let _ = Command::new("nft")
             .args(&[
                 "delete",
@@ -114,6 +120,10 @@ impl FirewallBackend for NftablesFirewall {
 
         let element_with_timeout = format!("{{ {} timeout {} }}", element_content, timeout_str);
 
+        info!(
+            "Granting access to IP: {} on PORT: {} for {:?}",
+            ip, port, duration
+        );
         self.run_nft_cmd(&[
             "add",
             "element",
@@ -124,12 +134,12 @@ impl FirewallBackend for NftablesFirewall {
         ])
     }
 
-    // (validate_config remains the same...)
     async fn validate_config(&self) -> Result<(), AppError> {
         let version_check = Command::new("nft").arg("--version").output();
         if version_check.is_err() {
+            error!("nft binary not found");
             return Err(AppError::InternalServerError(
-                "nft binary not found".to_string(),
+                "An internal server error occurred".to_string(),
             ));
         }
         Ok(())
