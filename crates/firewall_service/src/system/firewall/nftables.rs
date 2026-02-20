@@ -29,15 +29,13 @@ impl NftablesFirewall {
         debug!("Running nft command with args: {:?}", args);
         let output = Command::new("nft").args(args).output().map_err(|e| {
             error!("Failed to run nft command: {}", e);
-            AppError::InternalServerError("An internal server error occurred".to_string())
+            AppError::InternalServerError
         })?;
 
         if !output.status.success() {
             let stderr = String::from_utf8_lossy(&output.stderr);
             error!("nft command failed with error: {}", stderr);
-            return Err(AppError::InternalServerError(
-                "An internal server error occurred".to_string(),
-            ));
+            return Err(AppError::InternalServerError);
         }
 
         Ok(())
@@ -65,7 +63,7 @@ impl FirewallBackend for NftablesFirewall {
             .output()
             .map_err(|e| {
                 error!("Failed to list chain: {}", e);
-                AppError::InternalServerError("An internal server error occurred".to_string())
+                AppError::InternalServerError
             })?;
 
         let existing_rules = String::from_utf8_lossy(&check_cmd.stdout);
@@ -138,9 +136,7 @@ impl FirewallBackend for NftablesFirewall {
         let version_check = Command::new("nft").arg("--version").output();
         if version_check.is_err() {
             error!("nft binary not found");
-            return Err(AppError::InternalServerError(
-                "An internal server error occurred".to_string(),
-            ));
+            return Err(AppError::InternalServerError);
         }
         Ok(())
     }

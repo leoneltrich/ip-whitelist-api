@@ -58,7 +58,7 @@ pub(crate) async fn logout(
         .await
         .map_err(|e| {
             error!("An error occurred accessing the database: {}", e);
-            AppError::InternalServerError("An internal server error occurred".to_string())
+            AppError::InternalServerError
         })?
         .ok_or(AppError::InvalidRefreshToken)?;
 
@@ -75,9 +75,7 @@ pub(crate) async fn logout(
         .await
         .map_err(|e| {
             error!("An error occurred accessing the database: {}", e);
-            AppError::InternalServerError(
-                "An error occurred during the refresh token revocation".to_string(),
-            )
+            AppError::InternalServerError
         })?;
 
     let response = LogoutResponse {
@@ -230,7 +228,7 @@ mod tests {
 
         let result = login(&user_repo, &token_repo, &private_key, req).await;
 
-        assert!(matches!(result, Err(AppError::InternalServerError(_))));
+        assert!(matches!(result, Err(AppError::InternalServerError)));
     }
 
     #[tokio::test]
@@ -295,10 +293,7 @@ mod tests {
 
         let result = logout(&token_repo, username, refresh_token).await;
 
-        assert!(matches!(result, Err(AppError::InternalServerError(_))));
-        if let Err(AppError::InternalServerError(msg)) = result {
-            assert_eq!(msg, "An error occurred during the refresh token revocation");
-        }
+        assert!(matches!(result, Err(AppError::InternalServerError)));
     }
 
     #[tokio::test]

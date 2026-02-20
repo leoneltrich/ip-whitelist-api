@@ -16,7 +16,7 @@ pub async fn get_note_owner(
                 "An error occurred getting the note owner of note with id: {}, Error: {}",
                 note_id, e
             );
-            AppError::InternalServerError("An internal server error occurred".to_string())
+            AppError::InternalServerError
         })?
         .ok_or(AppError::NotFound)?;
     Ok(note_owner)

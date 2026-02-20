@@ -32,9 +32,7 @@ pub async fn create_refresh_token(
         .await
         .map_err(|e| {
             error!("An error occurred saving the refresh token: {}", e);
-            AppError::InternalServerError(
-                "An error occurred during the refresh token generation".to_string(),
-            )
+            AppError::InternalServerError
         })?;
 
     debug!("Successfully generated refresh token");
@@ -76,7 +74,7 @@ pub async fn get_user_optional(
 ) -> Result<Option<User>, AppError> {
     let user_option = repository.get_user_by_name(username).await.map_err(|e| {
         error!("An error occurred accessing the database: {}", e);
-        AppError::InternalServerError("An internal server error occurred".to_string())
+        AppError::InternalServerError
     })?;
     Ok(user_option)
 }

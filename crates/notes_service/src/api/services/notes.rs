@@ -26,7 +26,7 @@ pub(crate) async fn create_note(
 
     let note_id = note_repository.create_note(&note).await.map_err(|e| {
         error!("An error occurred creating the note: {}", e);
-        AppError::InternalServerError("An internal server error occurred".to_string())
+        AppError::InternalServerError
     })?;
 
     info!("Note created successfully with id: {}", note_id);
@@ -39,7 +39,7 @@ pub(crate) async fn get_notes_feed_as_admin(
     debug!("Getting notes feed for admin user");
     note_repository.get_all_notes_feed().await.map_err(|e| {
         error!("An error occurred, could not get notes feed: {}", e);
-        AppError::InternalServerError("An internal server error occurred".to_string())
+        AppError::InternalServerError
     })
 }
 
@@ -53,7 +53,7 @@ pub(crate) async fn get_own_notes_feed(
         .await
         .map_err(|e| {
             error!("An error occurred getting users notes: {}", e);
-            AppError::InternalServerError("An internal server error occurred".to_string())
+            AppError::InternalServerError
         })
 }
 
@@ -93,9 +93,7 @@ async fn get_note_by_id(
             "An error occurred getting the note with id: {}, Error: {}",
             note_id, e
         );
-        AppError::InternalServerError(
-            "An internal server error occurred getting the note".to_string(),
-        )
+        AppError::InternalServerError
     })
 }
 
@@ -144,9 +142,7 @@ async fn update_note(
         .await
         .map_err(|e| {
             error!("An error occurred updating note: {}", e);
-            AppError::InternalServerError(
-                "An internal server error occurred updating note".to_string(),
-            )
+            AppError::InternalServerError
         })
 }
 
@@ -183,7 +179,7 @@ async fn delete_note(note_repository: &dyn NoteRepository, note_id: i64) -> Resu
             "An error occurred deleting the note with id: {}, Error: {}",
             note_id, e
         );
-        AppError::InternalServerError("An internal server error occurred".to_string())
+        AppError::InternalServerError
     })?;
 
     if rows_deleted == 0 {
@@ -226,7 +222,7 @@ async fn delete_all_notes_of_user(
                 "An error occurred deleting all notes of user {}: {}",
                 user_id, e
             );
-            AppError::InternalServerError("An internal server error occurred".to_string())
+            AppError::InternalServerError
         })?;
 
     info!(

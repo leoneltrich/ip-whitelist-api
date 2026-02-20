@@ -4,14 +4,18 @@ use crate::models::api::server::{
 };
 use crate::state::AppState;
 use axum::{
-    Json,
     extract::{Path, State},
     http::StatusCode,
     response::IntoResponse,
+    Json,
 };
 use serde_json::json;
 use shared::errors::app_errors::AppError;
-use shared::errors::utoipa_errors::{AccessAuthErrorResponse, BadRequestErrorResponse, ConflictErrorResponse, InternalServerErrorResponse, NotFoundErrorResponse, PermissionErrorResponse};
+use shared::errors::utoipa_errors::{
+    AccessAuthErrorResponse, BadRequestErrorResponse, ConflictErrorResponse,
+    InternalServerErrorResponse, NotFoundErrorResponse, PermissionErrorResponse,
+};
+use tracing::error;
 
 #[utoipa::path(
     post,
@@ -158,13 +162,15 @@ pub async fn check_server_exists(
     State(state): State<AppState>,
     Path(name): Path<String>,
 ) -> Result<Json<ServerExistsResponse>, AppError> {
-    // We reuse the existing repository function
     let exists = state
         .repositories
         .server
         .get_server_by_name(&name)
         .await
-        .map_err(|e| AppError::InternalServerError(e.to_string()))?
+        .map_err(|e| {
+            error!("An error occurred checking if server exists: {}", e);
+            AppError::InternalServerError
+        })?
         .is_some();
 
     Ok(Json(ServerExistsResponse { exists }))

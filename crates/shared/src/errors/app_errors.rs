@@ -1,9 +1,9 @@
 use crate::errors::utoipa_errors::ErrorCode;
-use std::fmt;
 use axum::http::StatusCode;
-use axum::Json;
 use axum::response::{IntoResponse, Response};
+use axum::Json;
 use serde::Serialize;
+use std::fmt;
 
 /// The main error type used throughout the application.
 ///
@@ -11,7 +11,7 @@ use serde::Serialize;
 /// into appropriate HTTP responses with JSON bodies.
 #[derive(Debug, Clone)]
 pub enum AppError {
-    InternalServerError(String),
+    InternalServerError,
     NotFound,
     Conflict(String),
     BadRequest(String),
@@ -25,7 +25,7 @@ pub enum AppError {
 impl fmt::Display for AppError {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         match self {
-            AppError::InternalServerError(msg) => write!(f, "Internal Server Error: {}", msg),
+            AppError::InternalServerError => write!(f, "An Internal Server Error Occurred"),
             AppError::NotFound => write!(f, "Resource Not Found"),
             AppError::Conflict(msg) => write!(f, "Conflict: {}", msg),
             AppError::BadRequest(msg) => write!(f, "Bad Request: {}", msg),
@@ -43,12 +43,16 @@ impl std::error::Error for AppError {}
 impl IntoResponse for AppError {
     fn into_response(self) -> Response {
         let (status, code, msg) = match self {
-            AppError::InternalServerError(msg) => {
-                (StatusCode::INTERNAL_SERVER_ERROR, ErrorCode::InternalServerError, Some(msg))
-            }
+            AppError::InternalServerError => (
+                StatusCode::INTERNAL_SERVER_ERROR,
+                ErrorCode::InternalServerError,
+                None,
+            ),
             AppError::NotFound => (StatusCode::NOT_FOUND, ErrorCode::ResourceNotFound, None),
             AppError::Conflict(msg) => (StatusCode::CONFLICT, ErrorCode::Conflict, Some(msg)),
-            AppError::BadRequest(msg) => (StatusCode::BAD_REQUEST, ErrorCode::BadRequest, Some(msg)),
+            AppError::BadRequest(msg) => {
+                (StatusCode::BAD_REQUEST, ErrorCode::BadRequest, Some(msg))
+            }
             AppError::InvalidCredentials => (
                 StatusCode::UNAUTHORIZED,
                 ErrorCode::InvalidCredentials,
@@ -59,7 +63,9 @@ impl IntoResponse for AppError {
                 ErrorCode::InvalidAccessToken,
                 None,
             ),
-            AppError::PermissionDenied => (StatusCode::FORBIDDEN, ErrorCode::PermissionDenied, None),
+            AppError::PermissionDenied => {
+                (StatusCode::FORBIDDEN, ErrorCode::PermissionDenied, None)
+            }
             AppError::TokenExpired => (StatusCode::UNAUTHORIZED, ErrorCode::TokenExpired, None),
             AppError::InvalidRefreshToken => (
                 StatusCode::UNAUTHORIZED,

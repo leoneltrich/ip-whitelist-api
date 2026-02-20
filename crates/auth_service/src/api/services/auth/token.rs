@@ -51,9 +51,7 @@ async fn get_user(
         Some(user) => user,
         None => {
             warn!("User {} not found in database", username);
-            return Err(AppError::InternalServerError(
-                "An internal server error occurred".to_string(),
-            ));
+            return Err(AppError::InternalServerError);
         }
     };
     Ok(user)
@@ -71,7 +69,7 @@ async fn revoke_refresh_token(
                 "Failed to revoke refresh token: {}. Error: {:#?}",
                 refresh_token_hash, e
             );
-            AppError::InternalServerError("An internal server error occurred".to_string())
+            AppError::InternalServerError
         })?;
 
     debug!("Revoked refresh token with hash: {}", refresh_token_hash);
@@ -87,7 +85,7 @@ async fn get_stored_refresh_token(
         .await
         .map_err(|e| {
             error!("An error occurred accessing the database: {}", e);
-            AppError::InternalServerError("An internal server error occurred".to_string())
+            AppError::InternalServerError
         })? {
         Some(token) => token,
         None => return Err(AppError::InvalidRefreshToken),
@@ -112,7 +110,7 @@ async fn validate_refresh_token(
             .await
             .map_err(|e| {
                 error!("An error occurred revoking all refresh tokens: {}", e);
-                AppError::InternalServerError("An internal server error occurred".to_string())
+                AppError::InternalServerError
             })?;
         return Err(AppError::InvalidRefreshToken);
     }
@@ -126,7 +124,7 @@ async fn validate_refresh_token(
             .await
             .map_err(|e| {
                 error!("An error occurred revoking all refresh tokens: {}", e);
-                AppError::InternalServerError("An internal server error occurred".to_string())
+                AppError::InternalServerError
             })?;
         return Err(AppError::InvalidRefreshToken);
     }
@@ -370,7 +368,7 @@ mod tests {
         let result = refresh("token", &token_repo, &user_repo, &private_key, &username).await;
 
         assert!(
-            matches!(result, Err(AppError::InternalServerError(msg)) if msg == "An internal server error occurred")
+            matches!(result, Err(AppError::InternalServerError))
         );
     }
 
@@ -403,7 +401,7 @@ mod tests {
         let result = refresh("token", &token_repo, &user_repo, &private_key, &username).await;
 
         assert!(
-            matches!(result, Err(AppError::InternalServerError(msg)) if msg == "An internal server error occurred")
+            matches!(result, Err(AppError::InternalServerError))
         );
     }
 
@@ -440,7 +438,7 @@ mod tests {
         let result = refresh("token", &token_repo, &user_repo, &private_key, &username).await;
 
         assert!(
-            matches!(result, Err(AppError::InternalServerError(msg)) if msg == "An internal server error occurred")
+            matches!(result, Err(AppError::InternalServerError))
         );
     }
 
@@ -476,7 +474,7 @@ mod tests {
         let result = refresh("token", &token_repo, &user_repo, &private_key, &username).await;
 
         assert!(
-            matches!(result, Err(AppError::InternalServerError(msg)) if msg == "Token creation failed")
+            matches!(result, Err(AppError::InternalServerError))
         );
     }
 

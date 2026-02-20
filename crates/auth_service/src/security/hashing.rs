@@ -8,7 +8,7 @@ pub fn hash_password(password: &str) -> Result<String, AppError> {
     hash(password, DEFAULT_COST)
         .map_err(|e| {
             error!("An error occurred hashing the password: {}", e);
-            AppError::InternalServerError("An internal server error occurred".to_string())
+            AppError::InternalServerError
         })
 }
 
@@ -19,7 +19,7 @@ pub fn verify_password(password: &str, hash: &str) -> Result<bool, AppError> {
     verify(password, hash)
         .map_err(|e| {
             error!("An error occurred verifying the password: {}", e);
-            AppError::InternalServerError("An internal server error occurred".to_string())
+            AppError::InternalServerError
         })
 }
 

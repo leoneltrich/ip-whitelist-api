@@ -25,7 +25,7 @@ pub async fn grant_access(
                 "Failed to get server with name: {} from database: {}",
                 &req.server_id, e
             );
-            AppError::InternalServerError("An internal server error occurred".to_string())
+            AppError::InternalServerError
         })?
         .ok_or_else(|| {
             error!("No server found with name '{}'.", &req.server_id);
@@ -43,7 +43,7 @@ pub async fn grant_access(
         .await
         .map_err(|e| {
             error!("Failed to get whitelist entry: {}", e);
-            AppError::InternalServerError("An internal server error occurred".to_string())
+            AppError::InternalServerError
         })?;
 
     let entry = WhitelistEntry {
@@ -62,7 +62,7 @@ pub async fn grant_access(
             .await
             .map_err(|e| {
                 error!("Failed to update whitelist entry: {}", e);
-                AppError::InternalServerError("An internal server error occurred".to_string())
+                AppError::InternalServerError
             })?;
     } else {
         info!("Creating new whitelist entry");
@@ -73,7 +73,7 @@ pub async fn grant_access(
             .await
             .map_err(|e| {
                 error!("Failed to create whitelist entry: {}", e);
-                AppError::InternalServerError("An internal server error occurred".to_string())
+                AppError::InternalServerError
             })?;
     }
 
@@ -113,7 +113,7 @@ pub async fn get_access_status(
         .await
         .map_err(|e| {
             error!("Failed to get whitelist entry from database: {}", e);
-            AppError::InternalServerError("An internal server error occurred".to_string())
+            AppError::InternalServerError
         })?;
 
     match entry {

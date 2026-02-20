@@ -31,9 +31,7 @@ pub async fn create_server(repos: &Repositories, req: CreateServerRequest) -> Re
                 }
             }
             error!("Failed to create server in database: {}", e);
-            Err(AppError::InternalServerError(
-                "An internal server error occurred".to_string(),
-            ))
+            Err(AppError::InternalServerError)
         }
     }
 }
@@ -42,7 +40,7 @@ pub async fn create_server(repos: &Repositories, req: CreateServerRequest) -> Re
 pub async fn list_servers(repos: &Repositories) -> Result<Vec<ServerResponse>, AppError> {
     let servers = repos.server.list_all_servers().await.map_err(|e| {
         error!("Failed to list servers from database: {}", e);
-        AppError::InternalServerError("An internal server error occurred".to_string())
+        AppError::InternalServerError
     })?;
 
     let response: Vec<ServerResponse> = servers
@@ -68,7 +66,7 @@ pub async fn get_server(repos: &Repositories, name: String) -> Result<ServerResp
         .await
         .map_err(|e| {
             error!("Failed to get server from database: {}", e);
-            AppError::InternalServerError("An internal server error occurred".to_string())
+            AppError::InternalServerError
         })?
         .ok_or_else(|| {
             info!("No server found with name '{}'.", name);
@@ -115,7 +113,7 @@ pub async fn update_server(
                 }
             }
             error!("Failed to update server in database: {}", e);
-            AppError::InternalServerError("An internal server error occurres".to_string())
+            AppError::InternalServerError
         })?;
 
     if rows == 0 {
@@ -131,7 +129,7 @@ pub async fn update_server(
 pub async fn delete_server(repos: &Repositories, name: String) -> Result<(), AppError> {
     let rows = repos.server.delete_server(&name).await.map_err(|e| {
         error!("Failed to delete server from database: {}", e);
-        AppError::InternalServerError("An internal server error occurred".to_string())
+        AppError::InternalServerError
     })?;
 
     if rows == 0 {

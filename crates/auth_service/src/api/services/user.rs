@@ -16,7 +16,7 @@ pub async fn create_user(state: &AppState, req: CreateUserRequest) -> Result<(),
         .await
         .map_err(|e| {
             error!("An error occurred accessing the database: {}", e);
-            AppError::InternalServerError("An internal server error occurred".to_string())
+            AppError::InternalServerError
         })?;
 
     if existing_user.is_some() {
@@ -32,7 +32,7 @@ pub async fn create_user(state: &AppState, req: CreateUserRequest) -> Result<(),
 
     let password_hash = hashing::hash_password(&req.password).map_err(|e| {
         error!("An error occurred hashing the password: {}", e);
-        AppError::InternalServerError("Password hashing failed".to_string())
+        AppError::InternalServerError
     })?;
 
     let user = User {
@@ -52,7 +52,7 @@ pub async fn create_user(state: &AppState, req: CreateUserRequest) -> Result<(),
                 "An error occurred accessing the database creating the user: {}",
                 e
             );
-            AppError::InternalServerError("An internal server error occurred".to_string())
+            AppError::InternalServerError
         })?;
 
     info!(
@@ -65,7 +65,7 @@ pub async fn create_user(state: &AppState, req: CreateUserRequest) -> Result<(),
 pub async fn update_user(state: &AppState, req: UpdateUserRequest) -> Result<(), AppError> {
     let password_hash = hashing::hash_password(&req.password).map_err(|e| {
         error!("An error occurred hashing the password: {}", e);
-        AppError::InternalServerError("An internal server error occurred".to_string())
+        AppError::InternalServerError
     })?;
 
     let user = User {
@@ -81,7 +81,7 @@ pub async fn update_user(state: &AppState, req: UpdateUserRequest) -> Result<(),
         .await
         .map_err(|e| {
             error!("An error occurred accessing the database: {}", e);
-            AppError::InternalServerError("An internal server error occurred".to_string())
+            AppError::InternalServerError
         })?;
 
     if rows == 0 {
@@ -107,7 +107,7 @@ pub async fn delete_user(state: &AppState, username: String) -> Result<(), AppEr
         .await
         .map_err(|e| {
             error!("An error occurred accessing the database: {}", e);
-            AppError::InternalServerError("An internal server error occurred".to_string())
+            AppError::InternalServerError
         })?;
 
     if rows == 0 {
@@ -122,7 +122,7 @@ pub async fn delete_user(state: &AppState, username: String) -> Result<(), AppEr
 pub async fn get_all_users(state: &AppState) -> Result<Vec<UserResponse>, AppError> {
     let users = state.repositories.user.get_all_users().await.map_err(|e| {
         error!("An error occurred accessing the database: {}", e);
-        AppError::InternalServerError("An internal server error occurred".to_string())
+        AppError::InternalServerError
     })?;
 
     let response: Vec<UserResponse> = users.into_iter().map(UserResponse::from).collect();
@@ -300,7 +300,7 @@ mod tests {
 
         let result = create_user(&state, req).await;
 
-        assert!(matches!(result, Err(AppError::InternalServerError(_))));
+        assert!(matches!(result, Err(AppError::InternalServerError)));
     }
 }
 
@@ -315,7 +315,7 @@ pub async fn sanitize_user_self_update_request(
         .get_user_by_name(&claims.sub)
         .await
         .map_err(|_| {
-            AppError::InternalServerError("An internal server error occurred".to_string())
+            AppError::InternalServerError
         })?
         .ok_or(AppError::NotFound)?;
 

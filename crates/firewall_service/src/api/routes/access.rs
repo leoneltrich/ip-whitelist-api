@@ -10,9 +10,12 @@ use axum::{
 };
 use shared::auth::models::Claims;
 use shared::errors::app_errors::AppError;
-use std::net::SocketAddr;
-use shared::errors::utoipa_errors::{AccessAuthErrorResponse, BadRequestErrorResponse, InternalServerErrorResponse, NotFoundErrorResponse, PermissionErrorResponse};
+use shared::errors::utoipa_errors::{
+    AccessAuthErrorResponse, BadRequestErrorResponse, InternalServerErrorResponse,
+    NotFoundErrorResponse, PermissionErrorResponse,
+};
 use shared::utils;
+use std::net::SocketAddr;
 
 #[utoipa::path(
     post,
@@ -37,10 +40,7 @@ pub async fn request_access(
     ConnectInfo(addr): ConnectInfo<SocketAddr>,
     Json(req): Json<AccessRequest>,
 ) -> Result<impl IntoResponse, AppError> {
-
-    let ip = utils::get_real_ip(&headers, addr).ok_or(AppError::InternalServerError(
-        "Could not determine IP".into(),
-    ))?;
+    let ip = utils::get_real_ip(&headers, addr).ok_or(AppError::InternalServerError)?;
 
     let response = services::access::grant_access(&state, req, ip, &claims.sub).await?;
 
@@ -70,12 +70,9 @@ pub async fn check_access_status(
     headers: HeaderMap,
     ConnectInfo(addr): ConnectInfo<SocketAddr>,
 ) -> Result<Json<AccessStatusResponse>, AppError> {
-    let ip = utils::get_real_ip(&headers, addr).ok_or(AppError::InternalServerError(
-        "Could not determine IP".into(),
-    ))?;
+    let ip = utils::get_real_ip(&headers, addr).ok_or(AppError::InternalServerError)?;
 
     let response = services::access::get_access_status(&state, server, claims.sub, ip).await?;
 
     Ok(Json(response))
 }
-
