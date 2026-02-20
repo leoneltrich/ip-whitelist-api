@@ -1,44 +1,51 @@
 use crate::models::api::access::{AccessRequest, AccessResponse, AccessStatusResponse};
 use crate::models::database::whitelist::WhitelistEntry;
 use crate::state::AppState;
-use chrono::Utc; 
+use chrono::Utc;
 use shared::errors::app_errors::AppError;
 use std::net::IpAddr;
 use std::time::Duration;
+use tracing::{debug, error, info};
 
 const ACCESS_DURATION_SECS: u64 = 12 * 60 * 60;
 
-// CHANGED: Added 'username' argument
 pub async fn grant_access(
     state: &AppState,
     req: AccessRequest,
     requester_ip: IpAddr,
     username: &str,
 ) -> Result<AccessResponse, AppError> {
-    // 1. Validate Server Exists
     let server = state
         .repositories
         .server
         .get_server_by_name(&req.server_id)
         .await
-        .map_err(|e| AppError::InternalServerError(e.to_string()))?
-        .ok_or(AppError::NotFound)?;
+        .map_err(|e| {
+            error!(
+                "Failed to get server with name: {} from database: {}",
+                &req.server_id, e
+            );
+            AppError::InternalServerError("An internal server error occurred".to_string())
+        })?
+        .ok_or_else(|| {
+            error!("No server found with name '{}'.", &req.server_id);
+            AppError::NotFound
+        })?;
 
     let ip_string = requester_ip.to_string();
 
-    // 2. Calculate Expiration (Unix Timestamp)
     let expiration_time = Utc::now().timestamp() + (ACCESS_DURATION_SECS as i64);
 
-    // 3. Check if Entry Exists in DB
-    // We use the repository to see if this specific user has accessed this server from this IP
     let existing_entry = state
         .repositories
         .whitelist
         .get_entry(&server.servername, username, &ip_string)
         .await
-        .map_err(|e| AppError::InternalServerError(e.to_string()))?;
+        .map_err(|e| {
+            error!("Failed to get whitelist entry: {}", e);
+            AppError::InternalServerError("An internal server error occurred".to_string())
+        })?;
 
-    // 4. Create the Entry Object
     let entry = WhitelistEntry {
         servername: server.servername.clone(),
         username: username.to_string(),
@@ -46,30 +53,30 @@ pub async fn grant_access(
         expiration: expiration_time,
     };
 
-    // 5. DB Action: Insert vs Update
     if existing_entry.is_some() {
-        // Entry exists -> Just extend the time
+        info!("Updating existing whitelist entry");
         state
             .repositories
             .whitelist
             .update_expiration(&entry)
             .await
             .map_err(|e| {
-                AppError::InternalServerError(format!("Failed to update whitelist: {}", e))
+                error!("Failed to update whitelist entry: {}", e);
+                AppError::InternalServerError("An internal server error occurred".to_string())
             })?;
     } else {
-        // New access -> Create new row
+        info!("Creating new whitelist entry");
         state
             .repositories
             .whitelist
             .add_entry(&entry)
             .await
             .map_err(|e| {
-                AppError::InternalServerError(format!("Failed to create whitelist entry: {}", e))
+                error!("Failed to create whitelist entry: {}", e);
+                AppError::InternalServerError("An internal server error occurred".to_string())
             })?;
     }
 
-    // 6. Apply Firewall Rule (Actual Whitelisting)
     state
         .firewall
         .grant_access(
@@ -78,6 +85,8 @@ pub async fn grant_access(
             Duration::from_secs(ACCESS_DURATION_SECS),
         )
         .await?;
+
+    info!("Access granted to {} on port {}", ip_string, server.port);
 
     Ok(AccessResponse {
         status: "success".to_string(),
@@ -97,20 +106,33 @@ pub async fn get_access_status(
 ) -> Result<AccessStatusResponse, AppError> {
     let ip_str = ip.to_string();
 
-    // 1. Query the DB
     let entry = state
         .repositories
         .whitelist
         .get_entry(&server_name, &username, &ip_str)
         .await
-        .map_err(|e| AppError::InternalServerError(e.to_string()))?;
+        .map_err(|e| {
+            error!("Failed to get whitelist entry from database: {}", e);
+            AppError::InternalServerError("An internal server error occurred".to_string())
+        })?;
 
-    // 2. Process Result
     match entry {
         Some(e) => {
             let now = Utc::now().timestamp();
             let is_active = e.expiration > now;
             let remaining_secs = if is_active { e.expiration - now } else { 0 };
+
+            if is_active {
+                info!(
+                    "Active whitelist entry found for user {} on server {}",
+                    username, server_name
+                );
+            } else {
+                info!(
+                    "Whitelist entry expired for user {} on server {}",
+                    username, server_name
+                );
+            }
 
             Ok(AccessStatusResponse {
                 server: server_name,
@@ -124,12 +146,18 @@ pub async fn get_access_status(
                 },
             })
         }
-        None => Ok(AccessStatusResponse {
-            server: server_name,
-            ip: ip_str,
-            is_active: false,
-            expiration: None,
-            time_remaining: None,
-        }),
+        None => {
+            info!(
+                "No whitelist entry found for user {} on server {}",
+                username, server_name
+            );
+            Ok(AccessStatusResponse {
+                server: server_name,
+                ip: ip_str,
+                is_active: false,
+                expiration: None,
+                time_remaining: None,
+            })
+        }
     }
 }
