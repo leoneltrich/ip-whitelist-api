@@ -1,20 +1,20 @@
 pub mod access;
 pub mod server;
 
+use crate::api::docs::ApiDoc;
 use crate::state::AppState;
 use axum::routing::get;
 use axum::{
-    Router,
     routing::{delete, post, put},
+    Router,
 };
-use utoipa::OpenApi;
-use utoipa_swagger_ui::SwaggerUi;
 use shared::auth::middleware::require_admin;
 use shared::health::routes::health_check;
-use crate::api::docs::ApiDoc;
+use utoipa::OpenApi;
+use utoipa_swagger_ui::SwaggerUi;
 
 pub(crate) fn public_routes() -> Router<AppState> {
-    Router::new().route("/health", get(health_check))
+    Router::new().route("/health", get(|| health_check(env!("CARGO_PKG_VERSION"))))
 }
 
 pub(crate) fn docs_routes() -> Router {

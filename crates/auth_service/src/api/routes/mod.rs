@@ -17,7 +17,7 @@ use utoipa_swagger_ui::SwaggerUi;
 pub fn public_routes() -> Router<AppState> {
     Router::new()
         .route("/login", post(auth::login))
-        .route("/health", get(health_check))
+        .route("/health", get(|| health_check(env!("CARGO_PKG_VERSION"))))
         .route("/token/refresh", post(token::refresh))
 }
 

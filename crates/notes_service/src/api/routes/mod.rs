@@ -32,7 +32,7 @@ pub(crate) fn admin_routes() -> Router<AppState> {
 }
 
 pub(crate) fn public_routes() -> Router<AppState> {
-    Router::new().route("/health", get(health_check))
+    Router::new().route("/health", get(|| health_check(env!("CARGO_PKG_VERSION"))))
 }
 
 pub(crate) fn docs_routes() -> Router {
