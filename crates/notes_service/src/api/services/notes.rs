@@ -1,5 +1,5 @@
 use crate::api::services::utils;
-use crate::api::services::utils::{get_note_owner, is_note_public_write};
+use crate::api::services::utils::{get_note_owner, is_note_public_read, is_note_public_write};
 use crate::models::api::note::{CreateNoteRequest, UpdateNoteRequest};
 use crate::models::database::note::{NewNote, Note, UpdateNote};
 use crate::persistence::repository::interface::notes::NoteRepository;
@@ -65,14 +65,15 @@ pub(crate) async fn get_note_by_id_as_admin(
     get_note_by_id(note_repository, note_id).await
 }
 
-pub(crate) async fn get_own_note_by_id(
+pub(crate) async fn get_note_by_id_as_user(
     note_repository: &dyn NoteRepository,
     note_id: i64,
     claims: &Claims,
 ) -> Result<Option<Note>, AppError> {
     let owner = get_note_owner(note_repository, &note_id).await?;
+    let is_public_read = is_note_public_read(note_repository, &note_id).await?;
 
-    if owner != claims.sub {
+    if owner != claims.sub && !is_public_read {
         info!(
             "User {} trying to access note {} that is not owned by them",
             claims.sub, note_id

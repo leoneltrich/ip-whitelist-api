@@ -93,7 +93,7 @@ pub async fn get_note_by_id(
     Path(note_id): Path<i64>,
     Extension(claims): Extension<Claims>,
 ) -> Result<impl IntoResponse, AppError> {
-    let note = notes::get_own_note_by_id(&*state.repositories.note, note_id, &claims).await?;
+    let note = notes::get_note_by_id_as_user(&*state.repositories.note, note_id, &claims).await?;
 
     let response = SingleNoteResponse {
         status: "success".to_string(),

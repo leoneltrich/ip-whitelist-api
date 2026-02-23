@@ -39,3 +39,21 @@ pub async fn is_note_public_write(
 
     Ok(is_public_write)
 }
+
+pub async fn is_note_public_read(
+    note_repository: &dyn NoteRepository,
+    note_id: &i64,
+) -> Result<bool, AppError> {
+    debug!("Getting public read status for not with id: {}", note_id);
+    let is_public_write = note_repository
+        .get_note_by_id(note_id)
+        .await
+        .map_err(|_| {
+            error!("An error occurred getting the note with id: {}", note_id);
+            AppError::InternalServerError
+        })?
+        .ok_or(AppError::NotFound)?
+        .is_public_read;
+
+    Ok(is_public_write)
+}
