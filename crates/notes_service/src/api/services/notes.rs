@@ -1,5 +1,5 @@
 use crate::api::services::utils;
-use crate::api::services::utils::get_note_owner;
+use crate::api::services::utils::{get_note_owner, is_note_public_write};
 use crate::models::api::note::{CreateNoteRequest, UpdateNoteRequest};
 use crate::models::database::note::{NewNote, Note, UpdateNote};
 use crate::persistence::repository::interface::notes::NoteRepository;
@@ -97,16 +97,17 @@ async fn get_note_by_id(
     })
 }
 
-pub(crate) async fn update_own_note(
+pub(crate) async fn update_note_as_user(
     note_repository: &dyn NoteRepository,
     payload: &UpdateNoteRequest,
     claims: &Claims,
 ) -> Result<usize, AppError> {
     let note_owner = get_note_owner(note_repository, &payload.id).await?;
+    let is_public_write = is_note_public_write(note_repository, &payload.id).await?;
 
-    if note_owner != claims.sub {
+    if note_owner != claims.sub && !is_public_write {
         info!(
-            "User {} is trying to update a note that's not theirs",
+            "User {} is trying to update a note that's not theirs and isn't public write",
             claims.sub
         );
         return Err(AppError::PermissionDenied);

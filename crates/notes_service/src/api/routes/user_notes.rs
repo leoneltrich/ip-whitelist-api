@@ -122,7 +122,7 @@ pub async fn update_note(
     Extension(claims): Extension<Claims>,
     Json(payload): Json<UpdateNoteRequest>,
 ) -> Result<impl IntoResponse, AppError> {
-    notes::update_own_note(&*state.repositories.note, &payload, &claims).await?;
+    notes::update_note_as_user(&*state.repositories.note, &payload, &claims).await?;
 
     Ok((
         StatusCode::OK,
