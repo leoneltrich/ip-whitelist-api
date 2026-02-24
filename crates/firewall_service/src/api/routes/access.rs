@@ -29,6 +29,7 @@ use std::net::SocketAddr;
         (status = 404, description = "Resource not found", body = NotFoundErrorResponse),
         (status = 500, description = "An internal server error occurred", body = InternalServerErrorResponse)
     ),
+    tags = ["Access"],
     security(
         ("jwt" = [])
     )
@@ -61,6 +62,7 @@ pub async fn request_access(
         (status = 404, description = "Resource not found", body = NotFoundErrorResponse),
         (status = 500, description = "An internal server error occurred", body = InternalServerErrorResponse)
     ),
+    tags = ["Access"],
     security(("jwt" = []))
 )]
 pub async fn check_access_status(

@@ -29,6 +29,7 @@ use tracing::error;
         (status = 409, description = "Server already exists", body = ConflictErrorResponse),
         (status = 500, description = "An internal server error occurred", body = InternalServerErrorResponse)
     ),
+    tags = ["Servers"],
     security(("jwt" = []))
 )]
 pub async fn create_server(
@@ -53,6 +54,7 @@ pub async fn create_server(
         (status = 403, description = "Unauthorized", body = PermissionErrorResponse),
         (status = 500, description = "An internal server error occurred", body = InternalServerErrorResponse)
     ),
+    tags = ["Servers"],
     security(("jwt" = []))
 )]
 pub async fn list_servers(State(state): State<AppState>) -> Result<impl IntoResponse, AppError> {
@@ -74,6 +76,7 @@ pub async fn list_servers(State(state): State<AppState>) -> Result<impl IntoResp
         (status = 404, description = "Resource not found", body = NotFoundErrorResponse),
         (status = 500, description = "An internal server error occurred", body = InternalServerErrorResponse)
     ),
+    tags = ["Servers"],
     security(("jwt" = []))
 )]
 pub async fn get_server(
@@ -100,6 +103,7 @@ pub async fn get_server(
         (status = 409, description = "Server already exists", body = ConflictErrorResponse),
         (status = 500, description = "An internal server error occurred", body = InternalServerErrorResponse)
     ),
+    tags = ["Servers"],
     security(("jwt" = []))
 )]
 pub async fn update_server(
@@ -129,6 +133,7 @@ pub async fn update_server(
         (status = 404, description = "Resource not found", body = NotFoundErrorResponse),
         (status = 500, description = "An internal server error occurred", body = InternalServerErrorResponse)
     ),
+    tags = ["Servers"],
     security(("jwt" = []))
 )]
 pub async fn delete_server(
@@ -156,6 +161,7 @@ pub async fn delete_server(
         (status = 403, description = "Unauthorized", body = PermissionErrorResponse),
         (status = 500, description = "An internal server error occurred", body = InternalServerErrorResponse)
     ),
+    tags = ["Servers"],
     security(("jwt" = []))
 )]
 pub async fn check_server_exists(

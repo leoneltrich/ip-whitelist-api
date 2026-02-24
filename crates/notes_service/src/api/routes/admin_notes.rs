@@ -25,6 +25,7 @@ use shared::errors::utoipa_errors::{
         (status = 403, description = "Unauthorized", body = PermissionErrorResponse),
         (status = 500, description = "An internal server error occurred", body = InternalServerErrorResponse)
     ),
+    tags = ["Notes (Admin)"],
     security(("jwt" = []))
 )]
 pub async fn get_all_notes(
@@ -55,6 +56,7 @@ pub async fn get_all_notes(
         (status = 404, description = "Resource not found", body = NotFoundErrorResponse),
         (status = 500, description = "An internal server error occurred", body = InternalServerErrorResponse)
     ),
+    tags = ["Notes (Admin)"],
     security(("jwt" = []))
 )]
 pub async fn get_note_by_id(
@@ -84,6 +86,7 @@ pub async fn get_note_by_id(
         (status = 404, description = "Resource not found", body = NotFoundErrorResponse),
         (status = 500, description = "An internal server error occurred", body = InternalServerErrorResponse)
     ),
+    tags = ["Notes (Admin)"],
     security(("jwt" = []))
 )]
 pub async fn update_note(
@@ -116,6 +119,7 @@ pub async fn update_note(
         (status = 404, description = "Resource not found", body = NotFoundErrorResponse),
         (status = 500, description = "An internal server error occurred", body = InternalServerErrorResponse)
     ),
+    tags = ["Notes (Admin)"],
     security(("jwt" = []))
 )]
 pub async fn delete_note(
@@ -147,6 +151,7 @@ pub async fn delete_note(
         (status = 403, description = "Unauthorized", body = PermissionErrorResponse),
         (status = 500, description = "An internal server error occurred", body = InternalServerErrorResponse)
     ),
+    tags = ["Notes (Admin)"],
     security(("jwt" = []))
 )]
 pub async fn delete_all_notes_of_user(

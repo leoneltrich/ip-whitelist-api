@@ -31,7 +31,8 @@ use utoipa::OpenApi;
         )
     ),
     tags(
-        (name = "Notes", description = "Notes Management API")
+        (name = "Notes (Admin)", description = "Notes Management API for admin users"),
+        (name = "Notes (User)", description = "Notes Management API for normal users")
     ),
     modifiers(&SecurityAddon)
 )]

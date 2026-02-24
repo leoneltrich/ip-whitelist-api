@@ -19,7 +19,7 @@ use utoipa_swagger_ui::SwaggerUi;
         schemas(SystemHealth, ServiceHealth, HealthStatus)
     ),
     tags(
-        (name = "health", description = "Health Monitoring Endpoints")
+        (name = "Health", description = "Health Monitoring Endpoints")
     )
 )]
 pub struct ApiDoc;
@@ -61,7 +61,8 @@ pub(crate) fn docs_routes() -> Router {
     responses(
         (status = 200, description = "System Operational", body = SystemHealth),
         (status = 503, description = "System Unavailable", body = SystemHealth)
-    )
+    ),
+    tags = ["Health"],
 )]
 async fn health_check(State(state): State<SharedHealthState>) -> (StatusCode, Json<SystemHealth>) {
     let read_guard = state.read().await;
@@ -78,7 +79,8 @@ async fn health_check(State(state): State<SharedHealthState>) -> (StatusCode, Js
     path = "/api/v1/health/services",
     responses(
         (status = 200, description = "List of all services", body = SystemHealth)
-    )
+    ),
+    tags = ["Health"],
 )]
 async fn get_all_services(State(state): State<SharedHealthState>) -> Json<SystemHealth> {
     let read_guard = state.read().await;

@@ -28,6 +28,10 @@ use utoipa::OpenApi;
             health::HealthResponse,
         )
     ),
+    tags(
+        (name = "Servers", description = "Manage servers (CRUD)"),
+        (name = "Access", description = "Set and get access to servers"),
+    ),
     modifiers(&SecurityAddon)
 )]
 pub struct ApiDoc;
