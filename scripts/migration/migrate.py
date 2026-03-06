@@ -1,6 +1,7 @@
-import sqlite3
 import os
+import sqlite3
 import sys
+
 
 def migrate(original_db_path, data_dir):
     if not os.path.exists(original_db_path):
@@ -47,9 +48,11 @@ def migrate(original_db_path, data_dir):
         """)
         servers = src_conn.execute("SELECT * FROM servers").fetchall()
         for s in servers:
+            s_dict = dict(s)
             fire_conn.execute(
                 "INSERT OR REPLACE INTO servers (servername, port, api_startup_method, api_startup_link, api_startup_token) VALUES (?, ?, ?, ?, ?)",
-                (s['servername'], s['port'], s.get('api_startup_method'), s.get('api_startup_link'), s.get('api_startup_token'))
+                (s_dict['servername'], s_dict['port'], s_dict.get('api_startup_method'), s_dict.get('api_startup_link'),
+                 s_dict.get('api_startup_token'))
             )
 
         print("📜 Migrating whitelist to firewall.db...")
