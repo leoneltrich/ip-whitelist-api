@@ -1,6 +1,5 @@
 import json
 import os
-import sys
 import re
 import subprocess
 
@@ -279,6 +278,22 @@ def main():
     if not services:
         print("❌ No services configured. Exiting.")
         return
+
+    # --- Host Mode Selection ---
+    is_host_mode = get_input("\nWill Nginx run in 'network_mode: host'?", "n").lower() == 'y'
+
+    if is_host_mode:
+        print("\n" + "!" * 65)
+        print("⚠️  IMPORTANT: NGINX HOST MODE DETECTED")
+        print("-" * 65)
+        print(" All upstreams are being forced to 127.0.0.1.")
+        print(" You MUST ensure your docker-compose.yml has explicit port mappings")
+        print(" for every service (e.g., 127.0.0.1:3000:3000) so Nginx can reach")
+        print(" them from the host network.")
+        print("!" * 65 + "\n")
+
+        for s in services:
+            s['ip'] = '127.0.0.1'
 
     # 2. Conflict Analysis Phase
     path_providers = {} # full_path -> [service_index, ...]

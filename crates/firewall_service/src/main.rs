@@ -47,14 +47,15 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
 
     firewall.setup().await?;
     info!("Firewall backend initialized");
+    let address = format!("{}:{}", config.bind_address, config.listen_port);
 
     let app_state = AppState::new(config, repositories, firewall);
     info!("App state initialized");
 
     let app = api::app(app_state);
-    let listener = TcpListener::bind("0.0.0.0:3001").await?;
-    info!("Listening on port 3001");
-    
+    let listener = TcpListener::bind(&address).await?;
+    info!("Listening on port {}", address);
+
     info!("Startup complete.");
     axum::serve(
         listener,
