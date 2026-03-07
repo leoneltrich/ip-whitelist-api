@@ -201,6 +201,10 @@ def generate_nginx_conf(services, final_routing, output_path):
 }}
 
 http {{ 
+    set_real_ip_from 10.0.0.0/8;
+    real_ip_header X-Forwarded-For;
+    real_ip_recursive on;
+
 {chr(10).join(upstreams)}
 
     server {{ 
