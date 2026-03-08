@@ -10,9 +10,7 @@ pub async fn create_server(repos: &Repositories, req: CreateServerRequest) -> Re
     let server = Server {
         servername: req.servername.clone(),
         port: req.port,
-        api_startup_method: req.api_startup_method,
-        api_startup_link: req.api_startup_link,
-        api_startup_token: req.api_startup_token,
+        protocol: req.protocol,
     };
 
     match repos.server.create_server(&server).await {
@@ -48,9 +46,6 @@ pub async fn list_servers(repos: &Repositories) -> Result<Vec<ServerResponse>, A
         .map(|s| ServerResponse {
             servername: s.servername,
             port: s.port,
-            api_startup_method: s.api_startup_method,
-            api_startup_link: s.api_startup_link,
-            has_token: s.api_startup_token.is_some(),
         })
         .collect();
 
@@ -78,9 +73,6 @@ pub async fn get_server(repos: &Repositories, name: String) -> Result<ServerResp
     Ok(ServerResponse {
         servername: server.servername,
         port: server.port,
-        api_startup_method: server.api_startup_method,
-        api_startup_link: server.api_startup_link,
-        has_token: server.api_startup_token.is_some(),
     })
 }
 
@@ -93,9 +85,7 @@ pub async fn update_server(
     let server = Server {
         servername: req.servername.clone(),
         port: req.port,
-        api_startup_method: req.api_startup_method,
-        api_startup_link: req.api_startup_link,
-        api_startup_token: req.api_startup_token,
+        protocol: req.protocol,
     };
 
     let rows = repos

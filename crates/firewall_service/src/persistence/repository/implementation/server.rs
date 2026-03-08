@@ -16,19 +16,13 @@ impl SqliteServerRepository {
 #[async_trait]
 impl ServerRepository for SqliteServerRepository {
     async fn create_server(&self, server: &Server) -> Result<usize, Error> {
-        let result = sqlx::query(
-            "INSERT INTO servers (
-                servername, port,
-                api_startup_method, api_startup_link, api_startup_token
-            ) VALUES (?, ?, ?, ?, ?)",
-        )
-        .bind(&server.servername)
-        .bind(server.port)
-        .bind(&server.api_startup_method)
-        .bind(&server.api_startup_link)
-        .bind(&server.api_startup_token)
-        .execute(&self.pool)
-        .await?;
+        let result =
+            sqlx::query("INSERT INTO servers (servername, port, protocol) VALUES (?, ?, ?)")
+                .bind(&server.servername)
+                .bind(server.port)
+                .bind(&server.protocol)
+                .execute(&self.pool)
+                .await?;
 
         Ok(result.rows_affected() as usize)
     }
@@ -64,16 +58,12 @@ impl ServerRepository for SqliteServerRepository {
             "UPDATE servers SET
                 servername = ?,
                 port = ?,
-                api_startup_method = ?,
-                api_startup_link = ?,
-                api_startup_token = ?
+                protocol = ?
             WHERE servername = ?",
         )
         .bind(&server.servername)
         .bind(server.port)
-        .bind(&server.api_startup_method)
-        .bind(&server.api_startup_link)
-        .bind(&server.api_startup_token)
+            .bind(&server.protocol)
         .bind(current_name) // Identifying the row to update
         .execute(&self.pool)
         .await?;

@@ -32,9 +32,7 @@ async fn create_schema(pool: &SqlitePool) -> Result<(), sqlx::Error> {
         "CREATE TABLE IF NOT EXISTS servers (
             servername TEXT PRIMARY KEY,
             port INTEGER NOT NULL,
-            api_startup_method TEXT,
-            api_startup_link TEXT,
-            api_startup_token TEXT
+            protocol TEXT NOT NULL
         );",
     )
     .execute(pool)
