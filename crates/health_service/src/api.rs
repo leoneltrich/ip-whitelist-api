@@ -27,8 +27,8 @@ pub struct ApiDoc;
 pub fn router(state: SharedHealthState) -> Router {
     let rate_limit = Arc::new(
         GovernorConfigBuilder::default()
-            .per_second(5)
-            .burst_size(10)
+            .per_millisecond(200)
+            .burst_size(30)
             .key_extractor(SmartIpExtractor)
             .finish()
             .unwrap()
@@ -113,6 +113,7 @@ mod tests {
             .oneshot(
                 Request::builder()
                     .uri("/api/v1/health")
+                    .extension(axum::extract::ConnectInfo("1.2.3.4:1234".parse::<std::net::SocketAddr>().unwrap()))
                     .body(Body::empty())
                     .unwrap(),
             )
@@ -137,6 +138,7 @@ mod tests {
             .oneshot(
                 Request::builder()
                     .uri("/api/v1/health")
+                    .extension(axum::extract::ConnectInfo("1.2.3.4:1234".parse::<std::net::SocketAddr>().unwrap()))
                     .body(Body::empty())
                     .unwrap(),
             )
@@ -161,6 +163,7 @@ mod tests {
             .oneshot(
                 Request::builder()
                     .uri("/api/v1/health")
+                    .extension(axum::extract::ConnectInfo("1.2.3.4:1234".parse::<std::net::SocketAddr>().unwrap()))
                     .body(Body::empty())
                     .unwrap(),
             )

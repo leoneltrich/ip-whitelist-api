@@ -15,8 +15,8 @@ mod docs;
 pub fn app(state: AppState) -> Router {
     let rate_limit = Arc::new(
         GovernorConfigBuilder::default()
-            .per_second(5)
-            .burst_size(10)
+            .per_millisecond(200)
+            .burst_size(30)
             .key_extractor(SmartIpExtractor)
             .finish()
             .unwrap()
