@@ -33,6 +33,9 @@ pub struct ServerResponse {
     #[schema(example = 8080)]
     pub port: u16,
 
+    #[schema(example = "TCP, UDP, TCP/UDP")]
+    pub protocol: String,
+
 }
 
 #[derive(Debug, Serialize, ToSchema)]

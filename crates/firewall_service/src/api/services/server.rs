@@ -46,6 +46,7 @@ pub async fn list_servers(repos: &Repositories) -> Result<Vec<ServerResponse>, A
         .map(|s| ServerResponse {
             servername: s.servername,
             port: s.port,
+            protocol: s.protocol,
         })
         .collect();
 
@@ -73,6 +74,7 @@ pub async fn get_server(repos: &Repositories, name: String) -> Result<ServerResp
     Ok(ServerResponse {
         servername: server.servername,
         port: server.port,
+        protocol: server.protocol,
     })
 }
 

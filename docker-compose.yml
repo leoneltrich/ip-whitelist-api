@@ -56,7 +56,7 @@ services:
       context: .
       target: firewall_service
     ports:
-      - "3001:3001"
+      - "3001:3000"
     environment:
       - DATABASE_PATH=/data/firewall.db
       - PUBLIC_KEY_PATH=/secrets/public.pem

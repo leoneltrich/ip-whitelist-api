@@ -3,21 +3,21 @@
   "services": [
     {
       "name": "auth_service",
-      "url": "http://auth_service:3000/health",
+      "url": "http://auth_service:3000/api/v1/health",
       "required": true,
       "timeout_ms": 1000,
       "initial_delay_s": 5
     },
     {
       "name": "firewall_service",
-      "url": "http://firewall_service:3001/health",
+      "url": "http://firewall_service:3000/api/v1/health",
       "required": true,
       "timeout_ms": 1000,
       "initial_delay_s": 5
     },
     {
       "name": "notes_service",
-      "url": "http://notes_service:3003/health",
+      "url": "http://notes_service:3003/api/v1/health",
       "required": false,
       "timeout_ms": 1000,
       "initial_delay_s": 5
