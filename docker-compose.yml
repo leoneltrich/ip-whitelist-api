@@ -2,7 +2,7 @@ services:
   nginx:
     image: nginx:alpine
     ports:
-      - "80:80"
+      - "1080:80"
     volumes:
       - ./nginx.conf:/etc/nginx/nginx.conf:ro
     depends_on:
@@ -66,7 +66,7 @@ services:
       - ./public.pem:/secrets/public.pem:ro
     labels:
       - "mesh1.proxy.enable=true"                  # REQUIRED: Enables discovery
-      - "mesh1.proxy.port=3001"                    # Internal port (default: 3000)
+      - "mesh1.proxy.port=3000"                    # Internal port (default: 3000)
       - "mesh1.proxy.spec_path=/api/v1/api-docs/openapi.json" # Path to JSON spec (default: /api-docs/openapi.json)
 
   notes_service:
