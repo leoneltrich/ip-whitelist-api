@@ -15,8 +15,8 @@ pub fn app(state: AppState) -> Router {
 
     let rate_limit = Arc::new(
         GovernorConfigBuilder::default()
-            .per_second(5)
-            .burst_size(10)
+            .per_millisecond(200)
+            .burst_size(30)
             .key_extractor(SmartIpExtractor)
             .finish()
             .unwrap()
@@ -65,9 +65,9 @@ mod tests {
     use rsa::pkcs8::{EncodePrivateKey, EncodePublicKey};
     use shared::auth::jwt;
     use shared::auth::models::Claims;
+    use shared::logging::models::LogConfig;
     use std::sync::Arc;
     use tower::ServiceExt;
-    use shared::logging::models::LogConfig;
 
     fn setup_test_app() -> (Router, String) {
         let mut rng = rand::rng();
@@ -224,7 +224,7 @@ mod tests {
 
         let client_addr: std::net::SocketAddr = "1.2.3.4:1234".parse().unwrap();
 
-        for _ in 0..10 {
+            for _ in 0..30 {
             let req = Request::builder()
                 .uri("/api/v1/health")
                 .extension(axum::extract::ConnectInfo(client_addr))
@@ -235,7 +235,7 @@ mod tests {
             assert_eq!(response.status(), StatusCode::OK);
         }
 
-        // 11th request
+            // 31st request
         let req = Request::builder()
             .uri("/api/v1/health")
             .extension(axum::extract::ConnectInfo(client_addr))
