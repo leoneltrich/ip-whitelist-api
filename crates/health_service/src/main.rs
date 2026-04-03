@@ -6,6 +6,7 @@ mod monitor;
 use crate::config::Config;
 use crate::domain::SystemHealth;
 use crate::monitor::{HealthMonitor, SharedHealthState};
+use std::net::SocketAddr;
 use std::sync::Arc;
 use tokio::sync::RwLock;
 use tracing::{error, info};
@@ -43,5 +44,10 @@ async fn main() {
         .unwrap();
 
     info!("Health API listening on port {}", port);
-    axum::serve(listener, app).await.unwrap();
+    axum::serve(
+        listener,
+        app.into_make_service_with_connect_info::<SocketAddr>(),
+    )
+        .await
+        .unwrap();
 }
