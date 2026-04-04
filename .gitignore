@@ -1,1 +1,11 @@
 /target
+/.idea/db-forest-config.xml
+/health-service-project-outline.md
+/.idea/misc.xml
+/scripts/config/nginx.conf
+/refresh-token-plan.md
+/SCHEDULED_TASKS_CONCEPT.md
+/SECURITY_AUDIT_REPORT.md
+/.idea/sqldialects.xml
+/TESTING_STRATEGY.md
+/TODOs.md
