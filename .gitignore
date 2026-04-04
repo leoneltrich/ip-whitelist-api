@@ -9,3 +9,5 @@
 /.idea/sqldialects.xml
 /TESTING_STRATEGY.md
 /TODOs.md
+/data/
+nginx.conf
