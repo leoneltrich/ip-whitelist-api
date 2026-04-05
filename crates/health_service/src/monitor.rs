@@ -217,6 +217,7 @@ mod tests {
 
     fn create_single_service_config(name: &str, required: bool, initial_delay_s: u64) -> Config {
         Config {
+            host: "0.0.0.0".to_string(),
             port: 3000,
             refresh_interval_ms: 1000,
             services: vec![ServiceConfig {
@@ -315,6 +316,7 @@ mod tests {
     async fn test_check_all_services_sets_global_status_up_when_all_services_are_up() {
         // Arrange
         let config = Config {
+            host: "0.0.0.0".to_string(),
             port: 3000,
             refresh_interval_ms: 1000,
             services: vec![

@@ -26,7 +26,8 @@ async fn main() {
         }
     };
 
-    let port = config.port; // Copy port before moving state
+    let host = config.host.clone();
+    let port = config.port;
 
     // 2. Initialize Shared State
     let state: SharedHealthState = Arc::new(RwLock::new(SystemHealth::new()));
@@ -39,11 +40,11 @@ async fn main() {
 
     // 4. Start API Server
     let app = api::router(state);
-    let listener = tokio::net::TcpListener::bind(format!("0.0.0.0:{}", port))
+    let listener = tokio::net::TcpListener::bind(format!("{}:{}", host, port))
         .await
         .unwrap();
 
-    info!("Health API listening on port {}", port);
+    info!("Health API listening on {}:{}", host, port);
     axum::serve(
         listener,
         app.into_make_service_with_connect_info::<SocketAddr>(),
